@@ -307,38 +307,6 @@ function installScripts(projectRoot: string): string[] {
 
 // ── Metadata files ─────────────────────────────────────────────────────────
 
-function createIntegrationJson(projectRoot: string, agent: AgentConfig): void {
-  const file = path.join(projectRoot, ".specify", "integration.json");
-  if (!fs.existsSync(file)) {
-    fs.writeFileSync(file, JSON.stringify({
-      version: "1.0.0",
-      default_integration: agent.key,
-      installed_integrations: [agent.key],
-      integration_settings: {
-        [agent.key]: {
-          script: "sh",
-          invoke_separator: agent.separator,
-        },
-      },
-    }, null, 2) + "\n");
-  }
-}
-
-function createInitOptionsJson(projectRoot: string, agent: AgentConfig): void {
-  const file = path.join(projectRoot, ".specify", "init-options.json");
-  if (!fs.existsSync(file)) {
-    fs.writeFileSync(file, JSON.stringify({
-      ai: agent.key,
-      ai_skills: agent.format === "skills",
-      feature_numbering: "sequential",
-      here: true,
-      integration: agent.key,
-      script: "sh",
-      speckit_version: "1.0.0",
-    }, null, 2) + "\n");
-  }
-}
-
 function createFeatureJson(projectRoot: string): void {
   const file = path.join(projectRoot, ".specify", "feature.json");
   if (!fs.existsSync(file)) {
@@ -433,8 +401,6 @@ function main(): void {
 
   // 5. Metadata files
   createFeatureJson(projectRoot);
-  createIntegrationJson(projectRoot, agent);
-  createInitOptionsJson(projectRoot, agent);
   // CLAUDE.md
   if (agent.key === "claude") {
     const claudePath = path.join(projectRoot, "CLAUDE.md");
