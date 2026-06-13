@@ -19,6 +19,7 @@ import { fileURLToPath } from "node:url";
 // ── Types ──────────────────────────────────────────────────────────────────
 
 interface AgentConfig {
+  key: string;
   name: string;
   dir: string;
   format: "skills" | "markdown";
@@ -33,6 +34,7 @@ type AgentKey = "claude" | "cursor" | "copilot" | "codex" | "windsurf";
 
 const AGENTS: Record<AgentKey, AgentConfig> = {
   claude: {
+    key: "claude",
     name: "Claude Code",
     dir: ".claude/skills",
     format: "skills",
@@ -50,6 +52,7 @@ const AGENTS: Record<AgentKey, AgentConfig> = {
     },
   },
   cursor: {
+    key: "cursor",
     name: "Cursor",
     dir: ".cursor/commands",
     format: "markdown",
@@ -57,6 +60,7 @@ const AGENTS: Record<AgentKey, AgentConfig> = {
     frontmatter: {},
   },
   copilot: {
+    key: "copilot",
     name: "GitHub Copilot",
     dir: ".github/copilot/commands",
     format: "markdown",
@@ -64,6 +68,7 @@ const AGENTS: Record<AgentKey, AgentConfig> = {
     frontmatter: {},
   },
   codex: {
+    key: "codex",
     name: "OpenAI Codex",
     dir: ".codex/skills",
     format: "skills",
@@ -71,6 +76,7 @@ const AGENTS: Record<AgentKey, AgentConfig> = {
     frontmatter: { "user-invocable": true, "disable-model-invocation": false },
   },
   windsurf: {
+    key: "windsurf",
     name: "Windsurf",
     dir: ".windsurf/commands",
     format: "markdown",
@@ -222,6 +228,7 @@ function installAllSkills(agent: AgentConfig, projectRoot: string): string[] {
   const skillNames = [
     "specify", "plan", "tasks", "implement",
     "analyze", "clarify", "checklist", "constitution",
+    "taskstoissues",
   ];
 
   const installed: string[] = [];
@@ -277,10 +284,65 @@ function createProjectStructure(projectRoot: string): void {
   ensureDir(path.join(projectRoot, "specs"));
 }
 
+// ── Scripts ─────────────────────────────────────────────────────────────────
+
+function installScripts(projectRoot: string): string[] {
+  const scriptsSrc = path.join(PACKAGE_ROOT, "scripts", "bash");
+  const scriptsDest = path.join(projectRoot, ".specify", "scripts", "bash");
+
+  if (!fs.existsSync(scriptsSrc)) return [];
+
+  const installed: string[] = [];
+  for (const name of fs.readdirSync(scriptsSrc)) {
+    if (name.endsWith(".sh")) {
+      const src = path.join(scriptsSrc, name);
+      const dest = path.join(scriptsDest, name);
+      fs.copyFileSync(src, dest);
+      fs.chmodSync(dest, 0o755);
+      installed.push(name);
+    }
+  }
+  return installed;
+}
+
+// ── Metadata files ─────────────────────────────────────────────────────────
+
+function createIntegrationJson(projectRoot: string, agent: AgentConfig): void {
+  const file = path.join(projectRoot, ".specify", "integration.json");
+  if (!fs.existsSync(file)) {
+    fs.writeFileSync(file, JSON.stringify({
+      version: "1.0.0",
+      default_integration: agent.key,
+      installed_integrations: [agent.key],
+      integration_settings: {
+        [agent.key]: {
+          script: "sh",
+          invoke_separator: agent.separator,
+        },
+      },
+    }, null, 2) + "\n");
+  }
+}
+
+function createInitOptionsJson(projectRoot: string, agent: AgentConfig): void {
+  const file = path.join(projectRoot, ".specify", "init-options.json");
+  if (!fs.existsSync(file)) {
+    fs.writeFileSync(file, JSON.stringify({
+      ai: agent.key,
+      ai_skills: agent.format === "skills",
+      feature_numbering: "sequential",
+      here: true,
+      integration: agent.key,
+      script: "sh",
+      speckit_version: "1.0.0",
+    }, null, 2) + "\n");
+  }
+}
+
 function createFeatureJson(projectRoot: string): void {
-  const featureJson = path.join(projectRoot, ".specify", "feature.json");
-  if (!fs.existsSync(featureJson)) {
-    fs.writeFileSync(featureJson, JSON.stringify({
+  const file = path.join(projectRoot, ".specify", "feature.json");
+  if (!fs.existsSync(file)) {
+    fs.writeFileSync(file, JSON.stringify({
       version: "1.0.0",
       created: new Date().toISOString().split("T")[0],
       tool: "coach-kit",
@@ -301,17 +363,20 @@ function printBanner(): void {
 }
 
 function printNextSteps(agent: AgentConfig, projectRoot: string): void {
+  const sep = agent.separator;
   console.log(`
   ✓  Project initialized at ${projectRoot}
   ✓  AI agent: ${agent.name}
-  ✓  8 skills installed → ${path.join(projectRoot, agent.dir)}
+  ✓  8 skills → ${path.join(projectRoot, agent.dir)}
   ✓  5 document templates → ${path.join(projectRoot, ".specify/templates")}
+  ✓  5 helper scripts → ${path.join(projectRoot, ".specify/scripts/bash")}
 
   Next steps:
     1. Start ${agent.name} in this directory
-    2. Run /speckit-constitution to define your project principles
-    3. Run /speckit-specify with your feature description
-    4. Follow the SDD cycle: specify → plan → tasks → implement
+    2. Create a feature:  .specify/scripts/bash/create-new-feature.sh "your feature description"
+    3. Run /speckit-constitution to define project principles
+    4. Run /speckit-specify with your feature description
+    5. Follow the SDD cycle: specify → plan → tasks → implement
 `);
 }
 
@@ -343,6 +408,9 @@ function main(): void {
 
   const projectRoot = process.cwd();
   const agent = AGENTS[agentKey];
+  if (!agent) {
+    process.exit(1);
+  }
 
   printBanner();
   console.log(`  Agent: ${agent.name}  |  Format: ${agent.format}  |  Project: ${path.basename(projectRoot)}\n`);
@@ -351,17 +419,45 @@ function main(): void {
   createProjectStructure(projectRoot);
   console.log("  ✓  Project structure created");
 
-  // 2. Install skill templates
+  // 2. Install skill templates (8 core)
   const skills = installAllSkills(agent, projectRoot);
   console.log(`  ✓  ${skills.length} skill templates installed`);
 
-  // 3. Install document templates
+  // 3. Install document templates (5)
   const docTemplates = installDocumentTemplates(agent, projectRoot);
   console.log(`  ✓  ${docTemplates.length} document templates installed`);
 
-  // 4. Create feature.json
+  // 4. Install helper scripts (5)
+  const scripts = installScripts(projectRoot);
+  console.log(`  ✓  ${scripts.length} helper scripts installed`);
+
+  // 5. Metadata files
   createFeatureJson(projectRoot);
-  console.log("  ✓  feature.json created");
+  createIntegrationJson(projectRoot, agent);
+  createInitOptionsJson(projectRoot, agent);
+  // CLAUDE.md
+  if (agent.key === "claude") {
+    const claudePath = path.join(projectRoot, "CLAUDE.md");
+    const claudeContent = "# " + path.basename(projectRoot) + "\n\n" +
+      "<!-- SPECKIT START -->\n" +
+      "This project uses **Coach Kit** for spec-driven development.\n\n" +
+      "## SDD Workflow\n\n" +
+      "Run these slash commands in order:\n\n" +
+      "1. /speckit-constitution -- Define project principles\n" +
+      "2. /speckit-specify -- Create feature specification\n" +
+      "3. /speckit-clarify (optional) -- Clarify ambiguities\n" +
+      "4. /speckit-plan -- Create technical plan\n" +
+      "5. /speckit-tasks -- Generate task breakdown\n" +
+      "6. /speckit-analyze (optional) -- Cross-artifact review\n" +
+      "7. /speckit-implement -- Execute implementation\n\n" +
+      "See .specify/templates/ for document templates and .specify/scripts/ for helper scripts.\n" +
+      "<!-- SPECKIT END -->\n";
+    try {
+      fs.writeFileSync(claudePath, claudeContent);
+    } catch (e) {
+    }
+  }
+  console.log("  ✓  Metadata files created");
 
   printNextSteps(agent, projectRoot);
 }
