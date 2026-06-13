@@ -1,0 +1,33 @@
+{
+  "name": "coach-kit",
+  "version": "1.0.0",
+  "description": "SDD that trusts AI. Guidance over gates. Craftsmanship over compliance.",
+  "type": "module",
+  "bin": {
+    "coach-init": "./src/coach-init.ts"
+  },
+  "files": [
+    "skills/",
+    "templates/",
+    "src/"
+  ],
+  "scripts": {
+    "init": "npx tsx src/coach-init.ts"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "sdd",
+    "spec-driven-development",
+    "ai-coding",
+    "coach",
+    "claude-code",
+    "cursor",
+    "copilot"
+  ],
+  "license": "MIT",
+  "repository": "https://github.com/brownant/coach-kit"
+}
