@@ -1,68 +1,105 @@
 ---
-description: Perform a non-destructive cross-artifact consistency and quality analysis across spec.md, plan.md, and tasks.md after task generation.
-scripts:
-  sh: scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks
-  ps: scripts/powershell/check-prerequisites.ps1 -Json -RequireTasks -IncludeTasks
+name: coachkit-analyze
+description: Cross-check spec, plan, and tasks for consistency before implementation. Use after tasks are generated.
+handoffs:
+  next: coachkit.implement
 ---
+
+## Iron Laws
+
+```
+1. CRITICAL ISSUES BLOCK IMPLEMENTATION. If a spec requirement has no task,
+   implementation will miss it. That's not advisory — that's a gap.
+
+2. BE SPECIFIC. "Section 3 of the plan doesn't cover FR-004" is a finding.
+   "The plan has gaps" is a feeling. Specific citations only.
+
+3. DON'T REWRITE. This is analysis, not editing. Flag issues. Trust the
+   implementer to fix them. Don't touch the files.
+```
+
+## Common Rationalizations — STOP When You Think These
+
+| You might think | Reality |
+|----------------|---------|
+| "It's all good, no issues found" | Look harder. Every spec/plan/tasks set has at least one inconsistency. |
+| "That gap is minor, not worth flagging" | Minor gaps become production bugs. Flag it. Let the implementer decide. |
+| "Fixing it is faster than writing it up" | This is analysis, not editing. Report, don't rewrite. |
+| "I'll fix the tasks.md while I'm here" | Don't touch the files. The implementer needs to know what was found. |
 
 ## Your Role
 
-You are an **advisory reviewer**, not a compliance auditor. Your job is to read the spec, plan, and tasks with a fresh eye and flag issues that could cause problems downstream. Think of this as a code review for the design artifacts.
+You are an **advisory reviewer**. Read all three artifacts with a fresh eye. Flag gaps and inconsistencies. Don't fix them — just report them clearly.
 
 ## The Process
 
 ### 1. Load All Artifacts
 
-Read `spec.md`, `plan.md`, and `tasks.md`.
+Read from the feature directory:
+- `spec.md` — what we're building
+- `plan.md` — how we're building it
+- `tasks.md` — the work breakdown
 
-### 2. Cross-Reference Check
+### 2. Cross-Reference Matrix
 
-Look for inconsistencies across the three documents:
+Build a coverage matrix. For each spec requirement, find its corresponding plan section and task:
+
+| FR | Plan Component | Task(s) | Status |
+|----|---------------|---------|--------|
+| FR-001 | AlbumService | T002, T003, T004 | Covered |
+| FR-002 | PhotoService | T005, T006, T007 | Covered |
+| ... | ... | ... | GAP: no plan section |
+
+### 3. Consistency Checks
 
 | Check | What to look for |
 |-------|-----------------|
-| **Coverage** | Does every spec requirement have corresponding plan sections and tasks? |
-| **Alignment** | Do the plan and tasks actually implement what the spec describes? |
-| **Gaps** | Are there spec requirements with no plan? Plan sections with no tasks? |
-| **Drift** | Does the plan contradict the spec? Do the tasks contradict the plan? |
+| **Coverage** | Every FR has a plan component AND at least one task |
+| **Alignment** | The plan describes what the spec asks for — not something different |
+| **Drift** | Task descriptions match the plan's component design — same names, same files |
+| **Ordering** | Task order respects dependencies — earlier tasks actually unblock later ones |
+| **Orphans** | Any plan component with no task? Any task with no spec requirement? |
 
-### 3. Quality Check
+### 4. Write the Analysis
 
-Flag anything that stands out:
-- **Ambiguity**: requirements that could be interpreted multiple ways
-- **Complexity**: unnecessarily complicated approaches
-- **Missing**: obvious edge cases or error states not covered
-- **Ordering**: task order that would cause rework
-
-### 4. Report Findings
-
-Create `specs/{{FEATURE_ID}}/analysis.md` with:
+Write `specs/{{FEATURE_ID}}/analysis.md`:
 
 ```
 # Analysis: {{TITLE}}
 
 ## Summary
-A brief assessment of overall consistency and quality.
+One paragraph on overall consistency.
 
 ## Issues Found
-(Bullet points only — no need for tables)
 
 ### Critical
-Issues that should block implementation.
+Issues that should block implementation:
+- **GAP:** FR-003 has no corresponding task
+- **DRIFT:** Plan says `UserStore`, tasks reference `UserRepository`
 
 ### Advisory
-Suggestions for improvement.
+Suggestions for improvement:
+- Consider merging T008 and T009 — they always run together
+- Plan mentions rate limiting but spec doesn't require it
 
 ### Positive
-Things that are well done.
+Things that are well done:
+- Task ordering is correct — earlier tasks cleanly unblock later ones
+- Edge cases from the spec are all covered in the plan
 ```
 
 ### 5. Hand Off
 
-> Analysis complete. {{N}} issues found ({{C}} critical). Run `/speckit.implement` when ready.
+```
+Analysis complete. {{N}} issues found ({{C}} critical).
 
-## Guardrails
+If critical = 0: Run `/coachkit.implement` to start building.
+If critical > 0: Fix critical issues before implementing.
+```
 
-- **Advisory, not blocking**. Flag issues, suggest fixes, then trust the implementer.
-- **Be specific**. "Section 3 of the plan doesn't cover FR-004" beats "there are gaps."
-- **Catch what matters**. Missing error handling matters. Formatting preferences don't.
+## Red Flags — STOP and Fix
+
+- Analysis file contains fixes instead of findings ("Changed tasks.md to..." → wrong, this is analysis)
+- A finding without a specific citation ("FR-004 not covered" not "there are gaps")
+- Zero findings (look harder — cross-check the coverage matrix)
+- An issue labeled "Critical" that doesn't block implementation
