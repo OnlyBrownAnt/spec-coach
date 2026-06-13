@@ -49,6 +49,7 @@ const AGENTS: Record<AgentKey, AgentConfig> = {
       clarify: "Optional areas to clarify in the spec",
       constitution: "Principles or values for the project constitution",
       checklist: "Domain or focus area for the checklist",
+      autopilot: "Describe the feature — AI will run the full SDD cycle autonomously",
     },
   },
   cursor: {
@@ -228,7 +229,7 @@ function installAllSkills(agent: AgentConfig, projectRoot: string): string[] {
   const skillNames = [
     "specify", "plan", "tasks", "implement",
     "analyze", "clarify", "checklist", "constitution",
-    "taskstoissues",
+    "taskstoissues", "autopilot",
   ];
 
   const installed: string[] = [];
@@ -335,16 +336,18 @@ function printNextSteps(agent: AgentConfig, projectRoot: string): void {
   console.log(`
   ✓  Project initialized at ${projectRoot}
   ✓  AI agent: ${agent.name}
-  ✓  8 skills → ${path.join(projectRoot, agent.dir)}
+  ✓  10 skills → ${path.join(projectRoot, agent.dir)}
   ✓  5 document templates → ${path.join(projectRoot, ".specify/templates")}
   ✓  5 helper scripts → ${path.join(projectRoot, ".specify/scripts/bash")}
 
-  Next steps:
-    1. Start ${agent.name} in this directory
-    2. Create a feature:  .specify/scripts/bash/create-new-feature.sh "your feature description"
-    3. Run /speckit-constitution to define project principles
-    4. Run /speckit-specify with your feature description
-    5. Follow the SDD cycle: specify → plan → tasks → implement
+  Quick start — one command for the full cycle:
+    /speckit-autopilot "your feature description"
+
+  Manual step-by-step:
+    1. .specify/scripts/bash/create-new-feature.sh "your feature description"
+    2. /speckit-constitution  → /speckit-specify  → /speckit-clarify
+       → /speckit-plan  → /speckit-checklist  → /speckit-tasks
+       → /speckit-analyze  → /speckit-implement
 `);
 }
 
