@@ -343,11 +343,17 @@ function printNextSteps(agent: AgentConfig, projectRoot: string): void {
   Quick start — one command for the full cycle:
     /speckit-autopilot "your feature description"
 
-  Manual step-by-step:
-    1. .specify/scripts/bash/create-new-feature.sh "your feature description"
-    2. /speckit-constitution  → /speckit-specify  → /speckit-clarify
-       → /speckit-plan  → /speckit-checklist  → /speckit-tasks
-       → /speckit-analyze  → /speckit-implement
+  Manual step-by-step (official order):
+    1. /speckit-constitution  → define project principles
+    2. /speckit-specify       → what & why
+    3. /speckit-clarify       → resolve ambiguities
+    4. /speckit-checklist     → validate requirements quality
+    5. /speckit-plan          → technical plan
+    6. /speckit-tasks         → task breakdown
+    7. /speckit-analyze       → cross-check consistency
+    8. /speckit-implement     → execute
+
+  Lean: specify → plan → tasks → implement (skip quality gates)
 `);
 }
 

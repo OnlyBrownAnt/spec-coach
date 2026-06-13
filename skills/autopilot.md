@@ -13,11 +13,7 @@ Execute all phases in order. Only stop if a phase fails.
 
 ### Phase 0: Constitution
 
-Read `.specify/memory/constitution.md`. If it is still a template (contains `[PROJECT_NAME]`), run:
-- `/speckit-constitution` to define real project principles
-- Wait for completion, verify the file was updated, then continue
-
-If it already has real principles, skip this phase.
+Read `.specify/memory/constitution.md`. If it is still a template (contains `[PROJECT_NAME]`), run `/speckit-constitution` to define real project principles. Skip if already populated.
 
 ### Phase 1: Scaffold
 
@@ -28,35 +24,35 @@ Capture `FEATURE_DIR` and `SPEC_FILE` from the JSON output.
 
 Run `/speckit-specify {{FEATURE_DESCRIPTION}}`.
 Verify `$SPEC_FILE` exists and has content.
-If the spec contains `[NEEDS CLARIFICATION]`, run `/speckit-clarify` to resolve them.
 
-### Phase 3: Plan
+### Phase 3: Clarify
 
-Run `/speckit-plan`.
-Verify `$FEATURE_DIR/plan.md` exists.
+Run `/speckit-clarify`. This identifies and resolves ambiguities in the spec before we commit to a plan.
 
 ### Phase 4: Checklist
 
-Run `/speckit-checklist`.
-Verify `$FEATURE_DIR/checklist.md` exists. This is your quality gate — review the items.
+Run `/speckit-checklist`. Validates requirements quality before planning — catch gaps early.
 
-### Phase 5: Tasks
+### Phase 5: Plan
 
-Run `/speckit-tasks`.
+Run `/speckit-plan`. Creates the technical implementation plan with stack, architecture, and design decisions.
+Verify `$FEATURE_DIR/plan.md` exists.
+
+### Phase 6: Tasks
+
+Run `/speckit-tasks`. Generates an actionable, dependency-ordered task list.
 Verify `$FEATURE_DIR/tasks.md` exists.
 
-### Phase 6: Analyze
+### Phase 7: Analyze
 
-Run `/speckit-analyze`.
-Read `$FEATURE_DIR/checklist.md`. If critical issues found, fix before continuing.
-Advisory issues can be addressed during implementation.
+Run `/speckit-analyze`. Cross-checks spec, plan, and tasks for consistency before implementation starts. If critical issues are found, fix them before continuing.
 
-### Phase 7: Implement
+### Phase 8: Implement
 
-Run `/speckit-implement`.
+Run `/speckit-implement`. Execute the plan and task list.
 Verify the code compiles and tests pass.
 
-### Phase 8: Report
+### Phase 9: Report
 
 Output a summary:
 
@@ -72,9 +68,17 @@ Output a summary:
 **Follow-up**: [if any]
 ```
 
+## Lean Shortcut
+
+For quick experiments, skip the quality gates:
+
+```
+scaffold → specify → plan → tasks → implement
+```
+
 ## Guardrails
 
-- **Don't stop between phases.** Only exceptions: phase failure or `[NEEDS CLARIFICATION]` markers.
-- **Check file existence** after each phase. If expected file is missing, the phase failed — report and stop.
-- **Constitution is one-time.** Skip if already populated.
-- **Read before writing.** Each phase's output informs the next. The spec feeds the plan, the plan feeds the tasks.
+- **Don't stop between phases.** Only exception: phase failure.
+- **Check file existence** after each phase. Missing output = failure → report and stop.
+- **Constitution is one-time.** Skip Phase 0 if already populated.
+- **Analyze before implement.** The official workflow puts analysis right before implementation so gaps are caught while plans and tasks can still be adjusted.
