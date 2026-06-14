@@ -141,58 +141,30 @@ run_test() {
     printf "Running: %-40s " "$test_name"
     local test_start
     test_start=$(date +%s)
+    local dur
 
     local output_dir="$SCRIPT_DIR/.test-output/$(date +%s)-${test_name%.sh}"
     mkdir -p "$output_dir"
 
-    if [ "$VERBOSE" = true ]; then
-        if _timeout "$TIMEOUT" bash "$test_path" 2>&1 | tee "$output_dir/output.log"; then
-            local test_end; test_end=$(date +%s)
-            local dur=$((test_end - test_start))
-            echo "PASS" > "$output_dir/status"
-            echo "PASS (${dur}s)"
-            PASSED=$((PASSED + 1))
-        else
-            local exit_code=$?
-            local test_end; test_end=$(date +%s)
-            local dur=$((test_end - test_start))
-            if [ $exit_code -eq 124 ] || [ $exit_code -eq 142 ]; then
-                echo "TIMEOUT" > "$output_dir/status"
-                echo "FAIL (timeout after ${TIMEOUT}s)"
-            else
-                echo "FAILED" > "$output_dir/status"
-                echo "FAIL (${dur}s)"
-            fi
-            FAILED=$((FAILED + 1))
-        fi
+    # Always stream output in real-time; always save to log
+    if _timeout "$TIMEOUT" bash "$test_path" 2>&1 | tee "$output_dir/output.log"; then
+        test_end=$(date +%s)
+        dur=$((test_end - test_start))
+        echo "PASS" > "$output_dir/status"
+        echo "PASS (${dur}s)"
+        PASSED=$((PASSED + 1))
     else
-        if output=$(_timeout "$TIMEOUT" bash "$test_path" 2>&1); then
-            local test_end; test_end=$(date +%s)
-            local dur=$((test_end - test_start))
-            echo "$output" > "$output_dir/output.log"
-            echo "PASS" > "$output_dir/status"
-            echo "PASS (${dur}s)"
-            PASSED=$((PASSED + 1))
+        local exit_code=${PIPESTATUS[0]}
+        test_end=$(date +%s)
+        dur=$((test_end - test_start))
+        if [ "$exit_code" -eq 124 ] || [ "$exit_code" -eq 142 ]; then
+            echo "TIMEOUT" > "$output_dir/status"
+            echo "FAIL (timeout after ${TIMEOUT}s)"
         else
-            local exit_code=$?
-            local test_end; test_end=$(date +%s)
-            local dur=$((test_end - test_start))
-            echo "$output" > "$output_dir/output.log"
-            if [ $exit_code -eq 124 ] || [ $exit_code -eq 142 ]; then
-                echo "TIMEOUT" > "$output_dir/status"
-                echo "FAIL (timeout after ${TIMEOUT}s)"
-                echo ""
-                echo "  Last output:"
-                echo "$output" | tail -5 | sed 's/^/    /'
-            else
-                echo "FAILED" > "$output_dir/status"
-                echo "FAIL (${dur}s)"
-                echo ""
-                echo "  Output:"
-                echo "$output" | tail -20 | sed 's/^/    /'
-            fi
-            FAILED=$((FAILED + 1))
+            echo "FAILED" > "$output_dir/status"
+            echo "FAIL (${dur}s)"
         fi
+        FAILED=$((FAILED + 1))
     fi
 }
 
