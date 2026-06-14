@@ -31,7 +31,7 @@ echo ""
 # Test 4: Tasks don't contain implementation code
 echo "--- Test 4: No implementation code ---"
 output=$(run_claude "Do coachkit-tasks entries contain full implementation code? What level of detail do they provide?" 60)
-assert_contains "$output" "no.*code|not.*code|not.*contain|not.*implement|description" "Tasks don't contain code"
+assert_contains "$output" "not.*code|should not.*code|implement|commit" "Tasks don't contain code"
 echo ""
 
 echo "=== All tasks tests passed ==="

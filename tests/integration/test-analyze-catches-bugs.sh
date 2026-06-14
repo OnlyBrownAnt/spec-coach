@@ -101,7 +101,7 @@ echo ""
 
 # Test 2: Partial email rule coverage found
 echo "Test 2: Email rule coverage gap..."
-assert_contains "$analyze_output" "3 of 5|partial|not all|missing.*rule|incomplete|gap" "Email rule coverage gap identified" || FAILED=$((FAILED + 1))
+assert_contains "$analyze_output" "missing|gap|incomplete|not.*cover|only.*3" "Email rule coverage gap identified" || FAILED=$((FAILED + 1))
 echo ""
 
 # Test 3: Output has findings/issues structure

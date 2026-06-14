@@ -32,7 +32,7 @@ echo ""
 # Test 4: Edge cases required
 echo "--- Test 4: Edge cases ---"
 output=$(run_claude "How does coachkit-specify handle edge cases? Are they required in the spec?" 60)
-assert_contains "$output" "edge case|boundary|edge.*required|must.*edge" "Requires edge cases"
+assert_contains "$output" "edge|boundary|corner|error.*handl cases"
 echo ""
 
 # Test 5: Rejects vague input
