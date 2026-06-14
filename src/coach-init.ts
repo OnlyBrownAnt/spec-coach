@@ -14,6 +14,7 @@
 
 import * as fs from "node:fs";
 import * as path from "node:path";
+import * as readline from "node:readline";
 import { fileURLToPath } from "node:url";
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -214,9 +215,9 @@ function installSkill(
     // Markdown format: .cursor/commands/spec/specify.md
     const destDir = path.join(projectRoot, agent.dir, "spec");
     const destFile = path.join(destDir, `${templateName}.md`);
-    // Markdown integrations use the original frontmatter with __SPECKIT_COMMAND_*__ references
+    // Markdown integrations use the original frontmatter with __SPEC_COMMAND_*__ references
     const processed = body
-      .replace(/__SPECKIT_COMMAND_(\w+)__/g, (_m, name) => {
+      .replace(/__SPEC_COMMAND_(\w+)__/g, (_m, name) => {
         const lower = name.toLowerCase().replace(/_/g, agent.separator);
         return `/spec${agent.separator}${lower}`;
       });
@@ -319,6 +320,234 @@ function createFeatureJson(projectRoot: string): void {
   }
 }
 
+// ── Absorb: scan and migrate existing spec documents ─────────────────────
+
+const MAX_CANDIDATE_SIZE = 500 * 1024; // 500KB threshold for scanning
+
+const SCAN_EXCLUDE_DIRS = new Set([
+  "node_modules", ".git", ".claude", ".spec", "specs", ".test-output",
+]);
+
+const SCAN_EXCLUDE_FILES = new Set([
+  "changelog", "readme", "license", "contributing", "code_of_conduct",
+]);
+
+const FILE_KEYWORDS = [
+  "spec", "requirement", "需求", "prd", "feature", "设计",
+  "proposal", "方案", "plan", "任务", "story", "design",
+];
+
+const CONTENT_PATTERNS: { label: string; regex: RegExp }[] = [
+  { label: "frontmatter", regex: /^---\n[\s\S]*?\n---/m },
+  { label: "User Story", regex: /user\s*story|用户故事/i },
+  { label: "Functional Requirement", regex: /functional\s*requirement|FR-\d|功能需求/i },
+  { label: "Overview section", regex: /##\s*(overview|概述|背景|background)/i },
+  { label: "Acceptance Criteria", regex: /acceptance\s*criteria|验收标准/i },
+  { label: '"As a...I want" pattern', regex: /as\s+a\b.*\bi\s*want\b/i },
+];
+
+function isExcludedDir(name: string): boolean {
+  return SCAN_EXCLUDE_DIRS.has(name) || name.startsWith(".");
+}
+
+function slugify(name: string): string {
+  return path.basename(name, path.extname(name))
+    .toLowerCase()
+    .replace(/[^\w一-鿿-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .replace(/-+/g, "-")
+    .slice(0, 50);
+}
+
+interface Candidate {
+  file: string;   // relative path from project root
+  reason: string; // why it was flagged
+  sizeKB: number; // file size in KB
+}
+
+function scanForCandidateDocs(projectRoot: string): Candidate[] {
+  const candidates: Candidate[] = [];
+
+  function walk(dir: string): void {
+    let entries: fs.Dirent[];
+    try { entries = fs.readdirSync(dir, { withFileTypes: true }); }
+    catch { return; }
+
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
+
+      if (entry.isDirectory()) {
+        if (isExcludedDir(entry.name)) continue;
+        walk(fullPath);
+        continue;
+      }
+
+      if (!entry.name.endsWith(".md") && !entry.name.endsWith(".mdx")) continue;
+
+      const stem = entry.name.replace(/\.mdx?$/i, "").toLowerCase();
+      if (SCAN_EXCLUDE_FILES.has(stem)) continue;
+
+      let sizeKB = 0;
+      try {
+        const stat = fs.statSync(fullPath);
+        if (stat.size > MAX_CANDIDATE_SIZE) continue;
+        sizeKB = Math.round(stat.size / 1024);
+      } catch { continue; }
+
+      const relativePath = path.relative(projectRoot, fullPath);
+      let reason = "";
+
+      // Check filename keywords first
+      for (const kw of FILE_KEYWORDS) {
+        if (entry.name.toLowerCase().includes(kw.toLowerCase())) {
+          reason = `filename matches "${kw}"`;
+          break;
+        }
+      }
+
+      // If filename didn't match, check content
+      if (!reason) {
+        let content: string;
+        try { content = fs.readFileSync(fullPath, "utf-8"); }
+        catch { continue; }
+
+        for (const pattern of CONTENT_PATTERNS) {
+          if (pattern.regex.test(content)) {
+            reason = `content matches "${pattern.label}"`;
+            break;
+          }
+        }
+      }
+
+      if (reason) {
+        candidates.push({ file: relativePath, reason, sizeKB });
+      }
+    }
+  }
+
+  walk(projectRoot);
+  return candidates;
+}
+
+function absorbDocument(
+  sourceFile: string,
+  featureId: string,
+  projectRoot: string,
+): void {
+  const specsDir = path.join(projectRoot, "specs", featureId);
+  ensureDir(specsDir);
+
+  const sourceAbs = path.join(projectRoot, sourceFile);
+  const originalContent = fs.readFileSync(sourceAbs, "utf-8");
+  const [, body] = parseFrontmatter(originalContent);
+
+  const today = new Date().toISOString().split("T")[0];
+
+  const specContent = `# Spec: ${featureId}
+
+**Created**: ${today} | **Status**: Draft | **Absorbed from**: ${sourceFile}
+
+## Overview
+
+${body.trim()}
+
+## User Stories
+
+[TODO: Not in original document — run /spec-specify to fill in]
+
+## Functional Requirements
+
+[TODO: Not in original document — run /spec-specify to fill in]
+
+## Edge Cases
+
+[TODO: Not in original document — run /spec-specify to fill in]
+
+## Non-Goals
+
+[TODO: Not in original document — run /spec-specify to fill in]
+
+## Success Criteria
+
+- [ ] [TODO: Not in original document — run /spec-specify to fill in]
+`;
+
+  const specFile = path.join(specsDir, "spec.md");
+  fs.writeFileSync(specFile, specContent);
+
+  // Archive original file
+  const archiveDir = path.join(projectRoot, ".spec", "absorbed");
+  ensureDir(archiveDir);
+  const archiveName = sourceFile.replace(/\//g, "_");
+  fs.copyFileSync(sourceAbs, path.join(archiveDir, archiveName));
+  fs.unlinkSync(sourceAbs);
+}
+
+function prompt(rl: readline.Interface, question: string): Promise<string> {
+  return new Promise((resolve) => {
+    rl.question(question, (answer: string) => {
+      resolve(answer.trim());
+    });
+  });
+}
+
+async function runAbsorbWorkflow(projectRoot: string): Promise<void> {
+  const candidates = scanForCandidateDocs(projectRoot);
+  if (candidates.length === 0) return;
+
+  console.log(`\n  📄  Found ${candidates.length} candidate spec document(s):\n`);
+
+  for (let i = 0; i < candidates.length; i++) {
+    const c = candidates[i];
+    console.log(`  [${i + 1}] ${c.file}  (${c.sizeKB}KB, ${c.reason})`);
+  }
+
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+
+  console.log("");
+  const raw = await prompt(rl, "  [a]bsorb all  [n]skip all  or numbers (e.g. 1,3,5): ");
+
+  if (raw.toLowerCase() === "n" || raw === "") {
+    rl.close();
+    return;
+  }
+
+  let selected: Candidate[];
+
+  if (raw.toLowerCase() === "a") {
+    selected = candidates;
+  } else {
+    const indices = raw.split(",").map(s => parseInt(s.trim(), 10)).filter(n => n >= 1 && n <= candidates.length);
+    selected = indices.map(n => candidates[n - 1]);
+  }
+
+  if (selected.length === 0) {
+    rl.close();
+    return;
+  }
+
+  console.log(`\n  Absorbing ${selected.length} document(s). Enter a feature ID for each:\n`);
+
+  for (const c of selected) {
+    const defaultId = slugify(path.basename(c.file));
+    const id = await prompt(rl, `  Feature ID for "${c.file}" [${defaultId}]: `);
+    const featureId = id || defaultId;
+
+    if (!featureId) {
+      console.log(`  ⚠  Skipping "${c.file}" — no valid feature ID\n`);
+      continue;
+    }
+
+    absorbDocument(c.file, featureId, projectRoot);
+  }
+
+  rl.close();
+
+  console.log(`\n  ✓  Absorbed ${selected.length} document(s) into specs/\n`);
+  console.log("  Original files archived at .spec/absorbed/");
+  console.log("  Run /spec-specify on each to fill in [TODO] sections.");
+}
+
 // ── Main ───────────────────────────────────────────────────────────────────
 
 function printBanner(): void {
@@ -357,9 +586,10 @@ function printNextSteps(agent: AgentConfig, projectRoot: string): void {
 `);
 }
 
-function main(): void {
+async function main(): Promise<void> {
   const args = process.argv.slice(2);
   let agentKey: AgentKey = "claude";
+  let skipAbsorb = false;
 
   for (let i = 0; i < args.length; i++) {
     if (args[i] === "--agent" || args[i] === "-a") {
@@ -370,14 +600,17 @@ function main(): void {
         console.error(`Unknown agent: ${val}. Supported: ${Object.keys(AGENTS).join(", ")}`);
         process.exit(1);
       }
+    } else if (args[i] === "--skip-absorb") {
+      skipAbsorb = true;
     } else if (args[i] === "--help" || args[i] === "-h") {
       console.log(`Usage: coach-init --agent <agent>
 
   Supported agents: ${Object.keys(AGENTS).join(", ")}
 
   Options:
-    --agent, -a   AI coding agent to configure (default: claude)
-    --help, -h    Show this help
+    --agent, -a      AI coding agent to configure (default: claude)
+    --skip-absorb    Skip scanning for existing spec documents
+    --help, -h       Show this help
 `);
       process.exit(0);
     }
@@ -414,7 +647,7 @@ function main(): void {
   if (agent.key === "claude") {
     const claudePath = path.join(projectRoot, "CLAUDE.md");
     const claudeContent = "# " + path.basename(projectRoot) + "\n\n" +
-      "<!-- SPECKIT START -->\n" +
+      "<!-- COACH START -->\n" +
       "This project uses **Coach Kit** for spec-driven development.\n\n" +
       "## SDD Workflow\n\n" +
       "Run these slash commands in order:\n\n" +
@@ -426,13 +659,18 @@ function main(): void {
       "6. /spec-analyze (optional) -- Cross-artifact review\n" +
       "7. /spec-implement -- Execute implementation\n\n" +
       "See .spec/templates/ for document templates and .spec/scripts/ for helper scripts.\n" +
-      "<!-- SPECKIT END -->\n";
+      "<!-- COACH END -->\n";
     try {
       fs.writeFileSync(claudePath, claudeContent);
     } catch (e) {
     }
   }
   console.log("  ✓  Metadata files created");
+
+  // 6. Absorb existing spec documents (interactive)
+  if (!skipAbsorb) {
+    await runAbsorbWorkflow(projectRoot);
+  }
 
   printNextSteps(agent, projectRoot);
 }
