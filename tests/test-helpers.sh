@@ -23,7 +23,7 @@ run_claude() {
     local output_file
     output_file=$(mktemp)
 
-    local cmd="claude -p \"$prompt\" --output-format text --plugin-dir \"$COACH_KIT_ROOT\""
+    local cmd="claude -p \"$prompt\" --output-format text --plugin-dir \"$COACH_KIT_ROOT\" --permission-mode bypassPermissions"
     if [ -n "$allowed_tools" ]; then
         cmd="$cmd --allowed-tools=$allowed_tools"
     fi

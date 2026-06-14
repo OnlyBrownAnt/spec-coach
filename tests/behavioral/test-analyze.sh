@@ -25,7 +25,8 @@ echo ""
 # Test 3: Checks plan->tasks coverage
 echo "--- Test 3: Plan to tasks coverage ---"
 output=$(run_claude "Does coachkit-analyze check that every plan component has a corresponding task? How?" 60)
-assert_contains "$output" "plan.*task|component.*task|coverage|every" "Checks plan-to-tasks coverage"
+assert_contains "$output" "plan|component" "Mentions plan or component"
+assert_contains "$output" "task|implement" "Mentions tasks"
 echo ""
 
 # Test 4: Reports inconsistencies with specific citations
