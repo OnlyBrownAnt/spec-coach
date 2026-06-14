@@ -7,6 +7,10 @@ handoffs:
   optional_after: []
 ---
 
+<HARD-GATE>
+Do NOT invoke coachkit-implement or write any code until every task has a specific file, a verification step, and a dependency annotation. A task saying "build the X system" is not a task — it's a wish.
+</HARD-GATE>
+
 ## Iron Laws
 
 ```

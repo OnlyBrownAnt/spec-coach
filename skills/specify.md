@@ -6,6 +6,14 @@ handoffs:
   optional_before: [coachkit.clarify, coachkit.checklist]
 ---
 
+<HARD-GATE>
+Do NOT invoke coachkit-plan, coachkit-implement, or any implementation action until you have written the spec, presented it, and received explicit user approval. This applies to EVERY feature regardless of perceived simplicity.
+</HARD-GATE>
+
+## Anti-Pattern: "This Is Too Simple To Need A Spec"
+
+Every feature goes through spec. A config change, a one-line function, a validation rule — all of them. "Simple" features are where unexamined edge cases cause the most production bugs. The spec can be short (5 bullet points for truly simple features), but you MUST write it.
+
 ## Iron Laws
 
 ```

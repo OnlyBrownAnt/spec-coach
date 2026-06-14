@@ -10,16 +10,36 @@ handoffs:
 
 These are not advice. They are not "when convenient." They are the foundation of every task below.
 
-```
-1. NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST.
-   Write code before the test? Delete it. Start over.
+### 1. NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST
 
-2. NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE.
-   Haven't run the command this turn? You cannot claim it passes.
+Write code before the test? Delete it. Start over.
 
-3. NO FIXES WITHOUT ROOT CAUSE FIRST.
-   Reproduce → understand → fix. Never guess-fix.
-```
+**No exceptions:**
+- Don't keep it as "reference"
+- Don't "adapt" it while writing tests
+- Don't skip because the task is "too simple"
+- Don't write test and code simultaneously — test MUST fail first
+- Delete means delete. Start fresh from the test.
+
+### 2. NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE
+
+Haven't run the command this turn? You cannot claim it passes.
+
+**No exceptions:**
+- Don't say "all tests pass" — paste the output
+- Don't say "it works" — show the command result
+- Don't mark a task `[x]` without running verification THIS turn
+- Last session's output is not this session's evidence
+
+### 3. NO FIXES WITHOUT ROOT CAUSE FIRST
+
+Reproduce → understand → fix. Never guess-fix.
+
+**No exceptions:**
+- Don't try "just this one change" without reproducing
+- Don't attempt fix #4 after 3 failures — escalate
+- Don't change code to "see what happens"
+- Seeing symptoms ≠ understanding root cause
 
 **Violating the letter of these laws is violating the spirit of this process.**
 
@@ -116,6 +136,64 @@ For every task, follow these steps in exact order. Do not skip. Do not reorder. 
 10. COMMIT
     - Commit with the task ID and a clear description.
     - One commit per task — no bundling.
+```
+
+### Good vs Bad — Recognize the Pattern
+
+**RED — Writing a failing test:**
+
+```javascript
+// ✅ GOOD: One behavior, clear name, real code
+test('isValidEmail returns false when @ is missing', () => {
+  assert.strictEqual(isValidEmail('no-at.com'), false);
+});
+
+// ❌ BAD: Vague name, testing implementation not behavior
+test('email validation works', () => {
+  const validator = new EmailValidator();
+  jest.spyOn(validator, 'validate');
+  validator.validate('test@test.com');
+  expect(validator.validate).toHaveBeenCalled();
+});
+```
+
+**GREEN — Minimal code to pass:**
+
+```javascript
+// ✅ GOOD: Just enough to pass the test
+export function isValidEmail(email) {
+  if (!email.includes('@')) return false;
+  const [local, domain] = email.split('@');
+  if (!local || !domain.includes('.')) return false;
+  return true;
+}
+
+// ❌ BAD: Over-engineered — test only asked for @ check
+export function isValidEmail(email, options = {}) {
+  const config = { allowUnicode: false, maxLength: 254, ...options };
+  const regex = config.allowUnicode
+    ? /^[^\s@]+@[^\s@]+\.[^\s@]+$/u
+    : /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  if (email.length > config.maxLength) return false;
+  return regex.test(email);
+}
+```
+
+**REFACTOR — Clean up while green:**
+
+```javascript
+// ✅ GOOD: Extract helper, keep tests green
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+export function isValidEmail(email) {
+  return EMAIL_REGEX.test(email);
+}
+
+// ❌ BAD: Adding behavior during refactor
+export function isValidEmail(email) {
+  // Also validate email is not disposable (new behavior!)
+  if (DISPOSABLE_DOMAINS.has(email.split('@')[1])) return false;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
 ```
 
 ### 4. When You Hit a Bug

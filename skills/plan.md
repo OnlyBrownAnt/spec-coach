@@ -7,6 +7,10 @@ handoffs:
   optional_after: [coachkit.analyze]
 ---
 
+<HARD-GATE>
+Do NOT invoke coachkit-implement or write any code until the plan is complete. A plan with TBD or placeholders is not complete. A plan without a file mapping table is not complete.
+</HARD-GATE>
+
 ## Iron Laws
 
 ```
