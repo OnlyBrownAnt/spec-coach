@@ -18,6 +18,9 @@ handoffs:
    implementer to fix them. Don't touch the files.
 ```
 
+
+**Violating the letter of these laws is violating the spirit of this process.**
+
 ## Common Rationalizations — STOP When You Think These
 
 | You might think | Reality |

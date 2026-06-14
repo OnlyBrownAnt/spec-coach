@@ -19,6 +19,9 @@ handoffs:
    Users say "yes" faster than they write from scratch.
 ```
 
+
+**Violating the letter of these laws is violating the spirit of this process.**
+
 ## Common Rationalizations — STOP When You Think These
 
 | You might think | Reality |

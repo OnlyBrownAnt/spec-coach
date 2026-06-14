@@ -18,6 +18,9 @@ handoffs:
    it adds no value. Delete it.
 ```
 
+
+**Violating the letter of these laws is violating the spirit of this process.**
+
 ## Common Rationalizations — STOP When You Think These
 
 | You might think | Reality |

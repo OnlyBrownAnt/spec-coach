@@ -18,6 +18,9 @@ handoffs:
    Every item must reference a specific risk from THIS spec.
 ```
 
+
+**Violating the letter of these laws is violating the spirit of this process.**
+
 ## Common Rationalizations — STOP When You Think These
 
 | You might think | Reality |

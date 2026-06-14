@@ -20,6 +20,9 @@ handoffs:
    the implementer is lost. Break it down.
 ```
 
+
+**Violating the letter of these laws is violating the spirit of this process.**
+
 ## Common Rationalizations — STOP When You Think These
 
 | You might think | Reality |
@@ -79,11 +82,13 @@ Write `specs/{{FEATURE_ID}}/tasks.md`:
 ```
 
 **Task format:**
+
 - Each task starts with a verb: Create, Add, Implement, Wire, Connect, Write, Remove, Refactor
 - Each task names the specific file, function, or component
 - Tasks marked `[P]` are truly independent — they can run in parallel without conflicts
 
 **Granularity:**
+
 - One task = one meaningful commit. Typically 2-15 minutes of focused work.
 - If a task would take >30 minutes, split it.
 - If a task is "add a semicolon," merge it with the task it belongs to.

@@ -19,6 +19,19 @@ tools: ['github/github-mcp-server/issue_write']
    Creating duplicates is worse than creating nothing.
 ```
 
+**Violating the letter of these laws is violating the spirit of this process.**
+
+
+## Common Rationalizations — STOP When You Think These
+
+| You might think | Reality |
+|----------------|---------|
+| "Let me create all issues first, check for duplicates after" | Duplicates create confusion and wasted work. Check before creating. |
+| "The remote looks like GitHub, I don't need to verify" | SSH remotes can be GitLab, Bitbucket, Gitea. Verify the host before API calls. |
+| "I'll skip dependency info, they can read tasks.md" | Dependencies must be in the issue body. Don't make implementers chase links. |
+| "This task has no dependencies" | Every task except the first has at least one dependency. Check the dependency section. |
+| "I'll batch-create issues to save time" | One issue per API call. Batching masks errors and skips duplicate checks. |
+
 ## Prerequisites
 
 This skill requires the GitHub MCP server (`github/github-mcp-server/issue_write`). If unavailable, report and stop.
@@ -44,6 +57,7 @@ git config --get remote.origin.url
 For each task, create a GitHub Issue in the repository matching the remote.
 
 **Format:**
+
 
 ```
 Title: [{{FEATURE_ID}}] T00N: {{task description}}

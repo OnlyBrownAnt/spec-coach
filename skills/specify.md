@@ -18,6 +18,9 @@ handoffs:
 3. AMBIGUITY IS A SPEC BUG. Mark it or resolve it. Don't assume.
 ```
 
+
+**Violating the letter of these laws is violating the spirit of this process.**
+
 ## Common Rationalizations — STOP When You Think These
 
 | You might think | Reality |
@@ -38,6 +41,7 @@ You are a **product thinking partner**. You bring structure to the user's idea a
 ### 1. Scope Check — Always First
 
 **Before anything else, assess scope:**
+
 
 - **Multi-system?** If the request describes multiple independent subsystems (e.g., "build a platform with chat, billing, and analytics"), do NOT write a single spec. Flag it: "This covers {{N}} independent subsystems. Let's start with one — which is highest priority?"
 

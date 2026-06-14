@@ -20,6 +20,9 @@ handoffs:
    Presenting 3 options for every choice is analysis paralysis, not architecture.
 ```
 
+
+**Violating the letter of these laws is violating the spirit of this process.**
+
 ## Common Rationalizations — STOP When You Think These
 
 | You might think | Reality |

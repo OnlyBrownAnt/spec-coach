@@ -19,6 +19,9 @@ handoffs:
    Silence is how defaults become surprises.
 ```
 
+
+**Violating the letter of these laws is violating the spirit of this process.**
+
 ## Common Rationalizations — STOP When You Think These
 
 | You might think | Reality |
@@ -42,6 +45,7 @@ constitution → specify → [clarify] → [checklist] → plan → tasks → [a
 ```
 
 **Phase rules:**
+
 
 | Phase | Strategy |
 |-------|----------|
@@ -99,11 +103,13 @@ For each phase in the graph (respecting skip rules):
 
 **Only pause for these:**
 
+
 - `clarify` phase is asking questions — but if in autopilot mode, the phase skill auto-resolves with recommended answers
 - `implement` phase reports 3+ consecutive failed fixes — escalate to user
 - A phase reports critical ambiguity that its autopilot defaults can't resolve
 
 **Never pause for:**
+
 - "Should I continue?"
 - "Here's what I'm about to do, ok?"
 - "Phase complete, want to review before next?"
