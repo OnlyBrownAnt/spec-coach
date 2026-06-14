@@ -589,6 +589,7 @@ function printNextSteps(agent: AgentConfig, projectRoot: string): void {
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
   let agentKey: AgentKey = "claude";
+  let updateOnly = false;
   let skipAbsorb = false;
 
   for (let i = 0; i < args.length; i++) {
@@ -600,6 +601,8 @@ async function main(): Promise<void> {
         console.error(`Unknown agent: ${val}. Supported: ${Object.keys(AGENTS).join(", ")}`);
         process.exit(1);
       }
+    } else if (args[i] === "--update") {
+      updateOnly = true;
     } else if (args[i] === "--skip-absorb") {
       skipAbsorb = true;
     } else if (args[i] === "--help" || args[i] === "-h") {
@@ -609,6 +612,8 @@ async function main(): Promise<void> {
 
   Options:
     --agent, -a      AI coding agent to configure (default: claude)
+    --update         Update skills/templates/scripts only. Preserves project
+                     structure, metadata, and CLAUDE.md. Skips absorb.
     --skip-absorb    Skip scanning for existing spec documents
     --help, -h       Show this help
 `);
@@ -623,13 +628,33 @@ async function main(): Promise<void> {
   }
 
   printBanner();
-  console.log(`  Agent: ${agent.name}  |  Format: ${agent.format}  |  Project: ${path.basename(projectRoot)}\n`);
+  console.log(`  Agent: ${agent.name}  |  Format: ${agent.format}  |  Project: ${path.basename(projectRoot)}`);
+  if (updateOnly) console.log("  Mode: update (skills/templates/scripts only)\n");
+  else console.log("");
+
+  if (updateOnly) {
+    // Update-only mode: refresh skills, templates, scripts.
+    // Don't touch project structure, metadata, CLAUDE.md, or absorb.
+    const skills = installAllSkills(agent, projectRoot);
+    console.log(`  ✓  ${skills.length} skill templates updated`);
+
+    const docTemplates = installDocumentTemplates(agent, projectRoot);
+    console.log(`  ✓  ${docTemplates.length} document templates updated`);
+
+    const scripts = installScripts(projectRoot);
+    console.log(`  ✓  ${scripts.length} helper scripts updated\n`);
+
+    console.log("  Done. Skills, templates, and scripts are up to date.");
+    return;
+  }
+
+  // ── Full init mode ──────────────────────────────────────────────────────
 
   // 1. Create project structure
   createProjectStructure(projectRoot);
   console.log("  ✓  Project structure created");
 
-  // 2. Install skill templates (8 core)
+  // 2. Install skill templates (10)
   const skills = installAllSkills(agent, projectRoot);
   console.log(`  ✓  ${skills.length} skill templates installed`);
 
