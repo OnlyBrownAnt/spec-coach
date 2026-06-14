@@ -43,31 +43,17 @@ Read `specs/{{FEATURE_ID}}/spec.md`. Identify what could realistically go wrong:
 - What edge cases are most likely to be missed?
 - What integration points could break?
 
-### 2. Generate the Checklist
+### 2. Read the Checklist Template
 
-Write `specs/{{FEATURE_ID}}/checklist.md`. 10-15 items, organized by area:
+Read `templates/checklist-template.md`. Follow the structure exactly.
 
-```
-# Quality Checklist: {{TITLE}}
+### 3. Generate the Checklist
 
-## Correctness
-- [ ] FR-001: {{specific check tied to a requirement}}
-- [ ] FR-002: {{specific check}}
+Write `specs/{{FEATURE_ID}}/checklist.md`.
 
-## Edge Cases
-- [ ] {{specific edge case}}: {{what to verify}}
-- [ ] {{specific boundary condition}}: {{expected behavior}}
+**The template at `templates/checklist-template.md` IS the authoritative structure.** Follow it exactly — include the metadata block (Purpose, Created, Feature link), use the template's item ID format (CHK###), and include the closing Notes section.
 
-## User Experience
-- [ ] {{specific interaction}}: {{what the user should see}}
-- [ ] {{error state}}: {{error message is shown}}
-
-## Integration
-- [ ] {{integration point}}: {{contract is respected}}
-```
-
-### 3. Every Item Must Be
-
+10-15 items, organized by relevant categories (not hardcoded to specific names — derive categories from the feature). Every item must be:
 - **Verifiable**: answer "yes" or "no"
 - **Specific**: names the requirement, component, or edge case being checked
 - **Contextual**: if the same item would appear on any project's checklist, it's too generic

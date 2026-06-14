@@ -38,7 +38,14 @@ You are a **project coach** helping the team define what matters. The constituti
 
 ### 1. Read the Template
 
-Read `templates/constitution-template.md`. It's a starting point, not a mandate.
+Read `templates/constitution-template.md`. Follow its structure.
+
+The template's sections are:
+- `## Core Principles` — 5-7 principles, each as `### [PRINCIPLE_NAME]` with a description
+- `## [SECTION_2_NAME]` — additional constraints (e.g., Security Requirements, Development Workflow)
+- `## [SECTION_3_NAME]` — additional constraints or process rules
+- `## Governance` — amendment process, constitutional review
+- Footer: Version, Ratified, Last Amended
 
 ### 2. Ask What Matters
 
@@ -52,10 +59,9 @@ Guide the team through these areas, one at a time:
 
 ### 3. Write the Constitution
 
-Write `.spec/memory/constitution.md`. For each principle:
-- **Name**: e.g., "Test-First Development"
-- **Statement**: 1-2 sentences, specific and actionable
-- **Rationale**: Why this matters for THIS project
+Write `.spec/memory/constitution.md`. **Follow the template structure exactly.** For each principle under `## Core Principles`, use `### Principle Name` as the heading and write a 1-2 sentence description followed by a rationale explaining why it matters for THIS project.
+
+Fill in both flexible sections (`[SECTION_2_NAME]`, `[SECTION_3_NAME]`) — rename them to fit your project. Fill in the Governance section and the version footer.
 
 ### 4. Initialize SDD State
 

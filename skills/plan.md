@@ -63,58 +63,32 @@ Read `templates/plan-template.md`. Follow the structure.
 
 ### 4. Write the Plan
 
-Write `specs/{{FEATURE_ID}}/plan.md`:
+Write `specs/{{FEATURE_ID}}/plan.md`.
 
-```
-# Technical Plan: {{TITLE}}
+**The template at `templates/plan-template.md` IS the authoritative structure. Follow it exactly.** Do not add, remove, or rename sections.
 
-**Feature**: {{FEATURE_ID}} | **Spec**: spec.md | **Created**: {{DATE}}
-
-## Architecture
-How the pieces fit together. Include a data flow description.
-Not a component list — describe how data moves through the system.
-
-## Component Design
-For each component: responsibility, inputs, outputs, key interfaces.
-
-## File Mapping
-| Component | Creates | Modifies | Responsibility |
-|-----------|---------|----------|----------------|
-| Name | path/to/file.ts | path/to/existing.ts:45-60 | One-line summary |
-
-This table forces every architecture decision into concrete file changes.
-
-## Data Model
-Entities, relationships, constraints.
-
-## Route / API Design
-Endpoints, methods, request/response shapes. (Skip if not applicable.)
-
-## Technology Choices
-Only list non-obvious choices. "We use React because the project uses React" is noise.
-"We use SQLite over PostgreSQL because single-user offline-first" is useful.
-
-## Implementation Strategy
-Order of work, dependencies, risk areas, mitigation.
-
-## Open Questions
-Specific questions that need answers before or during implementation.
-Not "TBD" — actual questions: "Does the auth service support refresh token rotation?"
-```
+The template's sections are:
+- `## Summary` — what we're building and how
+- `## Technical Context` — language, dependencies, storage, testing, platform, constraints, scale
+- `## Constitution Check` — verify against each project principle
+- `## Project Structure` — documentation tree + source code tree
+- `## Complexity Tracking` — justify anything beyond template defaults
 
 ### 5. Self-Review — These Three Checks Are Mandatory
 
-**1. Spec coverage.** Skim each FR in the spec. Can you point to a component that implements it? List any gaps. If an FR has no component, add one.
+**1. Template compliance.** Does the output match the template structure exactly? Every section present, no extra sections?
 
-**2. Placeholder scan.** Search your plan for these plan failures:
+**2. Spec coverage.** Skim each FR in the spec. Can you point to a component that implements it? List any gaps. If an FR has no component, add one.
+
+**3. Placeholder scan.** Search your plan for these plan failures:
 - `TBD`, `TODO`, `implement later`, `fill in details`
 - `Add appropriate error handling` / `add validation` / `handle edge cases` (without specifics)
 - `Write tests for the above` (without actual test cases)
 - `Similar to Task N` (repeat the code)
 - References to types or functions not defined in the plan
-Fix every one. If you can't be specific, move it to Open Questions with a concrete question.
+Fix every one. If you can't be specific, move it to the Complexity Tracking section as an open question.
 
-**3. Type consistency.** Do names, signatures, and property names match across sections? `UserStore` in one section and `UserRepository` in another is a bug. Check every cross-reference.
+**4. Type consistency.** Do names, signatures, and property names match across sections? `UserStore` in one section and `UserRepository` in another is a bug. Check every cross-reference.
 
 Fix issues inline. Don't re-review — just fix and move on.
 

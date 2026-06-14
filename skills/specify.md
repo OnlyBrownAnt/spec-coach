@@ -89,45 +89,25 @@ Read `templates/spec-template.md`. Follow the structure exactly.
 
 ### 5. Write the Spec
 
-Write `specs/{{FEATURE_ID}}/spec.md`:
+Write `specs/{{FEATURE_ID}}/spec.md`.
 
-```
-# Spec: {{TITLE}}
+**The template at `templates/spec-template.md` IS the authoritative structure. Follow it exactly.** Do not add, remove, or rename sections.
 
-**Created**: {{DATE}} | **Status**: Draft
-
-## Overview
-2-3 sentence summary. Anyone should understand this without reading further.
-
-## User Stories
-1. **As a** …, **I want** …, **so that** …
-(Numbered, prioritized. Each story is independently testable.)
-
-## Functional Requirements
-- **FR-001**: … (testable, unambiguous)
-- **FR-002**: …
-
-## Edge Cases
-- What happens when [boundary condition]?
-- How does the system handle [error state]?
-(Don't skip this. Users describe happy paths. Edge cases are your job.)
-
-## Non-Goals
-- This feature does NOT …
-(Explicit exclusions prevent scope creep. Be specific.)
-
-## Success Criteria
-- [ ] … (measurable, verifiable)
-- [ ] …
-```
+The template's sections are:
+- `## User Scenarios & Testing` — prioritized user stories with Independent Test and Given/When/Then acceptance scenarios
+- `### Edge Cases` — within User Scenarios
+- `## Requirements` — Functional Requirements (FR-001 format) + Key Entities (if feature involves data)
+- `## Success Criteria` — measurable outcomes (SC-001 format)
+- `## Assumptions` — scope boundaries, dependencies, defaults chosen
 
 ### 6. Self-Review
 
 Before finishing, ask:
+- Does the output match the template structure exactly? Every section present, no extra sections?
 - Can a new team member understand this without asking "what does this mean"?
-- Is every functional requirement testable? ("The system shall…" is not testable if you can't measure it.)
-- Are edge cases covered for every user story, not just the main flow?
-- Are non-goals specific enough to say no to a feature request later?
+- Is every functional requirement testable?
+- Are user stories prioritized, independently testable, with Given/When/Then scenarios?
+- Are edge cases covered for every user story?
 
 ### 7. Hand Off
 

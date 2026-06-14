@@ -59,61 +59,24 @@ For each component in the plan's file mapping, derive the tasks needed to build 
 
 ### 4. Write the Task List
 
-Write `specs/{{FEATURE_ID}}/tasks.md`:
+Write `specs/{{FEATURE_ID}}/tasks.md`.
 
-```
-# Tasks: {{TITLE}}
+**The template at `templates/tasks-template.md` IS the authoritative structure. Follow it exactly.** Do not add, remove, or rename sections.
 
-**Feature**: {{FEATURE_ID}} | **Plan**: plan.md | **Spec**: spec.md
+The template's phases are:
+- `## Phase 1: Setup (Shared Infrastructure)` — project scaffolding, dependencies, config
+- `## Phase 2: Foundational (Blocking Prerequisites)` — must complete before any user story
+- `## Phase 3+: User Story N - [Title] (Priority: PN)` — one phase per user story, each with:
+  - `**Goal**`, `**Independent Test**`, `**Tests**` (optional), `**Implementation**` subtasks, `**Checkpoint**`
+- `## Phase N: Polish & Cross-Cutting Concerns`
+- `## Dependencies & Execution Order` — phase dependencies, user story dependencies, parallel opportunities
+- `## Implementation Strategy` — MVP first, incremental delivery, parallel team strategy
 
-## Phase 1: Setup
-- [ ] T001 [P] Setup project scaffolding and dependencies
-- [ ] T002 [P] Configure linting and test framework
+**Task granularity:** One task = one meaningful commit (2-15 min work). Name specific files, functions, or components. Mark independent tasks `[P]`. Follow the template's `[US1]`/`[US2]` labels to trace each task to its user story.
 
-## Phase 2: Core
-- [ ] T003 Implement UserStore with create and read operations
-- [ ] T004 [P] Implement AuthService with session validation
-- [ ] T005 Implement PhotoAlbum model with CRUD endpoints
+### 5. Cross-Check Against the Plan
 
-## Phase 3: Integration
-- [ ] T006 Wire UserStore into AuthService
-- [ ] T007 Connect PhotoAlbum to frontend components
-
-## Phase 4: Polish
-- [ ] T008 [P] Add input validation error messages
-- [ ] T009 [P] Write API documentation
-- [ ] T010 End-to-end smoke test of full feature
-```
-
-**Task format:**
-
-- Each task starts with a verb: Create, Add, Implement, Wire, Connect, Write, Remove, Refactor
-- Each task names the specific file, function, or component
-- Tasks marked `[P]` are truly independent — they can run in parallel without conflicts
-
-**Granularity:**
-
-- One task = one meaningful commit. Typically 2-15 minutes of focused work.
-- If a task would take >30 minutes, split it.
-- If a task is "add a semicolon," merge it with the task it belongs to.
-
-### 5. Add Dependency Section
-
-```
-## Dependencies
-
-Setup → Core → Integration → Polish
-
-Within Core:
-  T004 depends on T003 (AuthService needs UserStore)
-  T005 is independent of T003 and T004 [P]
-
-Tasks marked [P] in the same phase can run in parallel.
-```
-
-### 6. Cross-Check Against the Plan
-
-Verify: every component in the plan's file mapping table has at least one task. List any gaps.
+Verify: every user story from the spec has a corresponding phase. Every component from the plan has at least one task. List any gaps.
 
 ### 7. Hand Off
 
