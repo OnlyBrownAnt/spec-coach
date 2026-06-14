@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Shared helpers for coach-kit skill tests.
+# Shared helpers for spec-coach skill tests.
 # Modeled on superpowers tests/claude-code/test-helpers.sh
 
-# Resolve coach-kit root (one level above tests/)
+# Resolve spec-coach root (one level above tests/)
 COACH_KIT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 # ---- Cross-platform timeout (macOS lacks `timeout`) ----

@@ -73,8 +73,8 @@ Implement isValidEmail(email) checking @ presence, domain dot, and non-empty loc
 TASKSEOF
 
 git init --quiet
-git config user.email "test@coach-kit.test"
-git config user.name "Coach Kit Test"
+git config user.email "test@spec-coach.test"
+git config user.name "Spec Coach Test"
 git add . && git commit -m "chore: baseline with planted inconsistencies" --quiet
 
 echo "Planted inconsistencies:"

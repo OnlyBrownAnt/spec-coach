@@ -1,6 +1,6 @@
-# coach-kit Skill Tests
+# spec-coach Skill Tests
 
-Behavioral and integration tests for coach-kit's 10 SDD skills. Modeled on the superpowers test system.
+Behavioral and integration tests for spec-coach's 10 SDD skills. Modeled on the superpowers test system.
 
 ## Quick Start
 
@@ -56,7 +56,7 @@ Full workflow execution on real test projects. **Slow** (5-15 min each), not run
 ## How Tests Work
 
 1. Each test sources `test-helpers.sh` for assertions
-2. `run_claude "prompt" [timeout]` invokes Claude Code in headless mode with `--plugin-dir` pointing to coach-kit root
+2. `run_claude "prompt" [timeout]` invokes Claude Code in headless mode with `--plugin-dir` pointing to spec-coach root
 3. Assertions (`assert_contains`, `assert_not_contains`, `assert_order`, `assert_count`) verify the output
 4. Tests are isolated — each uses `mktemp -d` for scratch projects, cleaned via `trap EXIT`
 5. Tests return 0 on success, non-zero on failure

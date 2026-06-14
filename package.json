@@ -1,10 +1,10 @@
 {
-  "name": "coach-kit",
+  "name": "spec-coach",
   "version": "1.0.0",
   "description": "SDD that trusts AI. Guidance over gates. Craftsmanship over compliance.",
   "type": "module",
   "bin": {
-    "coach-init": "./src/coach-init.ts"
+    "spec-coach": "./src/cli.ts"
   },
   "files": [
     "skills/",
@@ -12,7 +12,7 @@
     "src/"
   ],
   "scripts": {
-    "init": "npx tsx src/coach-init.ts",
+    "init": "npx tsx src/cli.ts init --agent claude",
     "test": "bash tests/run.sh",
     "test:l2": "bash tests/run.sh l2",
     "test:all": "bash tests/run.sh all",
@@ -28,11 +28,11 @@
     "sdd",
     "spec-driven-development",
     "ai-coding",
-    "coach",
+    "spec-coach",
     "claude-code",
     "cursor",
     "copilot"
   ],
   "license": "MIT",
-  "repository": "https://github.com/brownant/coach-kit"
+  "repository": "https://github.com/brownant/spec-coach"
 }

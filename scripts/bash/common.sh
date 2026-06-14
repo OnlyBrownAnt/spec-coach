@@ -2,7 +2,7 @@
 # Common functions and variables for all scripts
 
 # Find repository root by searching upward for .spec directory
-# This is the primary marker for coach-kit projects
+# This is the primary marker for spec-coach projects
 find_specify_root() {
     local dir="${1:-$(pwd)}"
     # Normalize to absolute path to prevent infinite loop with relative paths
@@ -25,9 +25,9 @@ find_specify_root() {
 }
 
 # Get repository root, prioritizing .spec directory
-# This prevents using a parent repository when coach-kit is initialized in a subdirectory
+# This prevents using a parent repository when spec-coach is initialized in a subdirectory
 get_repo_root() {
-    # First, look for .spec directory (coach-kit's own marker)
+    # First, look for .spec directory (spec-coach's own marker)
     local specify_root
     if specify_root=$(find_specify_root); then
         echo "$specify_root"

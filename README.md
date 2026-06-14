@@ -1,8 +1,8 @@
-# Coach Kit — SDD that trusts AI
+# Spec Coach — SDD that trusts AI
 
 **Guidance over gates. Craftsmanship over compliance.**
 
-Coach Kit is a lightweight alternative to spec-kit. It strips everything down to the essentials:
+Spec Coach is a lightweight alternative to spec-kit. It strips everything down to the essentials:
 
 - **11 skill templates** that guide AI through SDD (specify → plan → tasks → implement) + bug fixing
 - **6 document templates** for structured outputs (spec, plan, tasks, checklist, constitution, fix)
@@ -14,14 +14,14 @@ Coach Kit is a lightweight alternative to spec-kit. It strips everything down to
 
 ```bash
 # One command — initializes SDD project structure for your AI tool
-npx tsx https://raw.githubusercontent.com/brownant/coach-kit/main/src/coach-init.ts --agent claude
+npx tsx https://raw.githubusercontent.com/brownant/spec-coach/main/src/cli.ts init --agent claude
 ```
 
 Or install globally:
 
 ```bash
-npm i -g coach-kit
-coach-init --agent cursor
+npm i -g spec-coach
+spec-coach init --agent cursor
 ```
 
 ## Supported AI Tools
@@ -59,9 +59,18 @@ your-project/
 │   ├── memory/
 │   │   └── constitution.md      # Project principles (edit this)
 │   ├── scripts/bash/            # Shell scripts
-│   └── feature.json
 └── specs/                       # Your feature specs go here
 ```
+
+## CLI
+
+```bash
+spec-coach init --agent claude     # Initialize a new SDD project
+spec-coach update --agent claude   # Refresh skills, templates, and scripts
+spec-coach --help                  # Show help
+```
+
+`--agent` is required. Supported agents: `claude`, `cursor`, `copilot`, `codex`, `windsurf`.
 
 ## SDD Workflow
 
@@ -86,7 +95,7 @@ See [COACH.md](COACH.md) for the full philosophy.
 
 ## Comparison
 
-| | Coach Kit | spec-kit |
+| | Spec Coach | spec-kit |
 |---|---|---|
 | Core product | 13 markdown files | 13 markdown files |
 | Installer | 1 TS file (~200 lines) | 3500-line Python CLI |
@@ -99,9 +108,9 @@ See [COACH.md](COACH.md) for the full philosophy.
 
 ## Acknowledgments
 
-Coach Kit is built on ideas from:
+Spec Coach is built on ideas from:
 
-- **[spec-kit](https://github.com/anthropics/spec-kit)** — the SDD workflow (specify → plan → tasks → implement) originated here. Coach Kit strips it down to the essentials.
+- **[spec-kit](https://github.com/anthropics/spec-kit)** — the SDD workflow (specify → plan → tasks → implement) originated here. Spec Coach strips it down to the essentials.
 - **[superpowers](https://github.com/anthropics/superpowers)** — behavioral patterns and the test system architecture are adapted from superpowers' skills.
 
 ## License

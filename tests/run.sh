@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# coach-kit skill test runner
+# spec-coach skill test runner
 # Usage: run.sh [all|list|results|<test-name>] [--verbose] [--timeout N]
 set -euo pipefail
 
@@ -111,7 +111,7 @@ if ! command -v claude &>/dev/null; then
 fi
 
 echo "========================================"
-echo " coach-kit Skill Test Suite"
+echo " spec-coach Skill Test Suite"
 echo "========================================"
 echo ""
 echo "Time:    $(date '+%Y-%m-%d %H:%M')"
