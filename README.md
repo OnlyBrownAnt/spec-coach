@@ -14,7 +14,7 @@ Spec Coach is a lightweight alternative to spec-kit. It strips everything down t
 
 ```bash
 # One command — initializes SDD project structure for your AI tool
-npx tsx https://raw.githubusercontent.com/brownant/spec-coach/main/src/cli.ts init --agent claude
+npx tsx https://raw.githubusercontent.com/OnlyBrownAnt/spec-coach/main/src/cli.ts init --agent claude
 ```
 
 Or install globally:
