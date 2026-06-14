@@ -4,8 +4,8 @@
 
 Coach Kit is a lightweight alternative to spec-kit. It strips everything down to the essentials:
 
-- **8 skill templates** that guide AI through SDD (specify → plan → tasks → implement)
-- **5 document templates** for structured outputs (spec, plan, tasks, checklist, constitution)
+- **11 skill templates** that guide AI through SDD (specify → plan → tasks → implement) + bug fixing
+- **6 document templates** for structured outputs (spec, plan, tasks, checklist, constitution, fix)
 - **1 TypeScript script** that installs everything for your AI tool
 
 **Zero Python. Zero pip. Zero dependencies (at runtime).**
@@ -43,6 +43,7 @@ your-project/
 │   ├── spec-plan/SKILL.md
 │   ├── spec-tasks/SKILL.md
 │   ├── spec-implement/SKILL.md
+│   ├── spec-fix/SKILL.md
 │   ├── spec-analyze/SKILL.md
 │   ├── spec-clarify/SKILL.md
 │   ├── spec-checklist/SKILL.md
@@ -53,7 +54,8 @@ your-project/
 │   │   ├── plan-template.md
 │   │   ├── tasks-template.md
 │   │   ├── checklist-template.md
-│   │   └── constitution-template.md
+│   │   ├── constitution-template.md
+│   │   └── fix-template.md
 │   ├── memory/
 │   │   └── constitution.md      # Project principles (edit this)
 │   ├── scripts/bash/            # Shell scripts
@@ -71,6 +73,7 @@ your-project/
 /spec-tasks         →  Generate task breakdown
 /spec-analyze       →  (optional) Cross-artifact review
 /spec-implement     →  Execute implementation
+/spec-fix "bug"     →  Diagnose and fix a bug (root cause + optional horizontal scan)
 ```
 
 ## Philosophy

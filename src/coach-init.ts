@@ -51,6 +51,7 @@ const AGENTS: Record<AgentKey, AgentConfig> = {
       constitution: "Principles or values for the project constitution",
       checklist: "Domain or focus area for the checklist",
       autopilot: "Describe the feature — AI will run the full SDD cycle autonomously",
+      fix: "Describe the bug — what happened vs what should have happened. Optional: --spec specs/<id>",
     },
   },
   cursor: {
@@ -230,7 +231,7 @@ function installAllSkills(agent: AgentConfig, projectRoot: string): string[] {
   const skillNames = [
     "specify", "plan", "tasks", "implement",
     "analyze", "clarify", "checklist", "constitution",
-    "taskstoissues", "autopilot",
+    "taskstoissues", "autopilot", "fix",
   ];
 
   const installed: string[] = [];
@@ -249,7 +250,7 @@ function installDocumentTemplates(agent: AgentConfig, projectRoot: string): stri
     "plan-template",
     "tasks-template",
     "checklist-template",
-    "constitution-template",
+    "constitution-template", "fix-template"
   ];
 
   const destDir = path.join(projectRoot, ".spec", "templates");
@@ -565,8 +566,8 @@ function printNextSteps(agent: AgentConfig, projectRoot: string): void {
   console.log(`
   ✓  Project initialized at ${projectRoot}
   ✓  AI agent: ${agent.name}
-  ✓  10 skills → ${path.join(projectRoot, agent.dir)}
-  ✓  5 document templates → ${path.join(projectRoot, ".spec/templates")}
+  ✓  11 skills → ${path.join(projectRoot, agent.dir)}
+  ✓  6 document templates → ${path.join(projectRoot, ".spec/templates")}
   ✓  5 helper scripts → ${path.join(projectRoot, ".spec/scripts/bash")}
 
   Quick start — one command for the full cycle:
@@ -581,6 +582,9 @@ function printNextSteps(agent: AgentConfig, projectRoot: string): void {
     6. /spec-tasks         → task breakdown
     7. /spec-analyze       → cross-check consistency
     8. /spec-implement     → execute
+
+  Bug fixes:
+    /spec-fix "describe the bug"   → root cause analysis + fix + archive
 
   Lean: specify → plan → tasks → implement (skip quality gates)
 `);
@@ -683,7 +687,9 @@ async function main(): Promise<void> {
       "5. /spec-tasks -- Generate task breakdown\n" +
       "6. /spec-analyze (optional) -- Cross-artifact review\n" +
       "7. /spec-implement -- Execute implementation\n\n" +
-      "See .spec/templates/ for document templates and .spec/scripts/ for helper scripts.\n" +
+      "See .spec/templates/ for document templates and .spec/scripts/ for helper scripts.\n\n" +
+      "## Bug Fixes\n\n" +
+      "Run `/spec-fix \"describe the bug\"` for root-cause analysis and targeted fixes.\n\n" +
       "<!-- COACH END -->\n";
     try {
       fs.writeFileSync(claudePath, claudeContent);
