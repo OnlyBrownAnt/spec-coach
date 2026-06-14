@@ -167,7 +167,7 @@ function buildSkillFrontmatter(
 
   // Skills format includes metadata block
   if (agent.format === "skills") {
-    fm.compatibility = "Requires coach-kit project structure with .specify/ directory";
+    fm.compatibility = "Requires coach-kit project structure with .spec/ directory";
     fm.metadata = {
       author: "coach-kit",
       source: sourcePath,
@@ -176,7 +176,7 @@ function buildSkillFrontmatter(
 
   // Add argument hint if available
   if (agent.argumentHints) {
-    const stem = skillName.replace("speckit" + agent.separator, "");
+    const stem = skillName.replace("spec" + agent.separator, "");
     const hint = agent.argumentHints[stem];
     if (hint) {
       (fm as any)["argument-hint"] = hint;
@@ -200,10 +200,10 @@ function installSkill(
   const raw = fs.readFileSync(src, "utf-8");
   const [origFm, body] = parseFrontmatter(raw);
   const description = String(origFm.description || `Coach Kit: ${templateName} workflow`);
-  const skillId = `speckit${agent.separator}${templateName.replace(".", agent.separator)}`;
+  const skillId = `spec${agent.separator}${templateName.replace(".", agent.separator)}`;
 
   if (agent.format === "skills") {
-    // Skills format: .claude/skills/speckit-specify/SKILL.md
+    // Skills format: .claude/skills/spec-specify/SKILL.md
     const destDir = path.join(projectRoot, agent.dir, skillId);
     ensureDir(destDir);
     const destFile = path.join(destDir, "SKILL.md");
@@ -211,14 +211,14 @@ function installSkill(
     const fm = buildSkillFrontmatter(agent, skillId, description, sourceRef, []);
     fs.writeFileSync(destFile, fm + body.trimStart());
   } else {
-    // Markdown format: .cursor/commands/speckit/specify.md
-    const destDir = path.join(projectRoot, agent.dir, "speckit");
+    // Markdown format: .cursor/commands/spec/specify.md
+    const destDir = path.join(projectRoot, agent.dir, "spec");
     const destFile = path.join(destDir, `${templateName}.md`);
     // Markdown integrations use the original frontmatter with __SPECKIT_COMMAND_*__ references
     const processed = body
       .replace(/__SPECKIT_COMMAND_(\w+)__/g, (_m, name) => {
         const lower = name.toLowerCase().replace(/_/g, agent.separator);
-        return `/speckit${agent.separator}${lower}`;
+        return `/spec${agent.separator}${lower}`;
       });
     ensureDir(destDir);
     fs.writeFileSync(destFile, raw); // Keep original frontmatter for markdown format
@@ -251,7 +251,7 @@ function installDocumentTemplates(agent: AgentConfig, projectRoot: string): stri
     "constitution-template",
   ];
 
-  const destDir = path.join(projectRoot, ".specify", "templates");
+  const destDir = path.join(projectRoot, ".spec", "templates");
   ensureDir(destDir);
 
   const installed: string[] = [];
@@ -267,7 +267,7 @@ function installDocumentTemplates(agent: AgentConfig, projectRoot: string): stri
   // Also copy constitution to memory
   const constSrc = templateSource("constitution-template");
   if (fs.existsSync(constSrc)) {
-    const memoryDir = path.join(projectRoot, ".specify", "memory");
+    const memoryDir = path.join(projectRoot, ".spec", "memory");
     ensureDir(memoryDir);
     const constDest = path.join(memoryDir, "constitution.md");
     fs.copyFileSync(constSrc, constDest);
@@ -279,9 +279,9 @@ function installDocumentTemplates(agent: AgentConfig, projectRoot: string): stri
 // ── Project structure ──────────────────────────────────────────────────────
 
 function createProjectStructure(projectRoot: string): void {
-  ensureDir(path.join(projectRoot, ".specify", "templates"));
-  ensureDir(path.join(projectRoot, ".specify", "memory"));
-  ensureDir(path.join(projectRoot, ".specify", "scripts", "bash"));
+  ensureDir(path.join(projectRoot, ".spec", "templates"));
+  ensureDir(path.join(projectRoot, ".spec", "memory"));
+  ensureDir(path.join(projectRoot, ".spec", "scripts", "bash"));
   ensureDir(path.join(projectRoot, "specs"));
 }
 
@@ -289,7 +289,7 @@ function createProjectStructure(projectRoot: string): void {
 
 function installScripts(projectRoot: string): string[] {
   const scriptsSrc = path.join(PACKAGE_ROOT, "scripts", "bash");
-  const scriptsDest = path.join(projectRoot, ".specify", "scripts", "bash");
+  const scriptsDest = path.join(projectRoot, ".spec", "scripts", "bash");
 
   if (!fs.existsSync(scriptsSrc)) return [];
 
@@ -309,7 +309,7 @@ function installScripts(projectRoot: string): string[] {
 // ── Metadata files ─────────────────────────────────────────────────────────
 
 function createFeatureJson(projectRoot: string): void {
-  const file = path.join(projectRoot, ".specify", "feature.json");
+  const file = path.join(projectRoot, ".spec", "feature.json");
   if (!fs.existsSync(file)) {
     fs.writeFileSync(file, JSON.stringify({
       version: "1.0.0",
@@ -337,21 +337,21 @@ function printNextSteps(agent: AgentConfig, projectRoot: string): void {
   ✓  Project initialized at ${projectRoot}
   ✓  AI agent: ${agent.name}
   ✓  10 skills → ${path.join(projectRoot, agent.dir)}
-  ✓  5 document templates → ${path.join(projectRoot, ".specify/templates")}
-  ✓  5 helper scripts → ${path.join(projectRoot, ".specify/scripts/bash")}
+  ✓  5 document templates → ${path.join(projectRoot, ".spec/templates")}
+  ✓  5 helper scripts → ${path.join(projectRoot, ".spec/scripts/bash")}
 
   Quick start — one command for the full cycle:
-    /speckit-autopilot "your feature description"
+    /spec-autopilot "your feature description"
 
   Manual step-by-step (official order):
-    1. /speckit-constitution  → define project principles
-    2. /speckit-specify       → what & why
-    3. /speckit-clarify       → resolve ambiguities
-    4. /speckit-checklist     → validate requirements quality
-    5. /speckit-plan          → technical plan
-    6. /speckit-tasks         → task breakdown
-    7. /speckit-analyze       → cross-check consistency
-    8. /speckit-implement     → execute
+    1. /spec-constitution  → define project principles
+    2. /spec-specify       → what & why
+    3. /spec-clarify       → resolve ambiguities
+    4. /spec-checklist     → validate requirements quality
+    5. /spec-plan          → technical plan
+    6. /spec-tasks         → task breakdown
+    7. /spec-analyze       → cross-check consistency
+    8. /spec-implement     → execute
 
   Lean: specify → plan → tasks → implement (skip quality gates)
 `);
@@ -418,14 +418,14 @@ function main(): void {
       "This project uses **Coach Kit** for spec-driven development.\n\n" +
       "## SDD Workflow\n\n" +
       "Run these slash commands in order:\n\n" +
-      "1. /speckit-constitution -- Define project principles\n" +
-      "2. /speckit-specify -- Create feature specification\n" +
-      "3. /speckit-clarify (optional) -- Clarify ambiguities\n" +
-      "4. /speckit-plan -- Create technical plan\n" +
-      "5. /speckit-tasks -- Generate task breakdown\n" +
-      "6. /speckit-analyze (optional) -- Cross-artifact review\n" +
-      "7. /speckit-implement -- Execute implementation\n\n" +
-      "See .specify/templates/ for document templates and .specify/scripts/ for helper scripts.\n" +
+      "1. /spec-constitution -- Define project principles\n" +
+      "2. /spec-specify -- Create feature specification\n" +
+      "3. /spec-clarify (optional) -- Clarify ambiguities\n" +
+      "4. /spec-plan -- Create technical plan\n" +
+      "5. /spec-tasks -- Generate task breakdown\n" +
+      "6. /spec-analyze (optional) -- Cross-artifact review\n" +
+      "7. /spec-implement -- Execute implementation\n\n" +
+      "See .spec/templates/ for document templates and .spec/scripts/ for helper scripts.\n" +
       "<!-- SPECKIT END -->\n";
     try {
       fs.writeFileSync(claudePath, claudeContent);
