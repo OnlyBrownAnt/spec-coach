@@ -28,26 +28,26 @@ coach-init --agent cursor
 
 | Agent | Format | Command Style |
 |-------|--------|--------------|
-| Claude Code | `speckit-name/SKILL.md` | `/speckit-specify` |
-| Cursor | `speckit/name.md` | `/speckit.specify` |
-| GitHub Copilot | `speckit/name.md` | `/speckit.specify` |
-| OpenAI Codex | `speckit-name/SKILL.md` | `/speckit-specify` |
-| Windsurf | `speckit/name.md` | `/speckit.specify` |
+| Claude Code | `spec-name/SKILL.md` | `/spec-specify` |
+| Cursor | `spec/name.md` | `/spec.specify` |
+| GitHub Copilot | `spec/name.md` | `/spec.specify` |
+| OpenAI Codex | `spec-name/SKILL.md` | `/spec-specify` |
+| Windsurf | `spec/name.md` | `/spec.specify` |
 
 ## What Gets Installed
 
 ```
 your-project/
 ├── .claude/skills/              # AI skill files (varies by agent)
-│   ├── speckit-specify/SKILL.md
-│   ├── speckit-plan/SKILL.md
-│   ├── speckit-tasks/SKILL.md
-│   ├── speckit-implement/SKILL.md
-│   ├── speckit-analyze/SKILL.md
-│   ├── speckit-clarify/SKILL.md
-│   ├── speckit-checklist/SKILL.md
-│   └── speckit-constitution/SKILL.md
-├── .specify/
+│   ├── spec-specify/SKILL.md
+│   ├── spec-plan/SKILL.md
+│   ├── spec-tasks/SKILL.md
+│   ├── spec-implement/SKILL.md
+│   ├── spec-analyze/SKILL.md
+│   ├── spec-clarify/SKILL.md
+│   ├── spec-checklist/SKILL.md
+│   └── spec-constitution/SKILL.md
+├── .spec/
 │   ├── templates/               # Document templates
 │   │   ├── spec-template.md
 │   │   ├── plan-template.md
@@ -64,13 +64,13 @@ your-project/
 ## SDD Workflow
 
 ```
-/speckit-constitution  →  Define project principles
-/speckit-specify       →  Create feature specification
-/speckit-clarify       →  (optional) Clarify ambiguities
-/speckit-plan          →  Create technical plan
-/speckit-tasks         →  Generate task breakdown
-/speckit-analyze       →  (optional) Cross-artifact review
-/speckit-implement     →  Execute implementation
+/spec-constitution  →  Define project principles
+/spec-specify       →  Create feature specification
+/spec-clarify       →  (optional) Clarify ambiguities
+/spec-plan          →  Create technical plan
+/spec-tasks         →  Generate task breakdown
+/spec-analyze       →  (optional) Cross-artifact review
+/spec-implement     →  Execute implementation
 ```
 
 ## Philosophy
@@ -93,6 +93,13 @@ See [COACH.md](COACH.md) for the full philosophy.
 | Extension system | — | — |
 | Presets | — | — |
 | Total files | ~15 | ~200+ |
+
+## Acknowledgments
+
+Coach Kit is built on ideas from:
+
+- **[spec-kit](https://github.com/anthropics/spec-kit)** — the SDD workflow (specify → plan → tasks → implement) originated here. Coach Kit strips it down to the essentials.
+- **[superpowers](https://github.com/anthropics/superpowers)** — behavioral patterns and the test system architecture are adapted from superpowers' skills.
 
 ## License
 
