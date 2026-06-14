@@ -2,6 +2,9 @@
 # Shared helpers for coach-kit skill tests.
 # Modeled on superpowers tests/claude-code/test-helpers.sh
 
+# Resolve coach-kit root (one level above tests/)
+COACH_KIT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
 # ---- Cross-platform timeout (macOS lacks `timeout`) ----
 _timeout() {
     local secs="$1"; shift
@@ -20,7 +23,7 @@ run_claude() {
     local output_file
     output_file=$(mktemp)
 
-    local cmd="claude -p \"$prompt\""
+    local cmd="claude -p \"$prompt\" --output-format text --plugin-dir \"$COACH_KIT_ROOT\""
     if [ -n "$allowed_tools" ]; then
         cmd="$cmd --allowed-tools=$allowed_tools"
     fi
