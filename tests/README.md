@@ -80,7 +80,7 @@ source "$SCRIPT_DIR/../test-helpers.sh"
 echo "=== Test: <skill-name> skill ==="
 echo ""
 
-output=$(run_claude "What does coachkit-<name> do?" 60)
+output=$(run_claude "What does spec-<name> do?" 60)
 assert_contains "$output" "<expected>" "Skill recognized"
 # ... more assertions ...
 

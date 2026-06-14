@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Common functions and variables for all scripts
 
-# Find repository root by searching upward for .specify directory
-# This is the primary marker for spec-kit projects
+# Find repository root by searching upward for .spec directory
+# This is the primary marker for coach-kit projects
 find_specify_root() {
     local dir="${1:-$(pwd)}"
     # Normalize to absolute path to prevent infinite loop with relative paths
@@ -10,7 +10,7 @@ find_specify_root() {
     dir="$(cd -- "$dir" 2>/dev/null && pwd)" || return 1
     local prev_dir=""
     while true; do
-        if [ -d "$dir/.specify" ]; then
+        if [ -d "$dir/.spec" ]; then
             echo "$dir"
             return 0
         fi
@@ -24,10 +24,10 @@ find_specify_root() {
     return 1
 }
 
-# Get repository root, prioritizing .specify directory
-# This prevents using a parent repository when spec-kit is initialized in a subdirectory
+# Get repository root, prioritizing .spec directory
+# This prevents using a parent repository when coach-kit is initialized in a subdirectory
 get_repo_root() {
-    # First, look for .specify directory (spec-kit's own marker)
+    # First, look for .spec directory (coach-kit's own marker)
     local specify_root
     if specify_root=$(find_specify_root); then
         echo "$specify_root"
@@ -42,7 +42,7 @@ get_repo_root() {
 # Get current feature name from explicit state only.
 # Returns the feature identifier or empty string if none is set.
 # Feature state is set by SPECIFY_FEATURE (from create-new-feature or
-# the git extension) or implicitly via .specify/feature.json.
+# the git extension) or implicitly via .spec/feature.json.
 get_current_branch() {
     if [[ -n "${SPECIFY_FEATURE:-}" ]]; then
         echo "$SPECIFY_FEATURE"
@@ -54,14 +54,14 @@ get_current_branch() {
     echo ""
 }
 
-# Safely read .specify/feature.json's "feature_directory" value.
+# Safely read .spec/feature.json's "feature_directory" value.
 # Prints the raw value (possibly relative) to stdout, or empty string if the file
 # is missing, unparseable, or does not contain the key. Always returns 0 so callers
 # under `set -e` cannot be aborted by parser failure.
 # Parser order mirrors the historical get_feature_paths behavior: jq -> python3 -> grep/sed.
 read_feature_json_feature_directory() {
     local repo_root="$1"
-    local fj="$repo_root/.specify/feature.json"
+    local fj="$repo_root/.spec/feature.json"
     [[ -f "$fj" ]] || { printf '%s' ''; return 0; }
 
     local _fd=''
@@ -86,14 +86,14 @@ read_feature_json_feature_directory() {
     return 0
 }
 
-# Persist a feature_directory value to .specify/feature.json.
+# Persist a feature_directory value to .spec/feature.json.
 # Writes only when the file is missing or the value differs from what's stored.
 # Accepts the raw (possibly relative) path — callers should pass the original
 # user-supplied value, not the normalized absolute path.
 _persist_feature_json() {
     local repo_root="$1"
     local feature_dir_value="$2"
-    local fj="$repo_root/.specify/feature.json"
+    local fj="$repo_root/.spec/feature.json"
 
     # Strip repo_root prefix if the value is absolute and under repo_root
     if [[ "$feature_dir_value" == "$repo_root/"* ]]; then
@@ -107,8 +107,8 @@ _persist_feature_json() {
         return 0
     fi
 
-    # Ensure .specify/ directory exists
-    mkdir -p "$repo_root/.specify"
+    # Ensure .spec/ directory exists
+    mkdir -p "$repo_root/.spec"
 
     # Write feature.json — prefer jq for safe JSON, fall back to printf
     if command -v jq >/dev/null 2>&1; then
@@ -124,7 +124,7 @@ get_feature_paths() {
 
     # Resolve feature directory.  Priority:
     #   1. SPECIFY_FEATURE_DIRECTORY env var (explicit override)
-    #   2. .specify/feature.json "feature_directory" key (persisted by specify command)
+    #   2. .spec/feature.json "feature_directory" key (persisted by specify command)
     #   3. Error — no feature context available
     local feature_dir
     if [[ -n "${SPECIFY_FEATURE_DIRECTORY:-}" ]]; then
@@ -133,7 +133,7 @@ get_feature_paths() {
         [[ "$feature_dir" != /* ]] && feature_dir="$repo_root/$feature_dir"
         # Persist to feature.json so future sessions without the env var still work
         _persist_feature_json "$repo_root" "$SPECIFY_FEATURE_DIRECTORY"
-    elif [[ -f "$repo_root/.specify/feature.json" ]]; then
+    elif [[ -f "$repo_root/.spec/feature.json" ]]; then
         local _fd
         _fd=$(read_feature_json_feature_directory "$repo_root")
         if [[ -n "$_fd" ]]; then
@@ -141,11 +141,11 @@ get_feature_paths() {
             # Normalize relative paths to absolute under repo root
             [[ "$feature_dir" != /* ]] && feature_dir="$repo_root/$feature_dir"
         else
-            echo "ERROR: Feature directory not found. Set SPECIFY_FEATURE_DIRECTORY or ensure .specify/feature.json contains feature_directory." >&2
+            echo "ERROR: Feature directory not found. Set SPECIFY_FEATURE_DIRECTORY or ensure .spec/feature.json contains feature_directory." >&2
             return 1
         fi
     else
-        echo "ERROR: Feature directory not found. Set SPECIFY_FEATURE_DIRECTORY or run the specify command to create .specify/feature.json." >&2
+        echo "ERROR: Feature directory not found. Set SPECIFY_FEATURE_DIRECTORY or run the specify command to create .spec/feature.json." >&2
         return 1
     fi
 
@@ -175,7 +175,7 @@ get_invoke_separator() {
         return 0
     fi
 
-    local integration_json="$repo_root/.specify/integration.json"
+    local integration_json="$repo_root/.spec/integration.json"
     local separator="."
     local parsed_with_jq=0
 
@@ -225,7 +225,7 @@ PY
     printf '%s\n' "$separator"
 }
 
-format_speckit_command() {
+format_spec_command() {
     local command_name="$1"
     local repo_root="${2:-$(get_repo_root)}"
     local separator
@@ -238,11 +238,11 @@ format_speckit_command() {
     fi
 
     command_name="${command_name#/}"
-    command_name="${command_name#speckit.}"
-    command_name="${command_name#speckit-}"
+    command_name="${command_name#spec.}"
+    command_name="${command_name#spec-}"
     command_name="${command_name//./$separator}"
 
-    printf '/speckit%s%s\n' "$separator" "$command_name"
+    printf '/spec%s%s\n' "$separator" "$command_name"
 }
 
 # Escape a string for safe embedding in a JSON value (fallback when jq is unavailable).
@@ -277,21 +277,21 @@ check_file() { [[ -f "$1" ]] && echo "  ✓ $2" || echo "  ✗ $2"; }
 check_dir() { [[ -d "$1" && -n $(ls -A "$1" 2>/dev/null) ]] && echo "  ✓ $2" || echo "  ✗ $2"; }
 
 # Resolve a template name to a file path using the priority stack:
-#   1. .specify/templates/overrides/
-#   2. .specify/presets/<preset-id>/templates/ (sorted by priority from .registry)
-#   3. .specify/extensions/<ext-id>/templates/
-#   4. .specify/templates/ (core)
+#   1. .spec/templates/overrides/
+#   2. .spec/presets/<preset-id>/templates/ (sorted by priority from .registry)
+#   3. .spec/extensions/<ext-id>/templates/
+#   4. .spec/templates/ (core)
 resolve_template() {
     local template_name="$1"
     local repo_root="$2"
-    local base="$repo_root/.specify/templates"
+    local base="$repo_root/.spec/templates"
 
     # Priority 1: Project overrides
     local override="$base/overrides/${template_name}.md"
     [ -f "$override" ] && echo "$override" && return 0
 
     # Priority 2: Installed presets (sorted by priority from .registry)
-    local presets_dir="$repo_root/.specify/presets"
+    local presets_dir="$repo_root/.spec/presets"
     if [ -d "$presets_dir" ]; then
         local registry_file="$presets_dir/.registry"
         if [ -f "$registry_file" ] && command -v python3 >/dev/null 2>&1; then
@@ -338,7 +338,7 @@ except Exception:
     fi
 
     # Priority 3: Extension-provided templates
-    local ext_dir="$repo_root/.specify/extensions"
+    local ext_dir="$repo_root/.spec/extensions"
     if [ -d "$ext_dir" ]; then
         for ext in "$ext_dir"/*/; do
             [ -d "$ext" ] || continue
@@ -368,7 +368,7 @@ except Exception:
 resolve_template_content() {
     local template_name="$1"
     local repo_root="$2"
-    local base="$repo_root/.specify/templates"
+    local base="$repo_root/.spec/templates"
 
     # Collect all layers (highest priority first)
     local -a layer_paths=()
@@ -382,7 +382,7 @@ resolve_template_content() {
     fi
 
     # Priority 2: Installed presets (sorted by priority from .registry)
-    local presets_dir="$repo_root/.specify/presets"
+    local presets_dir="$repo_root/.spec/presets"
     if [ -d "$presets_dir" ]; then
         local registry_file="$presets_dir/.registry"
         local sorted_presets=""
@@ -488,7 +488,7 @@ except Exception:
     fi
 
     # Priority 3: Extension-provided templates (always "replace")
-    local ext_dir="$repo_root/.specify/extensions"
+    local ext_dir="$repo_root/.spec/extensions"
     if [ -d "$ext_dir" ]; then
         for ext in "$ext_dir"/*/; do
             [ -d "$ext" ] || continue

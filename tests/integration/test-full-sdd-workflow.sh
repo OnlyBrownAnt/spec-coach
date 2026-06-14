@@ -17,7 +17,7 @@ git add . && git commit -m "init" --quiet
 
 FAILED=0
 
-spec_output=$(run_claude_l2 "Use coachkit-specify: create a spec for a function that validates US phone numbers. Accept formats: (555) 123-4567, 555-123-4567, 5551234567. Return true/false." 120)
+spec_output=$(run_claude_l2 "Use spec-specify: create a spec for a function that validates US phone numbers. Accept formats: (555) 123-4567, 555-123-4567, 5551234567. Return true/false." 120)
 
 assert_contains "$spec_output" "phone|valid" "Spec mentions phone validation" || FAILED=$((FAILED + 1))
 

@@ -30,13 +30,13 @@ unset _paths_output
 # Validate required files
 if [[ ! -f "$IMPL_PLAN" ]]; then
     echo "ERROR: plan.md not found in $FEATURE_DIR" >&2
-    echo "Run /speckit-plan first to create the implementation plan." >&2
+    echo "Run /spec-plan first to create the implementation plan." >&2
     exit 1
 fi
 
 if [[ ! -f "$FEATURE_SPEC" ]]; then
     echo "ERROR: spec.md not found in $FEATURE_DIR" >&2
-    echo "Run /speckit-specify first to create the feature structure." >&2
+    echo "Run /spec-specify first to create the feature structure." >&2
     exit 1
 fi
 
@@ -53,7 +53,7 @@ fi
 TASKS_TEMPLATE=$(resolve_template "tasks-template" "$REPO_ROOT") || true
 if [[ -z "$TASKS_TEMPLATE" ]] || [[ ! -f "$TASKS_TEMPLATE" ]]; then
     echo "ERROR: Could not resolve required tasks-template from the template override stack for $REPO_ROOT" >&2
-    echo "Template 'tasks-template' was not found in any supported location (overrides, presets, extensions, or shared core). Add an override at .specify/templates/overrides/tasks-template.md, or run 'specify init' / reinstall shared infra to restore the core .specify/templates/tasks-template.md template." >&2
+    echo "Template 'tasks-template' was not found in any supported location (overrides, presets, extensions, or shared core). Add an override at .spec/templates/overrides/tasks-template.md, or run 'specify init' / reinstall shared infra to restore the core .spec/templates/tasks-template.md template." >&2
     exit 1
 fi
 
