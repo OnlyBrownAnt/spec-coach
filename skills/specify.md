@@ -1,13 +1,13 @@
 ---
-name: coachkit-specify
+name: spec-specify
 description: Create or update the feature specification from a natural language feature description. Use when the user describes what they want to build.
 handoffs:
-  next: coachkit.plan
-  optional_before: [coachkit.clarify, coachkit.checklist]
+  next: spec.plan
+  optional_before: [spec.clarify, spec.checklist]
 ---
 
 <HARD-GATE>
-Do NOT invoke coachkit-plan, coachkit-implement, or any implementation action until you have written the spec, presented it, and received explicit user approval. This applies to EVERY feature regardless of perceived simplicity.
+Do NOT invoke spec-plan, spec-implement, or any implementation action until you have written the spec, presented it, and received explicit user approval. This applies to EVERY feature regardless of perceived simplicity.
 </HARD-GATE>
 
 ## Anti-Pattern: "This Is Too Simple To Need A Spec"
@@ -134,7 +134,7 @@ Before finishing, ask:
 ```
 Spec ready at specs/{{FEATURE_ID}}/spec.md.
 
-Next: `/coachkit.clarify` (resolve ambiguities) or `/coachkit.plan` (technical plan).
+Next: `/spec.clarify` (resolve ambiguities) or `/spec.plan` (technical plan).
 ```
 
 ## Red Flags — STOP and Fix

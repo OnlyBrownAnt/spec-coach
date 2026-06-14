@@ -1,9 +1,9 @@
 ---
-name: coachkit-clarify
+name: spec-clarify
 description: Identify underspecified areas in the current feature spec by asking up to 5 targeted clarification questions and encoding answers back into the spec.
 handoffs:
-  next: coachkit.plan
-  optional_before: [coachkit.checklist]
+  next: spec.plan
+  optional_before: [spec.checklist]
 ---
 
 ## Iron Laws
@@ -80,12 +80,12 @@ When all ambiguities are resolved (or the user indicates they're done):
 ```
 Clarification complete. {{N}} questions resolved.
 
-Next: `/coachkit.plan` to create the technical plan.
+Next: `/spec.plan` to create the technical plan.
 ```
 
 ### 6. Autopilot Mode
 
-If running without user interaction (from `/coachkit.autopilot`):
+If running without user interaction (from `/spec.autopilot`):
 
 1. Identify ambiguities as normal.
 2. Auto-apply the **recommended answer** for each.

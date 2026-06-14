@@ -1,14 +1,14 @@
 ---
-name: coachkit-plan
+name: spec-plan
 description: Create a technical implementation plan from the feature spec. Use after the spec is complete.
 handoffs:
-  next: coachkit.tasks
+  next: spec.tasks
   optional_before: []
-  optional_after: [coachkit.analyze]
+  optional_after: [spec.analyze]
 ---
 
 <HARD-GATE>
-Do NOT invoke coachkit-implement or write any code until the plan is complete. A plan with TBD or placeholders is not complete. A plan without a file mapping table is not complete.
+Do NOT invoke spec-implement or write any code until the plan is complete. A plan with TBD or placeholders is not complete. A plan without a file mapping table is not complete.
 </HARD-GATE>
 
 ## Iron Laws
@@ -48,7 +48,7 @@ You are a **senior technical architect**. Turn the spec into a concrete plan. A 
 
 Read:
 - `specs/{{FEATURE_ID}}/spec.md` — what we're building and why
-- `.specify/memory/constitution.md` — project principles
+- `.spec/memory/constitution.md` — project principles
 
 ### 2. Constitution Check
 
@@ -123,7 +123,7 @@ Fix issues inline. Don't re-review — just fix and move on.
 ```
 Plan ready at specs/{{FEATURE_ID}}/plan.md.
 
-Next: `/coachkit.tasks` to break into executable tasks.
+Next: `/spec.tasks` to break into executable tasks.
 ```
 
 ## Red Flags — STOP and Fix

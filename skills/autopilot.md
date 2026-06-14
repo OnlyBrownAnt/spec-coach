@@ -1,9 +1,9 @@
 ---
-name: coachkit-autopilot
+name: spec-autopilot
 description: Autonomous end-to-end SDD — one command from idea to working code. Use when the user wants to go from feature description to implementation without manual confirmation between phases.
 handoffs:
   next: null
-  optional_after: [coachkit.taskstoissues]
+  optional_after: [spec.taskstoissues]
 ---
 
 ## Iron Laws
@@ -49,7 +49,7 @@ constitution → specify → [clarify] → [checklist] → plan → tasks → [a
 
 | Phase | Strategy |
 |-------|----------|
-| constitution | Read `.specify/memory/constitution.md`. If populated with real principles — skip. If template (contains `[PROJECT_NAME]`) — run once with autopilot defaults. |
+| constitution | Read `.spec/memory/constitution.md`. If populated with real principles — skip. If template (contains `[PROJECT_NAME]`) — run once with autopilot defaults. |
 | specify | Always run. This is the entry point. |
 | clarify | Skip. Only run if specify phase produced 3+ `[NEEDS CLARIFICATION]` markers. |
 | checklist | Skip. Only run if user explicitly asked for it. |
@@ -64,14 +64,14 @@ constitution → specify → [clarify] → [checklist] → plan → tasks → [a
 
 ### 0. Get Feature Description
 
-If provided in the command (`/coachkit.autopilot build a photo album app`), use it. Otherwise ask: "What do you want to build?" — this is the ONE question you ask.
+If provided in the command (`/spec.autopilot build a photo album app`), use it. Otherwise ask: "What do you want to build?" — this is the ONE question you ask.
 
 ### 1. Scaffold
 
 Run the script to create the feature directory:
 
 ```bash
-.specify/scripts/bash/create-new-feature.sh "{{FEATURE_DESCRIPTION}}" --json
+.spec/scripts/bash/create-new-feature.sh "{{FEATURE_DESCRIPTION}}" --json
 ```
 
 Capture `FEATURE_DIR` and `SPEC_FILE`.
@@ -81,13 +81,13 @@ Capture `FEATURE_DIR` and `SPEC_FILE`.
 For each phase in the graph (respecting skip rules):
 
 1. Announce: `**Phase: {{phase}}**`
-2. Invoke: `Skill("coachkit-{{phase}}")`
+2. Invoke: `Skill("spec-{{phase}}")`
 3. The phase skill runs — it handles its own context, templates, and output. Autopilot mode skills (constitution, specify, clarify) accept defaults without asking.
 4. After the phase completes, verify its output:
 
 | Phase | Verify |
 |-------|--------|
-| constitution | `.specify/memory/constitution.md` has real principles (not template) |
+| constitution | `.spec/memory/constitution.md` has real principles (not template) |
 | specify | `$SPEC_FILE` exists and has content |
 | clarify | `$SPEC_FILE` updated (skip if no ambiguities found) |
 | checklist | `$FEATURE_DIR/checklist.md` exists |
@@ -127,7 +127,7 @@ For each phase in the graph (respecting skip rules):
 **Deviations**: {{if any, with reasons}}
 **Follow-up**: {{if any}}
 
-Run `/coachkit.taskstoissues` to create GitHub Issues.
+Run `/spec.taskstoissues` to create GitHub Issues.
 ```
 
 ## Red Flags — STOP and Fix

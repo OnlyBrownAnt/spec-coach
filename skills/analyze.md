@@ -1,8 +1,8 @@
 ---
-name: coachkit-analyze
+name: spec-analyze
 description: Cross-check spec, plan, and tasks for consistency before implementation. Use after tasks are generated.
 handoffs:
-  next: coachkit.implement
+  next: spec.implement
 ---
 
 ## Iron Laws
@@ -96,7 +96,7 @@ Things that are well done:
 ```
 Analysis complete. {{N}} issues found ({{C}} critical).
 
-If critical = 0: Run `/coachkit.implement` to start building.
+If critical = 0: Run `/spec.implement` to start building.
 If critical > 0: Fix critical issues before implementing.
 ```
 

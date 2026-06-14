@@ -1,9 +1,9 @@
 ---
-name: coachkit-implement
+name: spec-implement
 description: Execute the implementation plan by processing all tasks defined in tasks.md. Use when ready to build, after spec, plan, and tasks are complete.
 handoffs:
   next: null
-  optional_after: [coachkit.taskstoissues]
+  optional_after: [spec.taskstoissues]
 ---
 
 ## Iron Laws
@@ -229,7 +229,7 @@ Tests: {{M}}/{{M}} passing
 Deviations from plan: {{list with reasons, or "none"}}
 Follow-up: {{list, or "none"}}
 
-Run `/coachkit.taskstoissues` to create GitHub Issues from the task list.
+Run `/spec.taskstoissues` to create GitHub Issues from the task list.
 ```
 
 ## Red Flags — STOP and Return to Step 2

@@ -1,8 +1,8 @@
 ---
-name: coachkit-checklist
+name: spec-checklist
 description: Generate a custom quality checklist for the current feature based on the spec. Use after spec is stable, before or alongside planning.
 handoffs:
-  next: coachkit.plan
+  next: spec.plan
 ---
 
 ## Iron Laws
@@ -77,7 +77,7 @@ Write `specs/{{FEATURE_ID}}/checklist.md`. 10-15 items, organized by area:
 ```
 Checklist ready at specs/{{FEATURE_ID}}/checklist.md ({{N}} items).
 
-Next: `/coachkit.plan` to continue.
+Next: `/spec.plan` to continue.
 ```
 
 ## Red Flags — STOP and Fix

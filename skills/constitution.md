@@ -1,8 +1,8 @@
 ---
-name: coachkit-constitution
+name: spec-constitution
 description: Create or update the project constitution. Use when starting a new project or defining governing principles.
 handoffs:
-  next: coachkit.specify
+  next: spec.specify
 ---
 
 ## Iron Laws
@@ -52,7 +52,7 @@ Guide the team through these areas, one at a time:
 
 ### 3. Write the Constitution
 
-Write `.specify/memory/constitution.md`. For each principle:
+Write `.spec/memory/constitution.md`. For each principle:
 - **Name**: e.g., "Test-First Development"
 - **Statement**: 1-2 sentences, specific and actionable
 - **Rationale**: Why this matters for THIS project
@@ -72,18 +72,18 @@ Append the managed state section:
 
 ### 5. Autopilot Mode
 
-If running without user interaction (from `/coachkit.autopilot`):
+If running without user interaction (from `/spec.autopilot`):
 
 1. Apply sensible defaults for a typical project of this type.
 2. Customize principle names and rationales to the project context.
-3. Write and report: "Constitution created with 5 principles (autopilot defaults). Review at .specify/memory/constitution.md"
+3. Write and report: "Constitution created with 5 principles (autopilot defaults). Review at .spec/memory/constitution.md"
 
 ### 6. Hand Off
 
 ```
 Constitution created with {{N}} principles.
 
-Next: `/coachkit.specify` to start your first feature.
+Next: `/spec.specify` to start your first feature.
 ```
 
 ## Red Flags — STOP and Fix

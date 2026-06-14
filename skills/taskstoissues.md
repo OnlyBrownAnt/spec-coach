@@ -1,5 +1,5 @@
 ---
-name: coachkit-taskstoissues
+name: spec-taskstoissues
 description: Convert the task list into actionable, dependency-ordered GitHub Issues. Use after tasks.md is complete.
 handoffs:
   next: null
@@ -42,7 +42,7 @@ This skill requires the GitHub MCP server (`github/github-mcp-server/issue_write
 
 Read:
 - `specs/{{FEATURE_ID}}/tasks.md` — the task list
-- `.specify/memory/constitution.md` — project context
+- `.spec/memory/constitution.md` — project context
 
 ### 2. Verify Remote
 

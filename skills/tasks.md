@@ -1,14 +1,14 @@
 ---
-name: coachkit-tasks
+name: spec-tasks
 description: Break the technical plan into an actionable, dependency-ordered task list. Use after the plan is complete.
 handoffs:
-  next: coachkit.implement
-  optional_before: [coachkit.analyze]
+  next: spec.implement
+  optional_before: [spec.analyze]
   optional_after: []
 ---
 
 <HARD-GATE>
-Do NOT invoke coachkit-implement or write any code until every task has a specific file, a verification step, and a dependency annotation. A task saying "build the X system" is not a task — it's a wish.
+Do NOT invoke spec-implement or write any code until every task has a specific file, a verification step, and a dependency annotation. A task saying "build the X system" is not a task — it's a wish.
 </HARD-GATE>
 
 ## Iron Laws
@@ -120,7 +120,7 @@ Verify: every component in the plan's file mapping table has at least one task. 
 ```
 Tasks ready at specs/{{FEATURE_ID}}/tasks.md ({{N}} tasks, {{P}} parallelizable).
 
-Next: `/coachkit.analyze` to cross-check consistency, or `/coachkit.implement` to start building.
+Next: `/spec.analyze` to cross-check consistency, or `/spec.implement` to start building.
 ```
 
 ## Red Flags — STOP and Fix
