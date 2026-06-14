@@ -14,6 +14,7 @@
   "scripts": {
     "init": "npx tsx src/coach-init.ts",
     "test": "bash tests/run.sh",
+    "test:l2": "bash tests/run.sh l2",
     "test:all": "bash tests/run.sh all",
     "test:verbose": "bash tests/run.sh --verbose",
     "test:results": "bash tests/run.sh results"

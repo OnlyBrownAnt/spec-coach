@@ -10,6 +10,7 @@ TIMEOUT=300
 VERBOSE=false
 SPECIFIC_TEST=""
 RUN_INTEGRATION=false
+L2_ONLY=false
 
 # ---- Parse args ----
 while [[ $# -gt 0 ]]; do
@@ -20,6 +21,8 @@ while [[ $# -gt 0 ]]; do
             TIMEOUT="$2"; shift 2 ;;
         all)
             RUN_INTEGRATION=true; shift ;;
+        l2)
+            L2_ONLY=true; shift ;;
         list)
             echo "L1 — Behavioral Tests:"
             for f in "$SCRIPT_DIR"/behavioral/test-*.sh; do
@@ -49,6 +52,7 @@ while [[ $# -gt 0 ]]; do
             echo "Commands:"
             echo "  (none)          Run all L1 behavioral tests"
             echo "  all             Run all tests (L1 + L2)"
+            echo "  l2              Run only L2 integration tests"
             echo "  list            List available tests"
             echo "  results         Show recent run history"
             echo "  <test-name>     Run specific test (e.g., test-implement)"
@@ -76,7 +80,9 @@ for f in "$SCRIPT_DIR"/integration/test-*.sh; do
     [ -f "$f" ] && L2_TESTS+=("$(basename "$f")")
 done
 
-if [ "$RUN_INTEGRATION" = true ]; then
+if [ "$L2_ONLY" = true ]; then
+    ALL_TESTS=("${L2_TESTS[@]}")
+elif [ "$RUN_INTEGRATION" = true ]; then
     ALL_TESTS=("${L1_TESTS[@]}" "${L2_TESTS[@]}")
 else
     ALL_TESTS=("${L1_TESTS[@]}")
@@ -172,7 +178,12 @@ category_for() {
     echo "L2"
 }
 
-if [ ${#ALL_TESTS[@]} -gt 0 ] && [ "$RUN_INTEGRATION" = true ]; then
+if [ "$L2_ONLY" = true ]; then
+    echo "--- L2: Integration Tests ---"
+    for t in "${ALL_TESTS[@]}"; do
+        run_test "$t" "L2"
+    done
+elif [ ${#ALL_TESTS[@]} -gt 0 ] && [ "$RUN_INTEGRATION" = true ]; then
     echo "--- L1: Behavioral Tests ---"
     for t in "${L1_TESTS[@]}"; do
         found=false
@@ -197,9 +208,9 @@ else
         run_test "$t" "$cat"
     done
 
-    if [ "$RUN_INTEGRATION" = false ] && [ ${#L2_TESTS[@]} -gt 0 ]; then
+    if [ ${#L2_TESTS[@]} -gt 0 ]; then
         echo ""
-        echo "Note: L2 integration tests not run. Use 'run.sh all' to include them."
+        echo "Note: L2 integration tests not run. Use 'run.sh l2' or 'run.sh all'."
     fi
 fi
 
