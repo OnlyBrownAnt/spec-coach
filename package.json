@@ -12,7 +12,11 @@
     "src/"
   ],
   "scripts": {
-    "init": "npx tsx src/coach-init.ts"
+    "init": "npx tsx src/coach-init.ts",
+    "test": "bash tests/run.sh",
+    "test:all": "bash tests/run.sh all",
+    "test:verbose": "bash tests/run.sh --verbose",
+    "test:results": "bash tests/run.sh results"
   },
   "dependencies": {},
   "devDependencies": {
