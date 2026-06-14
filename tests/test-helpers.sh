@@ -23,7 +23,7 @@ run_claude() {
     local output_file
     output_file=$(mktemp)
 
-    local cmd="claude -p \"$prompt\" --output-format text --plugin-dir \"$COACH_KIT_ROOT\" --permission-mode bypassPermissions"
+    local cmd="claude -p \"$prompt\" --output-format text --plugin-dir \"$COACH_KIT_ROOT\""
     if [ -n "$allowed_tools" ]; then
         cmd="$cmd --allowed-tools=$allowed_tools"
     fi
@@ -142,5 +142,27 @@ cleanup_test_project() {
     local test_dir="$1"
     if [ -d "$test_dir" ]; then
         rm -rf "$test_dir"
+    fi
+}
+
+# Like run_claude but with --permission-mode bypassPermissions for L2 tests
+# that need to write files (implement, specify, plan, etc.).
+run_claude_l2() {
+    local prompt="$1"
+    local timeout_val="${2:-60}"
+    local output_file
+    output_file=$(mktemp)
+
+    local cmd="claude -p \"$prompt\" --output-format text --plugin-dir \"$COACH_KIT_ROOT\" --permission-mode bypassPermissions"
+
+    if _timeout "$timeout_val" bash -c "$cmd" > "$output_file" 2>&1; then
+        cat "$output_file"
+        rm -f "$output_file"
+        return 0
+    else
+        local exit_code=$?
+        cat "$output_file" >&2
+        rm -f "$output_file"
+        return $exit_code
     fi
 }

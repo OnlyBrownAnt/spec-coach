@@ -69,7 +69,7 @@ FAILED=0
 
 # ---- Run implement ----
 echo "--- Running coachkit-implement ---"
-implement_output=$(run_claude "Use coachkit-implement to execute the plan at specs/quick-feature/. Follow the tasks.md exactly." 180)
+implement_output=$(run_claude_l2 "Use coachkit-implement to execute the plan at specs/quick-feature/. Follow the tasks.md exactly." 180)
 echo "$implement_output" > "$TEST_PROJECT/implement-output.log"
 
 # ---- Assertions ----

@@ -35,7 +35,7 @@ FAILED=0
 
 # ---- Phase 1: Specify ----
 echo "--- Phase 1: Specify ---"
-spec_output=$(run_claude "Use coachkit-specify to create a spec for: a function that validates US phone numbers. It should accept formats like (555) 123-4567, 555-123-4567, and 5551234567. It should return true for valid numbers and false for invalid ones." 120)
+spec_output=$(run_claude_l2 "Use coachkit-specify to create a spec for: a function that validates US phone numbers. It should accept formats like (555) 123-4567, 555-123-4567, and 5551234567. It should return true for valid numbers and false for invalid ones." 120)
 echo "$spec_output" > "$TEST_PROJECT/claude-specify.log"
 
 assert_contains "$spec_output" "phone|validator|valid" "Spec mentions phone validation" || FAILED=$((FAILED + 1))
@@ -51,7 +51,7 @@ echo ""
 
 # ---- Phase 2: Clarify ----
 echo "--- Phase 2: Clarify ---"
-clarify_output=$(run_claude "Use coachkit-clarify to review the spec at ${SPEC_FILE:-specs/phone-validator/spec.md} for ambiguities. Identify up to 3 unclear areas." 60)
+clarify_output=$(run_claude_l2 "Use coachkit-clarify to review the spec at ${SPEC_FILE:-specs/phone-validator/spec.md} for ambiguities. Identify up to 3 unclear areas." 60)
 echo "$clarify_output" > "$TEST_PROJECT/claude-clarify.log"
 
 assert_contains "$clarify_output" "clarif|ambigu|unclear|question|NEEDS" "Clarify found ambiguities" || FAILED=$((FAILED + 1))
@@ -59,7 +59,7 @@ echo ""
 
 # ---- Phase 3: Plan ----
 echo "--- Phase 3: Plan ---"
-plan_output=$(run_claude "Use coachkit-plan to create a technical plan from the spec at ${SPEC_FILE:-specs/phone-validator/spec.md}." 120)
+plan_output=$(run_claude_l2 "Use coachkit-plan to create a technical plan from the spec at ${SPEC_FILE:-specs/phone-validator/spec.md}." 120)
 echo "$plan_output" > "$TEST_PROJECT/claude-plan.log"
 
 PLAN_FILE=$(find "$TEST_PROJECT/specs" -name "plan.md" 2>/dev/null | head -1)
@@ -73,7 +73,7 @@ echo ""
 
 # ---- Phase 4: Tasks ----
 echo "--- Phase 4: Tasks ---"
-tasks_output=$(run_claude "Use coachkit-tasks to break the plan at ${PLAN_FILE:-specs/phone-validator/plan.md} into tasks." 60)
+tasks_output=$(run_claude_l2 "Use coachkit-tasks to break the plan at ${PLAN_FILE:-specs/phone-validator/plan.md} into tasks." 60)
 echo "$tasks_output" > "$TEST_PROJECT/claude-tasks.log"
 
 TASKS_FILE=$(find "$TEST_PROJECT/specs" -name "tasks.md" 2>/dev/null | head -1)
@@ -87,7 +87,7 @@ echo ""
 
 # ---- Phase 5: Implement ----
 echo "--- Phase 5: Implement ---"
-implement_output=$(run_claude "Use coachkit-implement to execute the implementation plan. The tasks are at ${TASKS_FILE:-specs/phone-validator/tasks.md}." 300)
+implement_output=$(run_claude_l2 "Use coachkit-implement to execute the implementation plan. The tasks are at ${TASKS_FILE:-specs/phone-validator/tasks.md}." 300)
 echo "$implement_output" > "$TEST_PROJECT/claude-implement.log"
 
 if find "$TEST_PROJECT/src" -name "*.js" 2>/dev/null | grep -q .; then
