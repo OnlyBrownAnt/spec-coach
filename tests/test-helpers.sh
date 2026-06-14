@@ -49,7 +49,7 @@ assert_contains() {
     local pattern="$2"
     local test_name="${3:-test}"
 
-    if echo "$output" | grep -q "$pattern"; then
+    if echo "$output" | grep -Eq "$pattern"; then
         echo "  [PASS] $test_name"
         return 0
     else
@@ -66,7 +66,7 @@ assert_not_contains() {
     local pattern="$2"
     local test_name="${3:-test}"
 
-    if echo "$output" | grep -q "$pattern"; then
+    if echo "$output" | grep -Eq "$pattern"; then
         echo "  [FAIL] $test_name"
         echo "         Unexpected: $pattern"
         return 1
@@ -84,7 +84,7 @@ assert_count() {
     local expected="$3"
     local test_name="${4:-test}"
     local actual
-    actual=$(echo "$output" | grep -c "$pattern" 2>/dev/null || echo "0")
+    actual=$(echo "$output" | grep -Ec "$pattern" 2>/dev/null || echo "0")
 
     if [ "$actual" -eq "$expected" ]; then
         echo "  [PASS] $test_name (found $actual instances)"
@@ -105,8 +105,8 @@ assert_order() {
     local test_name="${4:-test}"
     local line_a
     local line_b
-    line_a=$(echo "$output" | grep -n "$pattern_a" | head -1 | cut -d: -f1)
-    line_b=$(echo "$output" | grep -n "$pattern_b" | head -1 | cut -d: -f1)
+    line_a=$(echo "$output" | grep -En "$pattern_a" | head -1 | cut -d: -f1)
+    line_b=$(echo "$output" | grep -En "$pattern_b" | head -1 | cut -d: -f1)
 
     if [ -z "$line_a" ]; then
         echo "  [FAIL] $test_name — pattern A not found: $pattern_a"
