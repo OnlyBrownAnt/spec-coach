@@ -87,7 +87,7 @@ FAILED=0
 
 # ---- Run analyze ----
 echo "--- Running coachkit-analyze ---"
-analyze_output=$(run_claude "Use coachkit-analyze to cross-check the spec, plan, and tasks at specs/email-validator/. Report all inconsistencies you find." 120)
+analyze_output=$(run_claude_l2 "Use coachkit-analyze to cross-check the spec, plan, and tasks at specs/email-validator/. Report all inconsistencies you find." 120)
 echo "$analyze_output" > "$TEST_PROJECT/analyze-output.log"
 
 # ---- Assertions ----
