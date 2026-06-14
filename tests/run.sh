@@ -138,7 +138,7 @@ run_test() {
 
     [ ! -x "$test_path" ] && chmod +x "$test_path"
 
-    printf "Running: %-40s " "$test_name"
+    echo "Running: $test_name"
     local test_start
     test_start=$(date +%s)
     local dur
@@ -146,24 +146,19 @@ run_test() {
     local output_dir="$SCRIPT_DIR/.test-output/$(date +%s)-${test_name%.sh}"
     mkdir -p "$output_dir"
 
-    # Always stream output in real-time; always save to log
-    if _timeout "$TIMEOUT" bash "$test_path" 2>&1 | tee "$output_dir/output.log"; then
+    # Run test with real-time output via tee. Each run_claude has its own 60s
+    # timeout, so we don't need an outer timeout wrapper that breaks on macOS.
+    if bash "$test_path" 2>&1 | tee "$output_dir/output.log"; then
         test_end=$(date +%s)
         dur=$((test_end - test_start))
         echo "PASS" > "$output_dir/status"
-        echo "PASS (${dur}s)"
+        echo "  PASS (${dur}s)"
         PASSED=$((PASSED + 1))
     else
-        local exit_code=${PIPESTATUS[0]}
         test_end=$(date +%s)
         dur=$((test_end - test_start))
-        if [ "$exit_code" -eq 124 ] || [ "$exit_code" -eq 142 ]; then
-            echo "TIMEOUT" > "$output_dir/status"
-            echo "FAIL (timeout after ${TIMEOUT}s)"
-        else
-            echo "FAILED" > "$output_dir/status"
-            echo "FAIL (${dur}s)"
-        fi
+        echo "FAILED" > "$output_dir/status"
+        echo "  FAIL (${dur}s)"
         FAILED=$((FAILED + 1))
     fi
 }
