@@ -143,6 +143,7 @@ function checkCandidateFile(
 
 function scanForCandidateDocs(projectRoot: string, scanDirs: string[]): Candidate[] {
   const candidates: Candidate[] = [];
+  let filesChecked = 0;
 
   // Helper: recursively walk a directory (used for preset subdirectories)
   function walkRecursive(dir: string): void {
@@ -161,10 +162,17 @@ function scanForCandidateDocs(projectRoot: string, scanDirs: string[]): Candidat
 
       if (!entry.name.endsWith(".md") && !entry.name.endsWith(".mdx")) continue;
 
+      filesChecked++;
       const c = checkCandidateFile(fullPath, entry.name, projectRoot);
-      if (c) candidates.push(c);
+      if (c) {
+        const rel = path.relative(projectRoot, fullPath);
+        console.log(`     ✓ ${rel}  (${c.reason})`);
+        candidates.push(c);
+      }
     }
   }
+
+  console.log("  🔍 扫描候选规格文档...\n");
 
   // 1. Scan root-level .md/.mdx files ONLY (no subdirectory recursion)
   let rootEntries: fs.Dirent[];
@@ -175,9 +183,14 @@ function scanForCandidateDocs(projectRoot: string, scanDirs: string[]): Candidat
     if (!entry.isFile()) continue;
     if (!entry.name.endsWith(".md") && !entry.name.endsWith(".mdx")) continue;
 
+    filesChecked++;
     const fullPath = path.join(projectRoot, entry.name);
     const c = checkCandidateFile(fullPath, entry.name, projectRoot);
-    if (c) candidates.push(c);
+    if (c) {
+      const rel = path.relative(projectRoot, fullPath);
+      console.log(`     ✓ ${rel}  (${c.reason})`);
+      candidates.push(c);
+    }
   }
 
   // 2. Recursively scan each preset/added subdirectory
@@ -189,6 +202,10 @@ function scanForCandidateDocs(projectRoot: string, scanDirs: string[]): Candidat
         walkRecursive(absDir);
       }
     } catch { /* directory doesn't exist or inaccessible — skip */ }
+  }
+
+  if (candidates.length === 0) {
+    console.log(`     (检查了 ${filesChecked} 个文件，未找到候选)\n`);
   }
 
   return candidates;
@@ -321,12 +338,9 @@ export async function runAbsorbWorkflow(projectRoot: string, skipAbsorb: boolean
 
   rl.close();
 
-  // --- Scan ---
+  // --- Scan (real-time progress printed by scanForCandidateDocs) ---
   const candidates = scanForCandidateDocs(projectRoot, scanDirs);
-  if (candidates.length === 0) {
-    console.log("  ✓  No candidate spec documents found.\n");
-    return;
-  }
+  if (candidates.length === 0) return;
 
   // --- Absorb flow (existing) ---
   console.log(`\n  📄  Found ${candidates.length} candidate spec document(s):\n`);
