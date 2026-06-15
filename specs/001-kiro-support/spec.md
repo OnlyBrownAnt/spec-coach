@@ -61,13 +61,17 @@ Kiro-installed skills produce functionally identical AI behavior to Claude Code 
 - **Kiro version**: Skills require Kiro CLI ≥ 1.24.0. Users on older versions won't see slash commands. This is documented, not enforced by spec-coach.
 - **Global vs workspace**: Kiro supports `~/.kiro/skills/` (global) and `.kiro/skills/` (workspace). `spec-coach init` installs to workspace (`.kiro/skills/`), consistent with `.claude/skills/` behavior.
 - **Agent not installed**: If user runs `spec-coach init --agent kiro` without Kiro CLI installed, the installation succeeds anyway — spec-coach only writes files, it doesn't require the agent to be present.
+- **Absorb scan — non-interactive stdin** (added via /spec-fix on 2025-06-15): If `process.stdin.isTTY` is false (CI, piped input, background process), the absorb scan MUST be skipped automatically with an informational message. No prompt, no blocking.
+- **Absorb scan — preset directories** (added via /spec-fix on 2025-06-15): The absorb scan MUST ONLY search within: project root (root-level files only, no subdirectory recursion) + preset subdirectories (`docs/`, `doc/`, `design/`, `spec/`, `requirements/`) when they exist (recursive within each). Other directories MUST NOT be scanned unless the user explicitly adds them via the interactive prompt.
+- **Absorb scan — interactive directory selection** (added via /spec-fix on 2025-06-15): Before scanning, the user MUST be shown which directories will be scanned and given the choice: [y] scan, [n] skip, or [a] add directories. Default (empty input) = skip.
+- **Absorb scan — `--no-absorb` flag** (added via /spec-fix on 2025-06-15): `spec-coach init --agent kiro --no-absorb` MUST skip the absorb scan entirely without prompting.
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
 
 - **FR-001**: System MUST accept `kiro` as a valid `--agent` value for both `init` and `update` commands
-- **FR-002**: System MUST install skills to `.kiro/skills/<skill-id>/SKILL.md` using the `skills` format (directory per skill, YAML frontmatter + markdown body)
+- **FR-002**: System MUST install skills to `.kiro/steering/<skill-id>/SKILL.md` using the `skills` format (directory per skill, YAML frontmatter + markdown body). Kiro's steering directory registers slash commands (`/spec-specify`); `.kiro/skills/` is for auto-activation only. <!-- Updated via /spec-fix on 2025-06-15 -->
 - **FR-003**: Skill SKILL.md files MUST include `name` and `description` in frontmatter (required by Kiro for slash command registration and auto-activation)
 - **FR-004**: Skill SKILL.md files MUST NOT include Claude-specific frontmatter fields (`user-invocable`, `disable-model-invocation`) when installing for Kiro
 - **FR-005**: Installed skill count MUST be 11 — same as all other agents (specify, plan, tasks, implement, analyze, clarify, checklist, constitution, taskstoissues, autopilot, fix)
@@ -75,23 +79,26 @@ Kiro-installed skills produce functionally identical AI behavior to Claude Code 
 - **FR-007**: `spec-coach init --agent kiro` MUST create the same `.spec/` structure, document templates, and scripts as all other agents. MUST NOT create `CLAUDE.md` (only Claude Code agent triggers `CLAUDE.md` generation)
 - **FR-009**: System MUST NOT create any Kiro-specific config files (e.g., steering files). Kiro follows the same pattern as cursor/copilot/codex/windsurf — only Claude Code gets agent-specific config generation (`CLAUDE.md`)
 - **FR-008**: Slash command separator for Kiro MUST be `-` (e.g., `/spec-specify`), matching Kiro's native slash command format
+- **FR-010**: System MUST accept `--no-absorb` as an optional CLI flag for `spec-coach init`. When present, the absorb scan workflow MUST be skipped entirely (no scan, no prompt). <!-- Added via /spec-fix on 2025-06-15 for bug absorb-scan-blocking -->
+- **FR-011**: Absorb scan MUST be limited to: project root (root-level `.md`/`.mdx` files only, non-recursive) + preset subdirectories `docs/`, `doc/`, `design/`, `spec/`, `requirements/` (recursive within each, when the directory exists). Existing exclusion rules (dot-directories, `node_modules`, `.git`, `.spec`, `specs`, known non-spec filenames) continue to apply within scanned directories. <!-- Added via /spec-fix on 2025-06-15 for bug absorb-scan-blocking -->
+- **FR-012**: Before scanning, system MUST display the directories to be scanned and prompt the user. If `stdin` is not a TTY, system MUST skip the scan with an informational message and no blocking prompt. <!-- Added via /spec-fix on 2025-06-15 for bug absorb-scan-blocking -->
 
 ### Key Entities *(include if feature involves data)*
 
-- **AgentConfig (kiro entry)**: key=`"kiro"`, name=`"Kiro"`, dir=`".kiro/skills"`, format=`"skills"`, separator=`"-"`, frontmatter=`{}`. No argument hints needed — Kiro natively supports `$ARGUMENTS` passthrough without frontmatter hints.
+- **AgentConfig (kiro entry)**: key=`"kiro"`, name=`"Kiro"`, dir=`".kiro/steering"`, format=`"skills"`, separator=`"-"`, frontmatter=`{}`. No argument hints needed — Kiro natively supports `$ARGUMENTS` passthrough without frontmatter hints. <!-- Updated via /spec-fix on 2025-06-15: dir changed from .kiro/skills to .kiro/steering -->
 
 ## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
 
-- **SC-001**: `spec-coach init --agent kiro` exits successfully and installs exactly 11 skills in under 2 seconds
+- **SC-001**: `spec-coach init --agent kiro` installs exactly 11 skills. File I/O phase (project structure + skills + templates + scripts) completes in under 2 seconds. Absorb scan phase is interactive and excluded from this time budget; with `--no-absorb` or non-TTY stdin, the full init exits in under 2 seconds.
 - **SC-002**: All 11 installed SKILL.md files are valid YAML frontmatter + markdown (parseable by a YAML parser, non-empty body)
 - **SC-003**: Kiro users can run `/spec-autopilot "describe a feature"` and Kiro loads the skill automatically via description matching
 - **SC-004**: Existing agent support (claude, cursor, copilot, codex, windsurf) is unaffected — all existing tests pass
 
 ## Assumptions
 
-- Kiro CLI's skill format follows the open Agent Skills standard (`.kiro/skills/<name>/SKILL.md` with `name` + `description` frontmatter), confirmed via kiro.dev documentation
+- Kiro CLI's steering directory (`.kiro/steering/<name>/SKILL.md`) registers slash commands with `name` + `description` frontmatter. The `.kiro/skills/` path is for auto-activation only (triggered by description matching, not explicit `/` invocation). <!-- Updated via /spec-fix on 2025-06-15 -->
 - Kiro ignores unknown frontmatter fields — no need to strip compatibility/metadata fields
 - No Kiro-specific `argumentHints` needed — Kiro's `$ARGUMENTS` passthrough works without hint metadata
 - `CLAUDE.md` generation is NOT triggered for Kiro (currently only Claude Code gets it); this matches existing behavior where only `agent.key === "claude"` triggers `createCLAUDEmd`

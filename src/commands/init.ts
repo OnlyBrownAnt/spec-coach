@@ -63,6 +63,9 @@ const SCAN_EXCLUDE_FILES = new Set([
   "changelog", "readme", "license", "contributing", "code_of_conduct",
 ]);
 
+/** Directories (besides root) that are recursively scanned for candidate spec docs */
+const PRESET_SCAN_DIRS = ["docs", "doc", "design", "spec", "requirements"];
+
 const FILE_KEYWORDS = [
   "spec", "requirement", "需求", "prd", "feature", "设计",
   "proposal", "方案", "plan", "任务", "story", "design",
@@ -96,10 +99,53 @@ interface Candidate {
   sizeKB: number;
 }
 
-function scanForCandidateDocs(projectRoot: string): Candidate[] {
+function checkCandidateFile(
+  fullPath: string,
+  entryName: string,
+  projectRoot: string,
+): Candidate | null {
+  const stem = entryName.replace(/\.mdx?$/i, "").toLowerCase();
+  if (SCAN_EXCLUDE_FILES.has(stem)) return null;
+
+  let sizeKB = 0;
+  try {
+    const stat = fs.statSync(fullPath);
+    if (stat.size > MAX_CANDIDATE_SIZE) return null;
+    sizeKB = Math.round(stat.size / 1024);
+  } catch { return null; }
+
+  const relativePath = path.relative(projectRoot, fullPath);
+  let reason = "";
+
+  for (const kw of FILE_KEYWORDS) {
+    if (entryName.toLowerCase().includes(kw.toLowerCase())) {
+      reason = `filename matches "${kw}"`;
+      break;
+    }
+  }
+
+  if (!reason) {
+    let content: string;
+    try { content = fs.readFileSync(fullPath, "utf-8"); }
+    catch { return null; }
+
+    for (const pattern of CONTENT_PATTERNS) {
+      if (pattern.regex.test(content)) {
+        reason = `content matches "${pattern.label}"`;
+        break;
+      }
+    }
+  }
+
+  if (!reason) return null;
+  return { file: relativePath, reason, sizeKB };
+}
+
+function scanForCandidateDocs(projectRoot: string, scanDirs: string[]): Candidate[] {
   const candidates: Candidate[] = [];
 
-  function walk(dir: string): void {
+  // Helper: recursively walk a directory (used for preset subdirectories)
+  function walkRecursive(dir: string): void {
     let entries: fs.Dirent[];
     try { entries = fs.readdirSync(dir, { withFileTypes: true }); }
     catch { return; }
@@ -109,52 +155,42 @@ function scanForCandidateDocs(projectRoot: string): Candidate[] {
 
       if (entry.isDirectory()) {
         if (isExcludedDir(entry.name)) continue;
-        walk(fullPath);
+        walkRecursive(fullPath);
         continue;
       }
 
       if (!entry.name.endsWith(".md") && !entry.name.endsWith(".mdx")) continue;
 
-      const stem = entry.name.replace(/\.mdx?$/i, "").toLowerCase();
-      if (SCAN_EXCLUDE_FILES.has(stem)) continue;
-
-      let sizeKB = 0;
-      try {
-        const stat = fs.statSync(fullPath);
-        if (stat.size > MAX_CANDIDATE_SIZE) continue;
-        sizeKB = Math.round(stat.size / 1024);
-      } catch { continue; }
-
-      const relativePath = path.relative(projectRoot, fullPath);
-      let reason = "";
-
-      for (const kw of FILE_KEYWORDS) {
-        if (entry.name.toLowerCase().includes(kw.toLowerCase())) {
-          reason = `filename matches "${kw}"`;
-          break;
-        }
-      }
-
-      if (!reason) {
-        let content: string;
-        try { content = fs.readFileSync(fullPath, "utf-8"); }
-        catch { continue; }
-
-        for (const pattern of CONTENT_PATTERNS) {
-          if (pattern.regex.test(content)) {
-            reason = `content matches "${pattern.label}"`;
-            break;
-          }
-        }
-      }
-
-      if (reason) {
-        candidates.push({ file: relativePath, reason, sizeKB });
-      }
+      const c = checkCandidateFile(fullPath, entry.name, projectRoot);
+      if (c) candidates.push(c);
     }
   }
 
-  walk(projectRoot);
+  // 1. Scan root-level .md/.mdx files ONLY (no subdirectory recursion)
+  let rootEntries: fs.Dirent[];
+  try { rootEntries = fs.readdirSync(projectRoot, { withFileTypes: true }); }
+  catch { rootEntries = []; }
+
+  for (const entry of rootEntries) {
+    if (!entry.isFile()) continue;
+    if (!entry.name.endsWith(".md") && !entry.name.endsWith(".mdx")) continue;
+
+    const fullPath = path.join(projectRoot, entry.name);
+    const c = checkCandidateFile(fullPath, entry.name, projectRoot);
+    if (c) candidates.push(c);
+  }
+
+  // 2. Recursively scan each preset/added subdirectory
+  for (const dir of scanDirs) {
+    const absDir = path.join(projectRoot, dir);
+    try {
+      const stat = fs.statSync(absDir);
+      if (stat.isDirectory()) {
+        walkRecursive(absDir);
+      }
+    } catch { /* directory doesn't exist or inaccessible — skip */ }
+  }
+
   return candidates;
 }
 
@@ -220,10 +256,79 @@ function prompt(rl: readline.Interface, question: string): Promise<string> {
   });
 }
 
-export async function runAbsorbWorkflow(projectRoot: string): Promise<void> {
-  const candidates = scanForCandidateDocs(projectRoot);
-  if (candidates.length === 0) return;
+export async function runAbsorbWorkflow(projectRoot: string, skipAbsorb: boolean = false): Promise<void> {
+  // Skip if --no-absorb flag is set
+  if (skipAbsorb) {
+    console.log("  ⚠  Absorb scan skipped (--no-absorb)");
+    return;
+  }
 
+  // Skip if non-interactive stdin (CI, piped, background)
+  if (!process.stdin.isTTY) {
+    console.log("  ⚠  Absorb scan skipped (non-interactive stdin)");
+    return;
+  }
+
+  // --- Interactive directory selection ---
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+
+  let scanDirs = [...PRESET_SCAN_DIRS];
+  let firstPrompt = true;
+
+  while (true) {
+    const existing = scanDirs.filter(d => {
+      const abs = path.join(projectRoot, d);
+      try { return fs.existsSync(abs) && fs.statSync(abs).isDirectory(); }
+      catch { return false; }
+    });
+
+    if (firstPrompt) {
+      console.log(`\n  📂 Absorb scan — will search the following for existing spec docs:`);
+      console.log(`     ./ (root-level files only)`);
+      for (const d of existing) {
+        console.log(`     ${d}/ (recursive)`);
+      }
+      if (existing.length === 0) {
+        console.log("     (no preset directories found)");
+      }
+      firstPrompt = false;
+    }
+
+    console.log("");
+    const action = await prompt(rl, "  [y] scan  [n] skip  [a] add directories: ");
+
+    if (action.toLowerCase() === "n" || action === "") {
+      console.log("  ⚠  Absorb scan skipped.\n");
+      rl.close();
+      return;
+    }
+
+    if (action.toLowerCase() === "a") {
+      const dirs = await prompt(rl, "  Enter directory paths (comma-separated, relative to project root): ");
+      for (const d of dirs.split(",").map(s => s.trim()).filter(Boolean)) {
+        if (!scanDirs.includes(d)) {
+          scanDirs.push(d);
+          console.log(`     + ${d}`);
+        }
+      }
+      continue; // back to prompt with updated list
+    }
+
+    if (action.toLowerCase() === "y") {
+      break; // proceed to scan
+    }
+  }
+
+  rl.close();
+
+  // --- Scan ---
+  const candidates = scanForCandidateDocs(projectRoot, scanDirs);
+  if (candidates.length === 0) {
+    console.log("  ✓  No candidate spec documents found.\n");
+    return;
+  }
+
+  // --- Absorb flow (existing) ---
   console.log(`\n  📄  Found ${candidates.length} candidate spec document(s):\n`);
 
   for (let i = 0; i < candidates.length; i++) {
@@ -231,13 +336,13 @@ export async function runAbsorbWorkflow(projectRoot: string): Promise<void> {
     console.log(`  [${i + 1}] ${c.file}  (${c.sizeKB}KB, ${c.reason})`);
   }
 
-  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  const rl2 = readline.createInterface({ input: process.stdin, output: process.stdout });
 
   console.log("");
-  const raw = await prompt(rl, "  [a]bsorb all  [n]skip all  or numbers (e.g. 1,3,5): ");
+  const raw = await prompt(rl2, "  [a]bsorb all  [n]skip all  or numbers (e.g. 1,3,5): ");
 
   if (raw.toLowerCase() === "n" || raw === "") {
-    rl.close();
+    rl2.close();
     return;
   }
 
@@ -251,7 +356,7 @@ export async function runAbsorbWorkflow(projectRoot: string): Promise<void> {
   }
 
   if (selected.length === 0) {
-    rl.close();
+    rl2.close();
     return;
   }
 
@@ -259,7 +364,7 @@ export async function runAbsorbWorkflow(projectRoot: string): Promise<void> {
 
   for (const c of selected) {
     const defaultId = slugify(path.basename(c.file));
-    const id = await prompt(rl, `  Feature ID for "${c.file}" [${defaultId}]: `);
+    const id = await prompt(rl2, `  Feature ID for "${c.file}" [${defaultId}]: `);
     const featureId = id || defaultId;
 
     if (!featureId) {
@@ -270,7 +375,7 @@ export async function runAbsorbWorkflow(projectRoot: string): Promise<void> {
     absorbDocument(c.file, featureId, projectRoot);
   }
 
-  rl.close();
+  rl2.close();
 
   console.log(`\n  ✓  Absorbed ${selected.length} document(s) into specs/\n`);
   console.log("  Original files archived at .spec/absorbed/");
@@ -310,7 +415,7 @@ export function printNextSteps(agent: AgentConfig, projectRoot: string): void {
 
 // ── Main ───────────────────────────────────────────────────────────────────
 
-export async function runInit(agent: AgentConfig, projectRoot: string): Promise<void> {
+export async function runInit(agent: AgentConfig, projectRoot: string, skipAbsorb: boolean = false): Promise<void> {
   // 1. Create project structure
   createProjectStructure(projectRoot);
   console.log("  ✓  Project structure created");
@@ -340,7 +445,7 @@ export async function runInit(agent: AgentConfig, projectRoot: string): Promise<
   }
 
   // 7. Absorb existing spec documents (interactive)
-  await runAbsorbWorkflow(projectRoot);
+  await runAbsorbWorkflow(projectRoot, skipAbsorb);
 
   printNextSteps(agent, projectRoot);
 }

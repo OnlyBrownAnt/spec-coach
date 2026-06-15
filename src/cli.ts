@@ -95,6 +95,7 @@ async function main(): Promise<void> {
 
   // Parse --agent
   let agentKey: AgentKey | null = null;
+  let noAbsorb = false;
   for (let i = 1; i < args.length; i++) {
     if (args[i] === "--agent" || args[i] === "-a") {
       const val = args[i + 1];
@@ -105,6 +106,8 @@ async function main(): Promise<void> {
         console.error(`Unknown agent: ${val || "(missing)"}. Supported: ${Object.keys(AGENTS).join(", ")}`);
         process.exit(1);
       }
+    } else if (args[i] === "--no-absorb" || args[i] === "--skip-absorb") {
+      noAbsorb = true;
     }
   }
 
@@ -121,7 +124,7 @@ async function main(): Promise<void> {
 
   if (subcommand === "init") {
     console.log("");
-    await runInit(agent, projectRoot);
+    await runInit(agent, projectRoot, noAbsorb);
   } else if (subcommand === "update") {
     console.log("  Mode: update (skills/templates/scripts only)\n");
     await runUpdate(agent, projectRoot);

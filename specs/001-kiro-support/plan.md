@@ -2,11 +2,11 @@
 
 **Branch**: `kiro-support` | **Date**: 2025-06-15 | **Spec**: [spec.md](./spec.md)
 
-**Input**: Feature specification from `/specs/kiro-support/spec.md`
+**Input**: Feature specification from `/specs/001-kiro-support/spec.md`
 
 ## Summary
 
-Add Kiro as a supported AI agent in spec-coach. Kiro uses the `skills` format (same family as Claude Code and Codex): each skill is a directory under `.kiro/skills/<skill-id>/SKILL.md` with YAML frontmatter. The implementation is a single `AgentConfig` entry in the `AGENTS` map plus one type union update. No new logic, no new files, no changes to skill content or templates.
+Add Kiro as a supported AI agent in spec-coach. Kiro uses the `skills` format (same family as Claude Code and Codex): each skill is a directory under `.kiro/steering/<skill-id>/SKILL.md` with YAML frontmatter. The implementation is a single `AgentConfig` entry in the `AGENTS` map plus one type union update. No new logic, no new files, no changes to skill content or templates.
 
 ## Technical Context
 
@@ -47,7 +47,7 @@ All principles pass. No deviations.
 ### Documentation (this feature)
 
 ```text
-specs/kiro-support/
+specs/001-kiro-support/
 ├── spec.md              # Feature specification
 ├── plan.md              # This file
 └── tasks.md             # Task breakdown (next phase)
@@ -69,7 +69,7 @@ src/
 | FR | Component | File | Action |
 |----|-----------|------|--------|
 | FR-001 (accept `--agent kiro`) | AgentKey type union | `src/utils.ts:22` | Add `"kiro"` to union |
-| FR-002 (install to `.kiro/skills/`) | AGENTS map entry | `src/utils.ts:79` | Add kiro config with `dir: ".kiro/skills"`, `format: "skills"` |
+| FR-002 (install to `.kiro/steering/`) | AGENTS map entry | `src/utils.ts:79` | Add kiro config with `dir: ".kiro/steering"`, `format: "skills"` |
 | FR-003 (`name` + `description` in frontmatter) | `buildSkillFrontmatter()` | `src/utils.ts:148` | Already generates both for all `skills` format agents — no change needed |
 | FR-004 (no Claude-specific frontmatter) | AGENTS map entry | `src/utils.ts:79` | Set `frontmatter: {}` — empty, no `user-invocable` or `disable-model-invocation` |
 | FR-005 (11 skills) | `SKILL_NAMES` array + `installAllSkills()` | `src/utils.ts:210-222` | No change — same loop for all agents |
@@ -86,7 +86,7 @@ src/
 kiro: {
   key: "kiro",
   name: "Kiro",
-  dir: ".kiro/skills",
+  dir: ".kiro/steering",
   format: "skills",
   separator: "-",
   frontmatter: {},
@@ -116,5 +116,5 @@ No violations. No complexity to justify.
 |------|------|--------|-------------|
 | 1 | `src/utils.ts` | Add `"kiro"` to `AgentKey` type union (line 22) | `npx tsc --noEmit` passes |
 | 2 | `src/utils.ts` | Add `kiro` entry to `AGENTS` map (after windsurf, line 78) | `npx tsc --noEmit` passes |
-| 3 | — | Smoke test: `spec-coach init --agent kiro` in temp dir | 11 skills in `.kiro/skills/`, valid YAML frontmatter |
+| 3 | — | Smoke test: `spec-coach init --agent kiro` in temp dir | 11 skills in `.kiro/steering/`, valid YAML frontmatter |
 | 4 | — | Regression: `npm test` (existing tests) | All pass |

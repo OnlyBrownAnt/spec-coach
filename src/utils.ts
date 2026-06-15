@@ -79,7 +79,7 @@ export const AGENTS: Record<AgentKey, AgentConfig> = {
   kiro: {
     key: "kiro",
     name: "Kiro",
-    dir: ".kiro/skills",
+    dir: ".kiro/steering",
     format: "skills",
     separator: "-",
     frontmatter: {},

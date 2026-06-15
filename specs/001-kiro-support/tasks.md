@@ -1,6 +1,6 @@
 # Tasks: Kiro Agent Support
 
-**Input**: Design documents from `/specs/kiro-support/`
+**Input**: Design documents from `/specs/001-kiro-support/`
 
 **Prerequisites**: plan.md (required), spec.md (required)
 
@@ -27,10 +27,10 @@
 
 **Goal**: `spec-coach init --agent kiro` works end-to-end.
 
-**Independent Test**: Run `spec-coach init --agent kiro` in a temp directory, verify 11 skills installed in `.kiro/skills/`, verify `--help` output lists kiro.
+**Independent Test**: Run `spec-coach init --agent kiro` in a temp directory, verify 11 skills installed in `.kiro/steering/`, verify `--help` output lists kiro.
 
 - [x] T001 [US1][US2][US3] Add `"kiro"` to `AgentKey` type union at `src/utils.ts:22`
-- [x] T002 [US1][US2][US3] Add `kiro` AgentConfig entry to `AGENTS` map at `src/utils.ts` (after windsurf, line 78): `dir: ".kiro/skills"`, `format: "skills"`, `separator: "-"`, `frontmatter: {}`
+- [x] T002 [US1][US2][US3] Add `kiro` AgentConfig entry to `AGENTS` map at `src/utils.ts` (after windsurf, line 78): `dir: ".kiro/steering"`, `format: "skills"`, `separator: "-"`, `frontmatter: {}`
 - [x] T003 Verify TypeScript compilation: `npx tsx --noEmit`
 
 **Checkpoint**: Kiro agent is registered. All three user stories are now verifiable.
@@ -39,15 +39,15 @@
 
 ## Phase 2: User Story 1 - Initialize SDD Project with Kiro (Priority: P1) 🎯 MVP
 
-**Goal**: User runs `spec-coach init --agent kiro` and gets a working SDD project with 11 skills in `.kiro/skills/`.
+**Goal**: User runs `spec-coach init --agent kiro` and gets a working SDD project with 11 skills in `.kiro/steering/`.
 
 **Independent Test**: `spec-coach init --agent kiro` in temp dir → 11 SKILL.md files exist with valid frontmatter.
 
 ### Verification for User Story 1
 
 - [x] T004 [US1] Smoke test: run `spec-coach init --agent kiro` in a temp directory, confirm exit code 0 and 11 skills installed
-- [x] T005 [P] [US1] Verify `.kiro/skills/spec-specify/SKILL.md` exists and contains valid YAML frontmatter with `name` and `description` fields
-- [x] T006 [P] [US1] Verify `.kiro/skills/spec-plan/SKILL.md` body matches `skills/plan.md` source (same skill content as other agents)
+- [x] T005 [P] [US1] Verify `.kiro/steering/spec-specify/SKILL.md` exists and contains valid YAML frontmatter with `name` and `description` fields
+- [x] T006 [P] [US1] Verify `.kiro/steering/spec-plan/SKILL.md` body matches `skills/plan.md` source (same skill content as other agents)
 - [x] T007 [P] [US1] Verify `spec-coach update --agent kiro` refreshes skills without overwriting `.spec/memory/constitution.md`
 
 **Checkpoint**: US1 verified — init + update work for Kiro.
