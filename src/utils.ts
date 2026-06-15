@@ -79,7 +79,7 @@ export const AGENTS: Record<AgentKey, AgentConfig> = {
   kiro: {
     key: "kiro",
     name: "Kiro",
-    dir: ".kiro/steering",
+    dir: ".kiro/skills",
     format: "skills",
     separator: "-",
     frontmatter: {},
@@ -144,7 +144,14 @@ export function buildFrontmatter(obj: Record<string, unknown>): string {
   const lines = ["---"];
   for (const [key, value] of Object.entries(obj)) {
     if (typeof value === "boolean") lines.push(`${key}: ${value}`);
-    else if (typeof value === "string") lines.push(`${key}: "${value.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`);
+    else if (typeof value === "string") {
+      // Quote only when needed (spaces, colons, special chars); simple identifiers stay bare
+      if (/^[a-zA-Z0-9][\w.\/-]*$/.test(value) && !/^(true|false|null|yes|no|on|off)$/i.test(value)) {
+        lines.push(`${key}: ${value}`);
+      } else {
+        lines.push(`${key}: "${value.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`);
+      }
+    }
     else lines.push(`${key}: ${JSON.stringify(value)}`);
   }
   lines.push("---");
