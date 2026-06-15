@@ -85,13 +85,16 @@ Don't manufacture questions. If it's clear enough, proceed.
 
 ### 4. Read the Spec Template
 
-Read `templates/spec-template.md`. Follow the structure exactly.
+Read `.spec/templates/spec-template.md`. Follow the structure exactly.
 
 ### 5. Write the Spec
 
+**FEATURE_ID format**: `NNN-slug` — zero-padded 3-digit number (`001`, `002`, …) + kebab-case name.
+Scan `specs/` for existing folders, pick the next number. Examples: `001-user-auth`, `002-payment-flow`.
+
 Write `specs/{{FEATURE_ID}}/spec.md`.
 
-**The template at `templates/spec-template.md` IS the authoritative structure. Follow it exactly.** Do not add, remove, or rename sections.
+**The template at `.spec/templates/spec-template.md` IS the authoritative structure. Follow it exactly.** Do not add, remove, or rename sections.
 
 The template's sections are:
 - `## User Scenarios & Testing` — prioritized user stories with Independent Test and Given/When/Then acceptance scenarios

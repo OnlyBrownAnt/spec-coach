@@ -51,7 +51,7 @@ Read:
 
 ### 2. Read the Tasks Template
 
-Read `templates/tasks-template.md` for the structure.
+Read `.spec/templates/tasks-template.md` for the structure.
 
 ### 3. Derive Tasks from the Plan
 
@@ -61,7 +61,7 @@ For each component in the plan's file mapping, derive the tasks needed to build 
 
 Write `specs/{{FEATURE_ID}}/tasks.md`.
 
-**The template at `templates/tasks-template.md` IS the authoritative structure. Follow it exactly.** Do not add, remove, or rename sections.
+**The template at `.spec/templates/tasks-template.md` IS the authoritative structure. Follow it exactly.** Do not add, remove, or rename sections.
 
 The template's phases are:
 - `## Phase 1: Setup (Shared Infrastructure)` — project scaffolding, dependencies, config

@@ -59,13 +59,13 @@ Check the plan against each principle. Spend one paragraph total:
 
 ### 3. Read the Plan Template
 
-Read `templates/plan-template.md`. Follow the structure.
+Read `.spec/templates/plan-template.md`. Follow the structure.
 
 ### 4. Write the Plan
 
 Write `specs/{{FEATURE_ID}}/plan.md`.
 
-**The template at `templates/plan-template.md` IS the authoritative structure. Follow it exactly.** Do not add, remove, or rename sections.
+**The template at `.spec/templates/plan-template.md` IS the authoritative structure. Follow it exactly.** Do not add, remove, or rename sections.
 
 The template's sections are:
 - `## Summary` — what we're building and how

@@ -182,7 +182,7 @@ If horizontal scan found 🔴 siblings: fix each one, with its own regression te
 
 #### 3a. Create Fix Record
 
-Write `specs/<feature>/fixes/<date>-<slug>.md` using `templates/fix-template.md` as structure.
+Write `specs/<feature>/fixes/<date>-<slug>.md` using `.spec/templates/fix-template.md` as structure.
 
 The fix record includes:
 - Bug description, root cause, and classification

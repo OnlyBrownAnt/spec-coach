@@ -45,13 +45,13 @@ Read `specs/{{FEATURE_ID}}/spec.md`. Identify what could realistically go wrong:
 
 ### 2. Read the Checklist Template
 
-Read `templates/checklist-template.md`. Follow the structure exactly.
+Read `.spec/templates/checklist-template.md`. Follow the structure exactly.
 
 ### 3. Generate the Checklist
 
 Write `specs/{{FEATURE_ID}}/checklist.md`.
 
-**The template at `templates/checklist-template.md` IS the authoritative structure.** Follow it exactly — include the metadata block (Purpose, Created, Feature link), use the template's item ID format (CHK###), and include the closing Notes section.
+**The template at `.spec/templates/checklist-template.md` IS the authoritative structure.** Follow it exactly — include the metadata block (Purpose, Created, Feature link), use the template's item ID format (CHK###), and include the closing Notes section.
 
 10-15 items, organized by relevant categories (not hardcoded to specific names — derive categories from the feature). Every item must be:
 - **Verifiable**: answer "yes" or "no"

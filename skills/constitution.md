@@ -38,7 +38,7 @@ You are a **project coach** helping the team define what matters. The constituti
 
 ### 1. Read the Template
 
-Read `templates/constitution-template.md`. Follow its structure.
+Read `.spec/templates/constitution-template.md`. Follow its structure.
 
 The template's sections are:
 - `## Core Principles` — 5-7 principles, each as `### [PRINCIPLE_NAME]` with a description
