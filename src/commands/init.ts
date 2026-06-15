@@ -300,19 +300,25 @@ export async function runAbsorbWorkflow(projectRoot: string, skipAbsorb: boolean
     });
 
     if (firstPrompt) {
-      console.log(`\n  📂 Absorb scan — will search the following for existing spec docs:`);
-      console.log(`     ./ (root-level files only)`);
+      console.log(`\n  ┌─────────────────────────────────────────┐`);
+      console.log(`  │  📂 扫描已有规格文档                    │`);
+      console.log(`  │  (等待你的输入，不会自动跳过)           │`);
+      console.log(`  ├─────────────────────────────────────────┤`);
+      console.log(`  │  扫描范围:                              │`);
+      console.log(`  │    ./ (根目录, 仅根级 .md 文件)          │`);
       for (const d of existing) {
-        console.log(`     ${d}/ (recursive)`);
+        console.log(`  │    ${d}/ (递归扫描)`);
       }
       if (existing.length === 0) {
-        console.log("     (no preset directories found)");
+        console.log(`  │    (未找到预设子目录)                   │`);
       }
+      console.log(`  ├─────────────────────────────────────────┤`);
+      console.log(`  │  [y] 开始扫描  [n] 跳过  [a] 添加目录   │`);
+      console.log(`  └─────────────────────────────────────────┘`);
       firstPrompt = false;
     }
 
-    console.log("");
-    const action = await prompt(rl, "  [y] scan  [n] skip  [a] add directories: ");
+    const action = await prompt(rl, "  👉 请输入 (y/n/a): ");
 
     if (action.toLowerCase() === "n" || action === "") {
       console.log("  ⚠  Absorb scan skipped.\n");
