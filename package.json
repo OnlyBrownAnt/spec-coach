@@ -20,9 +20,10 @@
     "test:verbose": "bash tests/run.sh --verbose",
     "test:results": "bash tests/run.sh results"
   },
-  "dependencies": {},
+  "dependencies": {
+    "tsx": "^4.0.0"
+  },
   "devDependencies": {
-    "tsx": "^4.0.0",
     "typescript": "^5.0.0"
   },
   "keywords": [
