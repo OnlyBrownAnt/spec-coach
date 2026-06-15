@@ -4,9 +4,10 @@
   "description": "SDD that trusts AI. Guidance over gates. Craftsmanship over compliance.",
   "type": "module",
   "bin": {
-    "spec-coach": "./src/cli.ts"
+    "spec-coach": "./bin/cli.mjs"
   },
   "files": [
+    "bin/",
     "skills/",
     "templates/",
     "src/"
