@@ -1,5 +1,6 @@
 node_modules
 .claude/
+.kiro/
 .spec/
 CLAUDE.md
 tests/.test-output/
