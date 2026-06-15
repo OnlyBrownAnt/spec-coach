@@ -19,7 +19,7 @@ export interface AgentConfig {
   argumentHints?: Record<string, string>;
 }
 
-export type AgentKey = "claude" | "cursor" | "copilot" | "codex" | "windsurf";
+export type AgentKey = "claude" | "cursor" | "copilot" | "codex" | "windsurf" | "kiro";
 
 // ── Agent configurations ───────────────────────────────────────────────────
 
@@ -74,6 +74,14 @@ export const AGENTS: Record<AgentKey, AgentConfig> = {
     dir: ".windsurf/commands",
     format: "markdown",
     separator: ".",
+    frontmatter: {},
+  },
+  kiro: {
+    key: "kiro",
+    name: "Kiro",
+    dir: ".kiro/skills",
+    format: "skills",
+    separator: "-",
     frontmatter: {},
   },
 };
