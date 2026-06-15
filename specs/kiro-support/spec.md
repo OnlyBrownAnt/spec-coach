@@ -4,7 +4,7 @@
 
 **Created**: 2025-06-15
 
-**Status**: Draft
+**Status**: Implemented
 
 **Input**: User description: "支持 kiro"
 
