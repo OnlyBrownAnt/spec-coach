@@ -109,7 +109,26 @@ export function templateSource(name: string): string {
 // ── File operations ────────────────────────────────────────────────────────
 
 export function ensureDir(dir: string): void {
-  fs.mkdirSync(dir, { recursive: true });
+  try {
+    fs.mkdirSync(dir, { recursive: true });
+  } catch (err: any) {
+    if (err.code === "ENOENT") {
+      // A path component may be a broken symlink — find and remove it
+      const parts = dir.split(path.sep);
+      for (let i = 1; i <= parts.length; i++) {
+        const partial = parts.slice(0, i).join(path.sep) || path.sep;
+        try {
+          const lst = fs.lstatSync(partial);
+          if (lst.isSymbolicLink()) {
+            try { fs.statSync(partial); } catch { fs.unlinkSync(partial); }
+          }
+        } catch { /* skip inaccessible components */ }
+      }
+      fs.mkdirSync(dir, { recursive: true });
+    } else {
+      throw err;
+    }
+  }
 }
 
 export function copyFile(src: string, dest: string): void {
