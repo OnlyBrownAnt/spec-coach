@@ -30,29 +30,76 @@ function statePath(projectRoot: string): string {
  * Read installed-agent state. Returns {} when the file is absent or unreadable
  * (never throws — callers treat absent state as "nothing installed").
  */
-export function readState(projectRoot: string): InstalledState {
+/** Full on-disk state document: the agents map + project-level createdContextFiles (spec 004). */
+interface StateDoc {
+  agents?: InstalledState;
+  createdContextFiles?: string[];
+}
+
+/**
+ * Read the raw state document. Returns null when the file is absent or unreadable
+ * (callers treat absent state as "nothing installed"). Handles the wrapped form
+ * `{ agents, createdContextFiles }` and the legacy bare-record form (pre-spec-003,
+ * where the whole object was the agents map).
+ */
+function readRaw(projectRoot: string): StateDoc | null {
   const p = statePath(projectRoot);
-  if (!fs.existsSync(p)) return {};
+  if (!fs.existsSync(p)) return null;
   let data: unknown;
   try {
     data = JSON.parse(fs.readFileSync(p, "utf-8"));
   } catch {
-    return {};
+    return null;
   }
-  if (typeof data !== "object" || data === null) return {};
-  // Wrapped form: { agents: { ... } }
-  const wrapped = (data as { agents?: unknown }).agents;
-  if (wrapped && typeof wrapped === "object") return wrapped as InstalledState;
-  // Legacy bare-record form
-  if (!("agents" in (data as object))) return data as InstalledState;
-  return {};
+  if (typeof data !== "object" || data === null) return null;
+  if ("agents" in (data as object)) return data as StateDoc; // wrapped form
+  return { agents: data as InstalledState }; // legacy bare-record form
 }
 
-/** Write installed-agent state. Creates the parent directory. */
+/** Read installed-agent state (the agents map). Returns {} when absent/unreadable (never throws). */
+export function readState(projectRoot: string): InstalledState {
+  return readRaw(projectRoot)?.agents ?? {};
+}
+
+/** Write the agents map, preserving any existing createdContextFiles. Creates the parent directory. */
 export function writeState(projectRoot: string, state: InstalledState): void {
+  writeRaw(projectRoot, { agents: state, createdContextFiles: readRaw(projectRoot)?.createdContextFiles });
+}
+
+function writeRaw(projectRoot: string, doc: StateDoc): void {
   const p = statePath(projectRoot);
   fs.mkdirSync(path.dirname(p), { recursive: true });
-  fs.writeFileSync(p, JSON.stringify({ agents: state }, null, 2) + "\n", "utf-8");
+  const out =
+    doc.createdContextFiles && doc.createdContextFiles.length > 0
+      ? { agents: doc.agents ?? {}, createdContextFiles: doc.createdContextFiles }
+      : { agents: doc.agents ?? {} };
+  fs.writeFileSync(p, JSON.stringify(out, null, 2) + "\n", "utf-8");
+}
+
+// ── createdContextFiles (spec 004) ──────────────────────────────────────────
+// Project-level record of the context files spec-coach created from scratch.
+// Drives context-file-BODY deletion (a file is deleted only when spec-coach
+// created it AND it is empty after teardown). Files the user authored are never
+// in this list and thus never auto-deleted.
+
+/** Context files spec-coach created from scratch. Returns [] when absent/unreadable. */
+export function readCreatedContextFiles(projectRoot: string): string[] {
+  return readRaw(projectRoot)?.createdContextFiles ?? [];
+}
+
+/** Idempotently record that spec-coach created a context file from scratch. */
+export function recordContextFileCreated(projectRoot: string, file: string): void {
+  const raw = readRaw(projectRoot) ?? {};
+  const set = new Set(raw.createdContextFiles ?? []);
+  set.add(file);
+  writeRaw(projectRoot, { agents: raw.agents ?? {}, createdContextFiles: [...set] });
+}
+
+/** Idempotently remove a context file from the created-from-scratch record. Call when its body is deleted. */
+export function removeContextFileCreated(projectRoot: string, file: string): void {
+  const raw = readRaw(projectRoot) ?? {};
+  const createdContextFiles = (raw.createdContextFiles ?? []).filter((f) => f !== file);
+  writeRaw(projectRoot, { agents: raw.agents ?? {}, createdContextFiles });
 }
 
 /** Record (or upgrade) a single installed agent. `createdFiles` (spec 004) records the leaf paths spec-coach created on disk, driving precise deletion. Returns the new full state. */

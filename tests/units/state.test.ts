@@ -11,6 +11,9 @@ import {
   recordAgent,
   unrecordAgent,
   reconcileFromFs,
+  readCreatedContextFiles,
+  recordContextFileCreated,
+  removeContextFileCreated,
   type AgentEntry,
 } from "../../src/state.ts";
 
@@ -65,6 +68,29 @@ try {
   // --- FR-013: createdFiles round-trips through write→read (spec 004) ---
   writeState(tmp, { cursor: { version: "2.0.0", createdFiles: [".cursor/commands/spec/specify.md"] } });
   ok("createdFiles round-trips write→read", readState(tmp).cursor?.createdFiles?.[0] === ".cursor/commands/spec/specify.md");
+
+  // --- FR-013: createdContextFiles accessors (spec 004) ---
+  const ccf = mktmp("spec-ccf-");
+  ok("readCreatedContextFiles absent -> []", readCreatedContextFiles(ccf).length === 0);
+  recordContextFileCreated(ccf, "CLAUDE.md");
+  ok("recordContextFileCreated adds file", readCreatedContextFiles(ccf).includes("CLAUDE.md"));
+  recordContextFileCreated(ccf, "CLAUDE.md"); // idempotent
+  ok("recordContextFileCreated is idempotent", readCreatedContextFiles(ccf).filter((f) => f === "CLAUDE.md").length === 1);
+  recordContextFileCreated(ccf, "AGENTS.md");
+  ok("recordContextFileCreated adds a second file", readCreatedContextFiles(ccf).length === 2 && readCreatedContextFiles(ccf).includes("AGENTS.md"));
+  removeContextFileCreated(ccf, "CLAUDE.md");
+  ok("removeContextFileCreated removes file", !readCreatedContextFiles(ccf).includes("CLAUDE.md") && readCreatedContextFiles(ccf).length === 1);
+  removeContextFileCreated(ccf, "CLAUDE.md"); // idempotent
+  ok("removeContextFileCreated is idempotent", readCreatedContextFiles(ccf).length === 1);
+  removeContextFileCreated(ccf, "never-recorded"); // no error
+  ok("removeContextFileCreated absent file is a no-op", readCreatedContextFiles(ccf).length === 1);
+
+  // --- createdContextFiles coexists with agents (writeState must preserve it) ---
+  writeState(ccf, { claude: { version: "1.0.0" } });
+  ok("writeState preserves createdContextFiles", readCreatedContextFiles(ccf).includes("AGENTS.md"));
+  ok("writeState writes agents", readState(ccf).claude?.version === "1.0.0");
+  recordAgent(ccf, "claude", "1.0.0"); // recordAgent calls writeState internally
+  ok("recordAgent preserves createdContextFiles", readCreatedContextFiles(ccf).includes("AGENTS.md"));
 
   // --- FR-018: reconcileFromFs detects installed agents from the filesystem ---
   const proj = mktmp("spec-recon-");
