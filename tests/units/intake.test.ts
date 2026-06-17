@@ -201,6 +201,26 @@ try {
   ok("T009: empty -> spec fallback", sanitizeSlug("!!!", sl) === "spec");
   fs.mkdirSync(path.join(sl, "specs", "a-b"), { recursive: true });
   ok("T009: unique within specs/ (suffix on clash)", sanitizeSlug("A B", sl) === "a-b-2");
+
+  // ── T010: --ai staging (FR-008, +A2 scan-completion flip) ────────────────
+  const a = mktmp("intake-ai-");
+  write(a, "docs/rough-design.md", "# Rough\nOverview\n");
+  runIntakeScan(a);
+  const rai = runIntakeProcess(a, { mode: "ai", target: "all" });
+  ok("T010: ai staging returns ok", rai.ok === true);
+  const aiMsg = rai.ok === true ? rai.message : "";
+  ok("T010: message instructs the spec-absorb skill", aiMsg.includes("spec-absorb"));
+  const entry = readManifest(a).find((c) => c.path === "docs/rough-design.md");
+  ok("T010: entry marked absorb-ai-pending", entry?.status === "absorb-ai-pending");
+  ok("T010: destination records specs/<slug>", !!entry?.destination?.startsWith("specs/"));
+  ok("T010: CLI wrote NO spec artifact (zero transform code, FR-008)", !fs.existsSync(path.join(a, "specs")));
+
+  // A2: scan flips absorb-ai-pending -> absorbed-ai once the spec-absorb skill writes the spec
+  const slug = entry!.destination!;
+  fs.mkdirSync(path.join(a, slug), { recursive: true });
+  fs.writeFileSync(path.join(a, slug, "spec.md"), "# transformed by the skill\n");
+  runIntakeScan(a);
+  ok("T010/A2: scan flips to absorbed-ai when the spec appears", readManifest(a).find((c) => c.path === "docs/rough-design.md")?.status === "absorbed-ai");
 } catch (e) {
   ok("intake ran without throwing", false);
   console.log("    error:", (e as Error).message);

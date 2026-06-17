@@ -212,8 +212,17 @@ export function runIntakeScan(projectRoot: string): CmdResult {
   const merged: Candidate[] = discovered.map((disc) => {
     const old = prevByPath.get(disc.path);
     if (old && TERMINAL_STATUSES.has(old.status)) {
-      // keep the terminal status; refresh hash/size from the current source
-      return { ...old, hash: disc.hash, size: disc.size };
+      let status = old.status;
+      // A2: the spec-absorb skill finished the transform -> promote to absorbed-ai.
+      if (
+        status === "absorb-ai-pending" &&
+        old.destination &&
+        fs.existsSync(path.join(projectRoot, old.destination, "spec.md"))
+      ) {
+        status = "absorbed-ai";
+      }
+      // keep the (possibly promoted) terminal status; refresh hash/size
+      return { ...old, status, hash: disc.hash, size: disc.size };
     }
     return disc; // pending — new, or a non-terminal entry still awaiting action
   });
@@ -292,6 +301,7 @@ export function runIntakeProcess(
   const targets = resolveTargets(manifest, opts.target);
 
   if (opts.mode === "verbatim") return absorbVerbatim(projectRoot, manifest, targets);
+  if (opts.mode === "ai") return stageAi(projectRoot, manifest, targets);
   return { ok: false, reason: `process mode '${opts.mode}' is not implemented yet` };
 }
 
@@ -323,5 +333,44 @@ function absorbVerbatim(projectRoot: string, manifest: Candidate[], targets: Can
   return {
     ok: true,
     message: `absorbed ${absorbed} doc(s) verbatim into .spec/absorbed/${missing > 0 ? ` (${missing} source(s) missing)` : ""}`.trim(),
+  };
+}
+
+/**
+ * AI-transform staging (FR-008): mark each target `absorb-ai-pending`, record the
+ * intended `specs/<slug>` destination (so a later scan can detect completion —
+ * A2), and emit instructions to invoke the `spec-absorb` skill. The CLI performs
+ * NO transformation and writes NO spec artifact (Constitution Principle I).
+ */
+function stageAi(projectRoot: string, manifest: Candidate[], targets: Candidate[]): CmdResult {
+  if (targets.length === 0) {
+    return { ok: false, reason: "no pending candidates to stage for AI transform (run `intake scan`)" };
+  }
+  const byPath = new Map(manifest.map((c) => [c.path, c]));
+  const lines: string[] = [];
+  let staged = 0;
+  let missing = 0;
+  for (const t of targets) {
+    if (!fs.existsSync(sourceAbs(projectRoot, t.path))) {
+      byPath.set(t.path, { ...t, status: "source-missing" }); // A3
+      missing++;
+      continue;
+    }
+    const slug = sanitizeSlug(path.basename(t.path, ".md"), projectRoot);
+    byPath.set(t.path, { ...t, status: "absorb-ai-pending", destination: `specs/${slug}` });
+    lines.push(`    • ${t.path}  ->  specs/${slug}/spec.md`);
+    staged++;
+  }
+  writeManifest(projectRoot, manifest.map((c) => byPath.get(c.path) ?? c));
+
+  if (staged === 0) {
+    return { ok: false, reason: `no docs staged (${missing} source(s) missing)` };
+  }
+  return {
+    ok: true,
+    message:
+      `staged ${staged} doc(s) for AI transform.\n` +
+      `  Invoke the spec-absorb skill on each staged source to transform it into a\n` +
+      `  specs/NNN-slug/spec.md following the spec template:\n${lines.join("\n")}`,
   };
 }
