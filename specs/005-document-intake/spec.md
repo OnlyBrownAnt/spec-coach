@@ -4,7 +4,7 @@
 
 **Created**: 2026-06-18
 
-**Status**: Draft
+**Status**: Implemented
 
 **Input**: User description: "如何处理用户想有的旧 spec" — the intake half of that original request (spec 004 hardened the *deletion* side; spec 005 builds the *introduction* side). Resurrects the document-absorb concern that spec 003 deliberately removed (its non-TTY blocking bug, fixed ad hoc in spec 001, was not worth keeping inside `init`) and re-designs it as an isolated, deterministic, non-blocking pipeline with two absorb modes (verbatim copy + AI-coached transform).
 
