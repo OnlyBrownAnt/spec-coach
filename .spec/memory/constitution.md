@@ -37,7 +37,7 @@ Tests verify that installed skills and templates produce correct AI behavior end
 - **Language**: TypeScript. The CLI is a single entry point (`src/cli.ts`) with command modules in `src/commands/`.
 - **Node**: No minimum version enforced beyond what tsx requires. Keep syntax boring.
 - **File structure**: Skills live in `.claude/skills/<name>/SKILL.md`. Templates in `.spec/templates/<name>-template.md`. Scripts in `.spec/scripts/bash/`. This structure is the contract — changing it breaks `spec-coach update`.
-- **CLI surface**: Two isolated surfaces — the **corpus lifecycle** (`init`, `update`, `uninstall`) and the **agent lifecycle** (`agents add`/`update`/`remove`/`list`). The two never mutate each other: an agent can retire (`agents remove`) while the spec corpus is fully preserved. Adding a new top-level command requires a compelling reason documented in the spec.
+- **CLI surface**: Three isolated surfaces — the **corpus lifecycle** (`init`, `update`, `uninstall`), the **agent lifecycle** (`agents add`/`update`/`remove`/`list`), and the **document lifecycle** (`intake scan`/`process`/`ignore`). The three never mutate each other's owned content: an agent can retire (`agents remove`) while the spec corpus is fully preserved; intake absorbs documents INTO the corpus without moving sources. Adding a new top-level command requires a compelling reason documented in the spec.
 - **Agent support**: Agents are data-driven via the root `agents.json` manifest. Adding a new agent means adding one manifest entry (`key`, `name`, `dir`, `format`, `separator`, `frontmatter`, `contextFile`, `version`) — no TypeScript change. No agent-specific logic branches in individual skills.
 
 ## Release Workflow
@@ -56,7 +56,7 @@ This constitution defines the non-negotiable principles for spec-coach. It super
 - **Complexity must be justified**: If a change adds a file, a dependency, or a new concept, the PR description must explain why simpler alternatives were rejected.
 - **Runtime guidance**: Day-to-day development practices (linting rules, commit style, local setup) live in `CLAUDE.md`, not here. The constitution is principles; `CLAUDE.md` is playbook.
 
-**Version**: 1.1.0 | **Ratified**: 2025-06-15 | **Last Amended**: 2026-06-17
+**Version**: 1.2.0 | **Ratified**: 2025-06-15 | **Last Amended**: 2026-06-18
 
 <!-- SDD STATE START -->
 **Current feature**: 005-document-intake
