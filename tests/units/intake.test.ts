@@ -265,6 +265,21 @@ try {
   runIntakeIgnore(it, "remove", "vendor");
   ok("T014: remove drops the pattern", !readIgnoreList(it).includes("vendor"));
   ok("T014: add without pattern -> not ok", runIntakeIgnore(it, "add").ok === false);
+
+  // ── T015 / SC-004: ignore + idempotent re-scan (US3 capstone) ────────────
+  const cap4 = mktmp("intake-sc4-");
+  write(cap4, "docs/keep-spec.md", "# Keep\nOverview\n");
+  write(cap4, "docs/noise-spec.md", "# Noise\nOverview\n");
+  runIntakeScan(cap4);
+  runIntakeProcess(cap4, { mode: "ignore", target: "docs/noise-spec.md" });
+  runIntakeProcess(cap4, { mode: "verbatim", target: "docs/keep-spec.md" });
+  write(cap4, "docs/new-spec.md", "# New\nOverview\n");
+  runIntakeScan(cap4);
+  const m4 = readManifest(cap4);
+  ok("SC-004: ignored path never reappears in manifest", !m4.some((c) => c.path === "docs/noise-spec.md"));
+  ok("SC-004: ignored path still tracked in ignore list", readIgnoreList(cap4).includes("docs/noise-spec.md"));
+  ok("SC-004: absorbed source stays absorbed through re-scan", m4.find((c) => c.path === "docs/keep-spec.md")?.status === "absorbed-verbatim");
+  ok("SC-004: genuinely-new doc surfaces as pending", m4.find((c) => c.path === "docs/new-spec.md")?.status === "pending");
 } catch (e) {
   ok("intake ran without throwing", false);
   console.log("    error:", (e as Error).message);
