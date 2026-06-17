@@ -302,6 +302,7 @@ export function runIntakeProcess(
 
   if (opts.mode === "verbatim") return absorbVerbatim(projectRoot, manifest, targets);
   if (opts.mode === "ai") return stageAi(projectRoot, manifest, targets);
+  if (opts.mode === "ignore") return markIgnored(projectRoot, manifest, targets);
   return { ok: false, reason: `process mode '${opts.mode}' is not implemented yet` };
 }
 
@@ -373,4 +374,20 @@ function stageAi(projectRoot: string, manifest: Candidate[], targets: Candidate[
       `  Invoke the spec-absorb skill on each staged source to transform it into a\n` +
       `  specs/NNN-slug/spec.md following the spec template:\n${lines.join("\n")}`,
   };
+}
+
+/** Ignore mode (FR-011): append each target's path to the ignore list (idempotent union) + mark `ignored`. */
+function markIgnored(projectRoot: string, manifest: Candidate[], targets: Candidate[]): CmdResult {
+  if (targets.length === 0) {
+    return { ok: false, reason: "no pending candidates to ignore (run `intake scan`)" };
+  }
+  const byPath = new Map(manifest.map((c) => [c.path, c]));
+  const patterns = new Set(readIgnoreList(projectRoot));
+  for (const t of targets) {
+    patterns.add(t.path);
+    byPath.set(t.path, { ...t, status: "ignored" });
+  }
+  writeIgnoreList(projectRoot, [...patterns]);
+  writeManifest(projectRoot, manifest.map((c) => byPath.get(c.path) ?? c));
+  return { ok: true, message: `ignored ${targets.length} doc(s); future scans will skip them.` };
 }

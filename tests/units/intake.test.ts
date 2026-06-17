@@ -236,6 +236,20 @@ try {
   const rsc3 = runIntakeProcess(cap3, { mode: "ai", target: "all" });
   ok("SC-003: ai staging marks absorb-ai-pending", readManifest(cap3).find((c) => c.path === "docs/plan.md")?.status === "absorb-ai-pending");
   ok("SC-003: ai staging message names the spec-absorb skill", (rsc3.ok === true ? rsc3.message : "").includes("spec-absorb"));
+
+  // ── T013: process --ignore (FR-011) ──────────────────────────────────────
+  const igp = mktmp("intake-ign-proc-");
+  write(igp, "docs/a-spec.md", "# A\nOverview\n");
+  write(igp, "docs/b-spec.md", "# B\nOverview\n");
+  runIntakeScan(igp);
+  runIntakeProcess(igp, { mode: "ignore", target: "docs/b-spec.md" });
+  const mig = readManifest(igp);
+  ok("T013: ignored entry marked ignored", mig.find((c) => c.path === "docs/b-spec.md")?.status === "ignored");
+  ok("T013: other entry stays pending", mig.find((c) => c.path === "docs/a-spec.md")?.status === "pending");
+  ok("T013: path added to ignore list", readIgnoreList(igp).includes("docs/b-spec.md"));
+  // idempotent union: ignoring again does not duplicate the pattern
+  runIntakeProcess(igp, { mode: "ignore", target: "all" });
+  ok("T013: ignore is idempotent union (no duplicate pattern)", readIgnoreList(igp).filter((p) => p === "docs/b-spec.md").length === 1);
 } catch (e) {
   ok("intake ran without throwing", false);
   console.log("    error:", (e as Error).message);
