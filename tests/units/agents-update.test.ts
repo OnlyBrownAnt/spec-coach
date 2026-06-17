@@ -69,6 +69,19 @@ try {
   const absent = runAgentsUpdate("cursor", t4);
   ok("update not-installed agent -> ok:false", absent.ok === false);
 
+  // --- T009/FR-017 (spec 004): update recomputes createdFiles (does not drop them) ---
+  const t5 = mktmp("up-cf-");
+  fs.mkdirSync(path.join(t5, ".spec"), { recursive: true });
+  runAgentsAdd("claude", t5);
+  ok("add recorded createdFiles", (readState(t5).claude?.createdFiles?.length ?? 0) === 11);
+  runAgentsUpdate("claude", t5);
+  ok("T009/FR-017: update recomputes createdFiles (not dropped)", (readState(t5).claude?.createdFiles?.length ?? 0) === 11);
+  // a dir not in ownedSkillUnits must not be claimed after update
+  fs.mkdirSync(path.join(t5, ".claude/skills/spec-future-user"), { recursive: true });
+  runAgentsUpdate("claude", t5);
+  ok("T009: update createdFiles excludes non-owned dir", !readState(t5).claude?.createdFiles?.includes(".claude/skills/spec-future-user"));
+  ok("T009: update createdFiles still has the owned set", (readState(t5).claude?.createdFiles?.length ?? 0) === 11);
+
   // --- advisory #5: update is idempotent (twice → no dup) ---
   runAgentsUpdate("cursor", t1);
   runAgentsUpdate("cursor", t1);

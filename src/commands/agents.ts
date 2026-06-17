@@ -235,8 +235,12 @@ export function runAgentsUpdate(target: string, projectRoot: string): CmdResult 
     if (!agent) continue; // agent removed from manifest since install
     const prevVersion = state[key]?.version;
     installAllSkills(agent, projectRoot);
-    upsertManagedSection(agent, projectRoot);
-    recordAgent(projectRoot, key, agent.version);
+    const { created } = upsertManagedSection(agent, projectRoot);
+    // FR-017: recompute createdFiles = ownedSkillUnits ∩ on-disk, so skill-set drift
+    // across versions stays attributed honestly (and update never drops provenance).
+    const createdFiles = ownedSkillUnits(agent).filter((p) => fs.existsSync(path.join(projectRoot, p)));
+    recordAgent(projectRoot, key, agent.version, createdFiles);
+    if (created) recordContextFileCreated(projectRoot, agent.contextFile);
     if (prevVersion !== agent.version) upgraded++;
   }
   const note = upgraded ? `, ${upgraded} version-upgraded` : "";
