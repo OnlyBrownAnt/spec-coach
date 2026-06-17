@@ -164,6 +164,34 @@ try {
   // no manifest
   const v4 = mktmp("intake-verb4-");
   ok("T006: no manifest -> not ok", runIntakeProcess(v4, { mode: "verbatim", target: "all" }).ok === false);
+
+  // ── T008 / SC-001 + SC-002: scan→verbatim end-to-end (US1 capstone) ───────
+  // Running headlessly here IS the FR-003/017 non-TTY proof (no blocking stdin).
+  const cap = mktmp("intake-cap-");
+  write(cap, "docs/old-spec.md", "# Old\nOverview body\n");
+  write(cap, "design/arch.md", "# Arch\n## Requirements\n");
+  write(cap, ".spec/internal.md", "# spec\nOverview\n");   // corpus-internal
+  write(cap, "specs/005/spec.md", "# spec\nOverview\n");   // corpus
+  write(cap, "node_modules/pkg.md", "# spec\nOverview\n");  // bounded out
+  write(cap, "docs/noise.md", "# noise\nOverview\n");       // stays pending
+
+  const scanRes = runIntakeScan(cap);
+  ok("SC-001: scan ok + non-blocking (ran headlessly)", scanRes.ok === true);
+  const capPaths = readManifest(cap).map((c) => c.path).sort();
+  ok("SC-001: exact candidate set (corpus/bounded excluded)", JSON.stringify(capPaths) === JSON.stringify(["design/arch.md", "docs/noise.md", "docs/old-spec.md"]));
+
+  const oldBefore = fs.readFileSync(path.join(cap, "docs/old-spec.md"), "utf-8");
+  runIntakeProcess(cap, { mode: "verbatim", target: "docs/old-spec.md" });
+  const afterVerb = readManifest(cap).find((c) => c.path === "docs/old-spec.md");
+  const destCap = path.join(cap, afterVerb!.destination!);
+  ok("SC-002: verbatim copy byte-identical", fs.readFileSync(destCap, "utf-8") === oldBefore);
+  ok("SC-002: source preserved in place", fs.readFileSync(path.join(cap, "docs/old-spec.md"), "utf-8") === oldBefore);
+
+  // idempotent re-scan: absorbed stays absorbed; others pending
+  runIntakeScan(cap);
+  const reM = readManifest(cap);
+  ok("SC-001: re-scan keeps absorbed entry absorbed", reM.find((c) => c.path === "docs/old-spec.md")?.status === "absorbed-verbatim");
+  ok("SC-001: re-scan keeps untouched entries pending", ["design/arch.md", "docs/noise.md"].every((p) => reM.find((c) => c.path === p)?.status === "pending"));
 } catch (e) {
   ok("intake ran without throwing", false);
   console.log("    error:", (e as Error).message);
