@@ -1,0 +1,77 @@
+{
+  "schema_version": "1.0",
+  "agents": {
+    "claude": {
+      "key": "claude",
+      "name": "Claude Code",
+      "dir": ".claude/skills",
+      "format": "skills",
+      "separator": "-",
+      "frontmatter": { "user-invocable": true, "disable-model-invocation": false },
+      "contextFile": "CLAUDE.md",
+      "version": "1.0.0",
+      "argumentHints": {
+        "specify": "Describe the feature you want to specify",
+        "plan": "Optional guidance for the planning phase",
+        "tasks": "Optional task generation constraints",
+        "implement": "Optional implementation guidance or task filter",
+        "analyze": "Optional focus areas for analysis",
+        "clarify": "Optional areas to clarify in the spec",
+        "constitution": "Principles or values for the project constitution",
+        "checklist": "Domain or focus area for the checklist",
+        "autopilot": "Describe the feature — AI will run the full SDD cycle autonomously",
+        "fix": "Describe the bug — what happened vs what should have happened. Optional: --spec specs/<id>"
+      }
+    },
+    "cursor": {
+      "key": "cursor",
+      "name": "Cursor",
+      "dir": ".cursor/commands",
+      "format": "markdown",
+      "separator": ".",
+      "frontmatter": {},
+      "contextFile": "AGENTS.md",
+      "version": "1.0.0"
+    },
+    "copilot": {
+      "key": "copilot",
+      "name": "GitHub Copilot",
+      "dir": ".github/copilot/commands",
+      "format": "markdown",
+      "separator": ".",
+      "frontmatter": {},
+      "contextFile": "AGENTS.md",
+      "version": "1.0.0"
+    },
+    "codex": {
+      "key": "codex",
+      "name": "OpenAI Codex",
+      "dir": ".codex/skills",
+      "format": "skills",
+      "separator": "-",
+      "frontmatter": { "user-invocable": true, "disable-model-invocation": false },
+      "contextFile": "AGENTS.md",
+      "version": "1.0.0"
+    },
+    "windsurf": {
+      "key": "windsurf",
+      "name": "Windsurf",
+      "dir": ".windsurf/commands",
+      "format": "markdown",
+      "separator": ".",
+      "frontmatter": {},
+      "contextFile": "AGENTS.md",
+      "version": "1.0.0"
+    },
+    "kiro": {
+      "key": "kiro",
+      "name": "Kiro",
+      "dir": ".kiro/skills",
+      "format": "skills",
+      "separator": "-",
+      "frontmatter": {},
+      "contextFile": "AGENTS.md",
+      "version": "1.0.0"
+    }
+  }
+}
