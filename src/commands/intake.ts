@@ -226,3 +226,82 @@ export function runIntakeScan(projectRoot: string): CmdResult {
     message: `scan found ${discovered.length} candidate(s); ${pending} pending (${merged.length - pending} already absorbed/ignored).`,
   };
 }
+
+// ── runIntakeProcess ────────────────────────────────────────────────────────
+
+export type ProcessMode = "verbatim" | "ai" | "ignore";
+
+/** Pending candidates selected by `target` (`"all"` or an exact source path). */
+function resolveTargets(manifest: Candidate[], target: string | "all"): Candidate[] {
+  const pending = manifest.filter((c) => c.status === "pending");
+  if (target === "all") return pending;
+  return pending.filter((c) => c.path === target);
+}
+
+/** A collision-safe flat filename under `.spec/absorbed/` for a source path. */
+export function safeAbsorbedName(sourceRel: string, projectRoot: string): string {
+  const base = sourceRel.replace(/\.md$/i, "").replace(/\//g, "__");
+  let name = `${base}.md`;
+  let n = 2;
+  while (fs.existsSync(path.join(projectRoot, ".spec", "absorbed", name))) {
+    name = `${base}-${n}.md`;
+    n++;
+  }
+  return name;
+}
+
+/** Resolve a POSIX candidate path to an absolute source path on this platform. */
+function sourceAbs(projectRoot: string, posixRel: string): string {
+  return path.join(projectRoot, ...posixRel.split("/"));
+}
+
+/**
+ * `intake process` (FR-006/007/008/011). Flag-driven (non-interactive — FR-017).
+ * `verbatim` copies each target unchanged into `.spec/absorbed/`; `ai` and
+ * `ignore` are added in T010/T013. A target whose source vanished since scan is
+ * marked `source-missing` and skipped without throwing (edge case / A3).
+ */
+export function runIntakeProcess(
+  projectRoot: string,
+  opts: { mode: ProcessMode; target: string | "all" },
+): CmdResult {
+  const manifest = readManifest(projectRoot);
+  if (manifest.length === 0) {
+    return { ok: false, reason: "no manifest — run `spec-coach intake scan` first" };
+  }
+  const targets = resolveTargets(manifest, opts.target);
+
+  if (opts.mode === "verbatim") return absorbVerbatim(projectRoot, manifest, targets);
+  return { ok: false, reason: `process mode '${opts.mode}' is not implemented yet` };
+}
+
+/** Verbatim absorb: copy each target unchanged into `.spec/absorbed/` (FR-006/007). */
+function absorbVerbatim(projectRoot: string, manifest: Candidate[], targets: Candidate[]): CmdResult {
+  if (targets.length === 0) {
+    return { ok: false, reason: "no pending candidates to absorb verbatim (run `intake scan`)" };
+  }
+  const absorbedDir = path.join(projectRoot, ".spec", "absorbed");
+  fs.mkdirSync(absorbedDir, { recursive: true });
+
+  const byPath = new Map(manifest.map((c) => [c.path, c]));
+  let absorbed = 0;
+  let missing = 0;
+  for (const t of targets) {
+    const src = sourceAbs(projectRoot, t.path);
+    if (!fs.existsSync(src)) {
+      byPath.set(t.path, { ...t, status: "source-missing" }); // A3 — no throw
+      missing++;
+      continue;
+    }
+    const name = safeAbsorbedName(t.path, projectRoot);
+    fs.copyFileSync(src, path.join(absorbedDir, name)); // unchanged; source never mutated
+    byPath.set(t.path, { ...t, status: "absorbed-verbatim", destination: `.spec/absorbed/${name}` });
+    absorbed++;
+  }
+
+  writeManifest(projectRoot, manifest.map((c) => byPath.get(c.path) ?? c));
+  return {
+    ok: true,
+    message: `absorbed ${absorbed} doc(s) verbatim into .spec/absorbed/${missing > 0 ? ` (${missing} source(s) missing)` : ""}`.trim(),
+  };
+}

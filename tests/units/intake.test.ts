@@ -13,6 +13,7 @@ import {
   isIgnored,
   discoverCandidates,
   runIntakeScan,
+  runIntakeProcess,
   type Candidate,
 } from "../../src/commands/intake.ts";
 
@@ -120,6 +121,49 @@ try {
   runIntakeScan(s);
   const m3 = readManifest(s);
   ok("T005: vanished source pruned on re-scan", !m3.some((c) => c.path === "docs/b-spec.md"));
+
+  // ── T006: verbatim absorb (FR-006/007, +A3 source-missing) ───────────────
+  const v = mktmp("intake-verb-");
+  write(v, "docs/a-spec.md", "# A body\nOverview\n");
+  write(v, "docs/b-spec.md", "# B body\nOverview\n");
+  runIntakeScan(v);
+  const before = fs.readFileSync(path.join(v, "docs/a-spec.md"), "utf-8");
+  const rv = runIntakeProcess(v, { mode: "verbatim", target: "all" });
+  ok("T006: verbatim returns ok", rv.ok === true);
+  const mv = readManifest(v);
+  ok("T006: all pending -> absorbed-verbatim", mv.filter((c) => c.status === "absorbed-verbatim").length === 2);
+  const aEntry = mv.find((c) => c.path === "docs/a-spec.md");
+  ok("T006: destination recorded", !!aEntry?.destination?.startsWith(".spec/absorbed/"));
+  const destAbs = path.join(v, aEntry!.destination!);
+  ok("T006: verbatim copy is byte-identical", fs.existsSync(destAbs) && fs.readFileSync(destAbs, "utf-8") === before);
+  ok("T006: source unchanged in place", fs.readFileSync(path.join(v, "docs/a-spec.md"), "utf-8") === before);
+
+  // single target
+  const v2 = mktmp("intake-verb2-");
+  write(v2, "docs/x-spec.md", "# X\nOverview\n");
+  write(v2, "docs/y-spec.md", "# Y\nOverview\n");
+  runIntakeScan(v2);
+  runIntakeProcess(v2, { mode: "verbatim", target: "docs/x-spec.md" });
+  const mv2 = readManifest(v2);
+  ok("T006: single target absorbed", mv2.find((c) => c.path === "docs/x-spec.md")?.status === "absorbed-verbatim");
+  ok("T006: non-target stays pending", mv2.find((c) => c.path === "docs/y-spec.md")?.status === "pending");
+
+  // A3: source vanished between scan and process — no crash, marked source-missing
+  const v3 = mktmp("intake-verb3-");
+  write(v3, "docs/gone-spec.md", "# G\nOverview\n");
+  write(v3, "docs/keep-spec.md", "# K\nOverview\n");
+  runIntakeScan(v3);
+  fs.rmSync(path.join(v3, "docs/gone-spec.md"));
+  let threw = false;
+  try { runIntakeProcess(v3, { mode: "verbatim", target: "all" }); } catch { threw = true; }
+  ok("T006: missing source does not throw (A3)", !threw);
+  const mv3 = readManifest(v3);
+  ok("T006: missing source marked source-missing (A3)", mv3.find((c) => c.path === "docs/gone-spec.md")?.status === "source-missing");
+  ok("T006: present source still absorbed alongside missing (A3)", mv3.find((c) => c.path === "docs/keep-spec.md")?.status === "absorbed-verbatim");
+
+  // no manifest
+  const v4 = mktmp("intake-verb4-");
+  ok("T006: no manifest -> not ok", runIntakeProcess(v4, { mode: "verbatim", target: "all" }).ok === false);
 } catch (e) {
   ok("intake ran without throwing", false);
   console.log("    error:", (e as Error).message);
