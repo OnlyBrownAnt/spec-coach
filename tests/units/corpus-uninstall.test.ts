@@ -68,6 +68,21 @@ try {
   runUninstall(t2, { confirmed: true, purge: true });
   ok("purge removes specs/", !exists(t2, "specs/001-y/spec.md"));
   ok("purge removes constitution", !exists(t2, ".spec/memory/constitution.md"));
+
+  // --- T010/FR-012 (spec 004): uninstall touches only INSTALLED agents (advisory A4) ---
+  const t3 = mktmp("un-installed-");
+  await runInit(null, t3);
+  runAgentsAdd("claude", t3);
+  // codex is NOT installed, but a spec-coach-looking dir exists (user mimicked / partial install)
+  fs.mkdirSync(path.join(t3, ".codex", "skills", "spec-specify"), { recursive: true });
+  fs.writeFileSync(path.join(t3, ".codex/skills/spec-specify/SKILL.md"), "# user's own\n");
+  // colliding user content in the installed agent's namespace
+  fs.mkdirSync(path.join(t3, ".claude", "skills", "spec-user"), { recursive: true });
+  fs.writeFileSync(path.join(t3, ".claude/skills/spec-user/README.md"), "mine");
+  runUninstall(t3, { confirmed: true });
+  ok("T010/FR-012: non-installed agent dir untouched", exists(t3, ".codex/skills/spec-specify/SKILL.md"));
+  ok("T010/FR-012: installed claude binding removed", !exists(t3, ".claude/skills/spec-specify"));
+  ok("T010: colliding user content in installed agent dir preserved", exists(t3, ".claude/skills/spec-user/README.md"));
 } catch (e) {
   ok("uninstall ran without throwing", false);
   console.log("    error:", (e as Error).message);

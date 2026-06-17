@@ -57,7 +57,7 @@ export function corpusExists(projectRoot: string): boolean {
  * absent but a corpus exists — migrating projects created by a prior version
  * whose agent bindings are on disk but unrecorded (FR-018). One-time write.
  */
-function ensureState(projectRoot: string): InstalledState {
+export function ensureState(projectRoot: string): InstalledState {
   if (fs.existsSync(path.join(projectRoot, ".spec", "agents.json"))) {
     return readState(projectRoot);
   }
@@ -180,7 +180,7 @@ function pruneEmptyParents(dir: string, projectRoot: string): void {
  * non-Claude agent, keep the section while any OTHER non-Claude agent remains
  * installed (FR-011 / analysis advisory #1).
  */
-function removeAgentContext(agent: AgentConfig, projectRoot: string, opts: { isOwner: boolean }): void {
+export function removeAgentContext(agent: AgentConfig, projectRoot: string, opts: { isOwner: boolean }): void {
   // FR-011: preserve the shared AGENTS.md block while any other non-Claude agent remains installed.
   if (agent.contextFile !== "CLAUDE.md" && otherNonClaudeAgentsInstalled(agent.key, projectRoot)) {
     return;

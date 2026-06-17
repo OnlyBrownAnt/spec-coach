@@ -9,8 +9,9 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { loadManifest } from "../manifest.ts";
-import { loadAgentConfig, removeManagedSection } from "../utils.ts";
-import { removeAgentSkills, type CmdResult } from "./agents.ts";
+import { loadAgentConfig } from "../utils.ts";
+import { readCreatedContextFiles, unrecordAgent } from "../state.ts";
+import { removeAgentSkills, removeAgentContext, ensureState, type CmdResult } from "./agents.ts";
 
 export interface UninstallOptions {
   /** FR-014: must be true to proceed (the CLI prompts; tests pass it directly). */
@@ -30,16 +31,19 @@ export function runUninstall(projectRoot: string, opts: UninstallOptions = {}): 
     };
   }
 
-  // 1. Remove every agent's bindings (skills + managed context sections).
-  for (const entry of loadManifest()) {
-    const agent = loadAgentConfig(entry.key);
-    if (!agent) continue;
-    removeAgentSkills(agent, projectRoot);
-    removeManagedSection(agent, projectRoot);
-  }
-  // Delete context files left as only the auto-generated H1 shell.
-  for (const file of ["CLAUDE.md", "AGENTS.md"]) {
-    deleteIfShell(projectRoot, file);
+  // 1. Remove ONLY installed agents' bindings (provenance-aware). Non-installed
+  //    manifest agents are untouched (FR-012). Skills use each agent's recorded
+  //    createdFiles; context files use ownership (createdContextFiles). Unregister
+  //    each agent after processing so the shared-AGENTS.md gate falls open for the
+  //    last non-Claude agent (its removeAgentContext then strips + deletes the file).
+  const state = ensureState(projectRoot);
+  const createdContextFiles = readCreatedContextFiles(projectRoot);
+  for (const key of Object.keys(state)) {
+    const agent = loadAgentConfig(key);
+    if (!agent) continue; // agent removed from manifest since install
+    removeAgentSkills(agent, projectRoot, state[key]?.createdFiles);
+    removeAgentContext(agent, projectRoot, { isOwner: createdContextFiles.includes(agent.contextFile) });
+    unrecordAgent(projectRoot, key);
   }
 
   // 2. Remove spec-coach infrastructure.
@@ -59,15 +63,6 @@ export function runUninstall(projectRoot: string, opts: UninstallOptions = {}): 
 
 function rmAny(p: string): void {
   try { fs.rmSync(p, { recursive: true, force: true }); } catch { /* best effort */ }
-}
-
-function deleteIfShell(projectRoot: string, file: string): void {
-  const p = path.join(projectRoot, file);
-  try {
-    if (!fs.existsSync(p)) return;
-    const residual = fs.readFileSync(p, "utf-8").trim();
-    if (residual === "" || residual === `# ${path.basename(projectRoot)}`) fs.unlinkSync(p);
-  } catch { /* best effort */ }
 }
 
 function pruneIfEmpty(dir: string): void {
