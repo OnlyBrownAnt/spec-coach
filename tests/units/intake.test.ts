@@ -12,6 +12,7 @@ import {
   writeIgnoreList,
   isIgnored,
   discoverCandidates,
+  runIntakeScan,
   type Candidate,
 } from "../../src/commands/intake.ts";
 
@@ -95,6 +96,30 @@ try {
   // empty .md is skipped even if its name carries a keyword
   write(d, "docs/empty-spec.md", "");
   ok("T004: empty .md skipped", !discoverCandidates(d, []).map((c) => c.path).includes("docs/empty-spec.md"));
+
+  // ── T005: runIntakeScan (idempotent merge) ───────────────────────────────
+  const s = mktmp("intake-scan-");
+  write(s, "docs/a-spec.md", "# A\nOverview\n");
+  write(s, "docs/b-spec.md", "# B\nOverview\n");
+  const r1 = runIntakeScan(s);
+  ok("T005: scan returns ok", r1.ok === true);
+  const m1 = readManifest(s);
+  ok("T005: scan stages 2 pending", m1.length === 2 && m1.every((c) => c.status === "pending"));
+
+  // simulate one already absorbed, then add a new doc + re-scan (idempotent)
+  writeManifest(s, m1.map((c) => c.path === "docs/a-spec.md" ? { ...c, status: "absorbed-verbatim", destination: ".spec/absorbed/a-spec.md" } : c));
+  write(s, "docs/c-spec.md", "# C\nOverview\n");
+  runIntakeScan(s);
+  const m2 = readManifest(s);
+  ok("T005: re-scan keeps absorbed entry absorbed", m2.find((c) => c.path === "docs/a-spec.md")?.status === "absorbed-verbatim");
+  ok("T005: re-scan surfaces new doc as pending", m2.find((c) => c.path === "docs/c-spec.md")?.status === "pending");
+  ok("T005: re-scan manifest has 3 entries", m2.length === 3);
+
+  // vanished source is pruned
+  fs.rmSync(path.join(s, "docs/b-spec.md"));
+  runIntakeScan(s);
+  const m3 = readManifest(s);
+  ok("T005: vanished source pruned on re-scan", !m3.some((c) => c.path === "docs/b-spec.md"));
 } catch (e) {
   ok("intake ran without throwing", false);
   console.log("    error:", (e as Error).message);

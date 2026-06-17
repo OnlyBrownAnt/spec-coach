@@ -187,3 +187,42 @@ export function discoverCandidates(projectRoot: string, ignoreList: string[] = [
 
   return found.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
 }
+
+// ── Command handlers ───────────────────────────────────────────────────────
+
+/** Statuses that are terminal w.r.t. discovery — once set, a re-scan must not re-surface the source (FR-013). */
+const TERMINAL_STATUSES: ReadonlySet<CandidateStatus> = new Set([
+  "absorbed-verbatim",
+  "absorbed-ai",
+  "absorb-ai-pending",
+  "ignored",
+]);
+
+/**
+ * `intake scan` (FR-004, FR-013): discover candidates and merge them into the
+ * manifest, PRESERVING any entry whose status is terminal (absorbed/ignored),
+ * marking genuinely-new paths `pending`, and pruning entries whose source has
+ * vanished. Deterministic and non-interactive. Idempotent across re-runs.
+ */
+export function runIntakeScan(projectRoot: string): CmdResult {
+  const ignoreList = readIgnoreList(projectRoot);
+  const discovered = discoverCandidates(projectRoot, ignoreList);
+  const prevByPath = new Map(readManifest(projectRoot).map((c) => [c.path, c]));
+
+  const merged: Candidate[] = discovered.map((disc) => {
+    const old = prevByPath.get(disc.path);
+    if (old && TERMINAL_STATUSES.has(old.status)) {
+      // keep the terminal status; refresh hash/size from the current source
+      return { ...old, hash: disc.hash, size: disc.size };
+    }
+    return disc; // pending — new, or a non-terminal entry still awaiting action
+  });
+  merged.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
+  writeManifest(projectRoot, merged);
+
+  const pending = merged.filter((c) => c.status === "pending").length;
+  return {
+    ok: true,
+    message: `scan found ${discovered.length} candidate(s); ${pending} pending (${merged.length - pending} already absorbed/ignored).`,
+  };
+}
