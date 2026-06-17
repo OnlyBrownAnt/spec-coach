@@ -4,7 +4,7 @@
 
 **Created**: 2026-06-17
 
-**Status**: Draft
+**Status**: Implemented
 
 **Input**: User description: "卸载和 agent 删除时能不能做到精准删除。只处理本身相关的内容，用户自己维护的不要动。" — 把 spec 003 已发布的 `agents remove` / `uninstall` 删除从"通配 + 内容启发式"升级为"只删 spec-coach 自己建过的路径"的可证明精准。
 
