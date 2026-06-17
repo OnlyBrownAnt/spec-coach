@@ -100,7 +100,7 @@ export function runAgentsRemove(
 }
 
 /** Remove exactly the skill files installAllSkills wrote (precise inverse of add). */
-function removeAgentSkills(agent: AgentConfig, projectRoot: string): void {
+export function removeAgentSkills(agent: AgentConfig, projectRoot: string): void {
   const agentDir = path.join(projectRoot, agent.dir);
   if (!fs.existsSync(agentDir)) return;
   let entries: fs.Dirent[];
