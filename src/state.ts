@@ -13,6 +13,8 @@ import { loadManifest, type AgentEntry } from "./manifest.ts";
 
 export interface InstalledAgent {
   version: string;
+  /** Leaf paths spec-coach created for this agent (skill dirs/files). Drives precise skill deletion (spec 004). */
+  createdFiles?: string[];
 }
 
 /** Installed state, keyed by agent key. */
@@ -53,10 +55,15 @@ export function writeState(projectRoot: string, state: InstalledState): void {
   fs.writeFileSync(p, JSON.stringify({ agents: state }, null, 2) + "\n", "utf-8");
 }
 
-/** Record (or upgrade) a single installed agent. Returns the new full state. */
-export function recordAgent(projectRoot: string, key: string, version: string): InstalledState {
+/** Record (or upgrade) a single installed agent. `createdFiles` (spec 004) records the leaf paths spec-coach created on disk, driving precise deletion. Returns the new full state. */
+export function recordAgent(
+  projectRoot: string,
+  key: string,
+  version: string,
+  createdFiles?: string[],
+): InstalledState {
   const state = readState(projectRoot);
-  state[key] = { version };
+  state[key] = createdFiles && createdFiles.length > 0 ? { version, createdFiles } : { version };
   writeState(projectRoot, state);
   return state;
 }

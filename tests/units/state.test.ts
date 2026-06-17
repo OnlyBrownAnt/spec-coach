@@ -56,6 +56,16 @@ try {
   unrecordAgent(tmp, "never-installed"); // no error
   ok("unrecordAgent absent agent is a no-op", !readState(tmp)["never-installed"]);
 
+  // --- FR-014: recordAgent persists createdFiles (spec 004) ---
+  recordAgent(tmp, "claude", "1.0.0", [".claude/skills/spec-specify", ".claude/skills/spec-plan"]);
+  const recClaude = readState(tmp).claude;
+  ok("recordAgent stores createdFiles", Array.isArray(recClaude?.createdFiles) && recClaude.createdFiles.length === 2);
+  ok("recordAgent keeps version alongside createdFiles", recClaude?.version === "1.0.0");
+
+  // --- FR-013: createdFiles round-trips through write→read (spec 004) ---
+  writeState(tmp, { cursor: { version: "2.0.0", createdFiles: [".cursor/commands/spec/specify.md"] } });
+  ok("createdFiles round-trips write→read", readState(tmp).cursor?.createdFiles?.[0] === ".cursor/commands/spec/specify.md");
+
   // --- FR-018: reconcileFromFs detects installed agents from the filesystem ---
   const proj = mktmp("spec-recon-");
   // skills-format agent (claude): .claude/skills/spec-specify/SKILL.md
