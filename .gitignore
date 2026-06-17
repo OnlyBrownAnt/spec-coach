@@ -1,6 +1,11 @@
 node_modules
 .claude/
 .kiro/
-.spec/
+# .spec/ is local/regenerable for consumer projects — but spec-coach's OWN
+# constitution is an authored governance doc, so track that one file.
+.spec/*
+!.spec/memory/
+.spec/memory/*
+!.spec/memory/constitution.md
 CLAUDE.md
 tests/.test-output/
