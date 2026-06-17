@@ -240,7 +240,7 @@ const TEMPLATE_NAMES = [
   "fix-template",
 ];
 
-export function installDocumentTemplates(agent: AgentConfig, projectRoot: string): string[] {
+export function installDocumentTemplates(projectRoot: string): string[] {
   const destDir = path.join(projectRoot, ".spec", "templates");
   ensureDir(destDir);
 
