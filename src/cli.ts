@@ -2,19 +2,24 @@
 /**
  * Spec Coach — SDD that trusts AI.
  *
- * Usage:
- *   spec-coach init --agent claude
- *   spec-coach update --agent cursor
+ * Two isolated command surfaces (spec 003):
+ *   Corpus lifecycle:   init | update | uninstall
+ *   Agent lifecycle:    agents { list | add | update | remove }
  *
- * Or run directly:
- *   npx tsx src/cli.ts init --agent claude
+ * Usage:
+ *   spec-coach init                       # scaffold the spec corpus
+ *   spec-coach agents add claude          # bind an AI tool (skills + context)
+ *   spec-coach agents list                # available + installed
+ *   spec-coach update                     # refresh corpus templates/scripts
+ *   spec-coach agents update --all        # refresh agent bindings
+ *   spec-coach uninstall --yes            # remove spec-coach (preserves specs/)
  */
 
 import * as fs from "node:fs";
-import * as path from "node:path";
-import { AGENTS, type AgentKey } from "./utils.js";
 import { runInit } from "./commands/init.js";
 import { runUpdate } from "./commands/update.js";
+import { runUninstall } from "./commands/uninstall.js";
+import { runAgentsList, runAgentsAdd, runAgentsUpdate, runAgentsRemove } from "./commands/agents.js";
 
 // ── Banner ─────────────────────────────────────────────────────────────────
 
@@ -31,21 +36,29 @@ const BANNER = `
 function printHelp(): void {
   console.log(`Spec Coach — SDD that trusts AI.
 
-Usage:
-  spec-coach init --agent <agent>
-  spec-coach update --agent <agent>
+Corpus lifecycle (the durable product):
+  init                           Scaffold the spec corpus (templates, scripts,
+                                 constitution). Installs no agent.
+  update                         Refresh corpus templates + scripts.
+  uninstall --yes [--force]      Remove spec-coach infrastructure + agent
+                                 bindings. --force also purges specs/ +
+                                 constitution (otherwise preserved).
 
-Commands:
-  init      Initialize a new SDD project (skills, templates, scripts, structure)
-  update    Refresh skills, templates, and scripts in an existing project
+Agent lifecycle (ephemeral bindings):
+  agents list                    Show available + installed agents.
+  agents add <key>               Install an agent's skills + context.
+  agents update <key|--all>      Refresh installed agent bindings.
+  agents remove <key> --force    Remove an agent's bindings (corpus untouched).
 
 Options:
-  --agent, -a    AI coding agent (required): ${Object.keys(AGENTS).join(", ")}
-  --help, -h     Show this help
+  --help, -h        Show this help
+  --version, -v     Show version
 
 Examples:
-  spec-coach init --agent claude
-  spec-coach update --agent cursor
+  spec-coach init
+  spec-coach agents add claude
+  spec-coach agents add cursor
+  spec-coach agents list
 `);
 }
 
@@ -59,75 +72,88 @@ function printVersion(): void {
   }
 }
 
+function report(result: { ok: boolean; message?: string; reason?: string }): boolean {
+  if (result.ok) {
+    console.log(`  ✓  ${result.message}`);
+  } else {
+    console.error(`  ✗  ${result.reason}`);
+  }
+  return result.ok;
+}
+
 // ── Arg parsing ────────────────────────────────────────────────────────────
 
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
 
-  if (args.length === 0) {
+  if (args.length === 0 || args.includes("--help") || args.includes("-h")) {
     console.log(BANNER);
     printHelp();
     process.exit(0);
   }
-
-  // Look for --help/-h anywhere
-  if (args.includes("--help") || args.includes("-h")) {
-    console.log(BANNER);
-    printHelp();
-    process.exit(0);
-  }
-
-  // Look for --version anywhere
   if (args.includes("--version") || args.includes("-v")) {
-    console.log(BANNER);
     printVersion();
     process.exit(0);
   }
 
-  // Parse subcommand
-  const subcommand = args[0];
-  if (subcommand !== "init" && subcommand !== "update") {
-    console.log(BANNER);
-    console.error(`Unknown command: ${subcommand}\n`);
-    printHelp();
-    process.exit(1);
-  }
-
-  // Parse --agent
-  let agentKey: AgentKey | null = null;
-  let noAbsorb = false;
-  for (let i = 1; i < args.length; i++) {
-    if (args[i] === "--agent" || args[i] === "-a") {
-      const val = args[i + 1];
-      if (val && val in AGENTS) {
-        agentKey = val as AgentKey;
-        i++; // consume the value
-      } else {
-        console.error(`Unknown agent: ${val || "(missing)"}. Supported: ${Object.keys(AGENTS).join(", ")}`);
-        process.exit(1);
-      }
-    } else if (args[i] === "--no-absorb" || args[i] === "--skip-absorb") {
-      noAbsorb = true;
-    }
-  }
-
-  if (!agentKey) {
-    console.error("Error: --agent is required. Supported: " + Object.keys(AGENTS).join(", "));
-    process.exit(1);
-  }
-
+  const cmd = args[0];
+  const rest = args.slice(1);
+  const has = (flag: string): boolean => rest.includes(flag);
   const projectRoot = process.cwd();
-  const agent = AGENTS[agentKey];
 
   console.log(BANNER);
-  console.log(`  Agent: ${agent.name}  |  Format: ${agent.format}  |  Project: ${path.basename(projectRoot)}`);
 
-  if (subcommand === "init") {
-    console.log("");
-    await runInit(agent, projectRoot, noAbsorb);
-  } else if (subcommand === "update") {
-    console.log("  Mode: update (skills/templates/scripts only)\n");
-    await runUpdate(agent, projectRoot);
+  switch (cmd) {
+    case "init":
+      await runInit(null, projectRoot);
+      break;
+
+    case "update":
+      await runUpdate(null, projectRoot);
+      break;
+
+    case "uninstall": {
+      if (!has("--yes")) {
+        console.log("  Uninstall would remove: spec-coach infrastructure + all agent bindings.");
+        console.log("  User content (specs/, constitution) is preserved unless --force is passed.");
+        console.log("  Re-run with --yes to proceed" + (has("--force") ? " (--force → also purge user content)." : "."));
+        process.exit(1);
+      }
+      const r = runUninstall(projectRoot, { confirmed: true, purge: has("--force") });
+      if (!report(r)) process.exit(1);
+      break;
+    }
+
+    case "agents": {
+      const verb = rest[0];
+      const key = rest[1];
+      if (verb === "list") {
+        runAgentsList(projectRoot);
+        break;
+      }
+      if (verb === "add") {
+        if (!key) { console.error("  ✗  usage: spec-coach agents add <key>"); process.exit(1); }
+        if (!report(runAgentsAdd(key, projectRoot))) process.exit(1);
+        break;
+      }
+      if (verb === "update") {
+        if (!report(runAgentsUpdate(key || "all", projectRoot))) process.exit(1);
+        break;
+      }
+      if (verb === "remove") {
+        if (!key) { console.error("  ✗  usage: spec-coach agents remove <key> --force"); process.exit(1); }
+        if (!report(runAgentsRemove(key, projectRoot, { force: has("--force") }))) process.exit(1);
+        break;
+      }
+      console.error(`  ✗  unknown agents verb: ${verb || "(missing)"}\n`);
+      printHelp();
+      process.exit(1);
+    }
+
+    default:
+      console.error(`Unknown command: ${cmd}\n`);
+      printHelp();
+      process.exit(1);
   }
 }
 
