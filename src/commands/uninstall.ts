@@ -20,7 +20,7 @@ export interface UninstallOptions {
   purge?: boolean;
 }
 
-const INFRA_PATHS = [".spec/scripts", ".spec/templates", ".spec/agents.json"];
+const INFRA_PATHS = [".spec/scripts", ".spec/templates", ".spec/agents.json", ".spec/intake"];
 const USER_PATHS = ["specs", ".spec/memory", ".spec/absorbed"];
 
 export function runUninstall(projectRoot: string, opts: UninstallOptions = {}): CmdResult {

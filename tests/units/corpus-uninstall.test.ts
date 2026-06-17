@@ -83,6 +83,25 @@ try {
   ok("T010/FR-012: non-installed agent dir untouched", exists(t3, ".codex/skills/spec-specify/SKILL.md"));
   ok("T010/FR-012: installed claude binding removed", !exists(t3, ".claude/skills/spec-specify"));
   ok("T010: colliding user content in installed agent dir preserved", exists(t3, ".claude/skills/spec-user/README.md"));
+
+  // --- T017/FR-016 (spec 005): .spec/intake is infra (removed); .spec/absorbed is user content (kept unless --force) ---
+  const t4 = mktmp("un-intake-");
+  await runInit(null, t4);
+  fs.mkdirSync(path.join(t4, ".spec", "intake"), { recursive: true });
+  fs.writeFileSync(path.join(t4, ".spec/intake/manifest.json"), '{"candidates":[]}');
+  fs.writeFileSync(path.join(t4, ".spec/intake/ignore.json"), '{"patterns":[]}');
+  fs.mkdirSync(path.join(t4, ".spec", "absorbed"), { recursive: true });
+  fs.writeFileSync(path.join(t4, ".spec/absorbed/old.md"), "# absorbed doc\n");
+  runUninstall(t4, { confirmed: true });
+  ok("T017: .spec/intake removed on plain uninstall (regenerable infra)", !exists(t4, ".spec/intake"));
+  ok("T017: .spec/absorbed PRESERVED on plain uninstall (user content)", exists(t4, ".spec/absorbed/old.md"));
+
+  const t5 = mktmp("un-intake-force-");
+  await runInit(null, t5);
+  fs.mkdirSync(path.join(t5, ".spec", "absorbed"), { recursive: true });
+  fs.writeFileSync(path.join(t5, ".spec/absorbed/old.md"), "# absorbed\n");
+  runUninstall(t5, { confirmed: true, purge: true });
+  ok("T017: --force purges .spec/absorbed", !exists(t5, ".spec/absorbed/old.md"));
 } catch (e) {
   ok("uninstall ran without throwing", false);
   console.log("    error:", (e as Error).message);
