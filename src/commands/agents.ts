@@ -120,6 +120,25 @@ function removeAgentSkills(agent: AgentConfig, projectRoot: string): void {
       try { fs.rmSync(specDir, { recursive: true, force: true }); } catch { /* best effort */ }
     }
   }
+  // Precise inverse (SC-002): prune now-empty parent dirs up to projectRoot.
+  pruneEmptyParents(agentDir, projectRoot);
+}
+
+/** Remove empty directories from `dir` upward, stopping at projectRoot or the first non-empty dir. */
+function pruneEmptyParents(dir: string, projectRoot: string): void {
+  const root = path.resolve(projectRoot);
+  let cur = path.resolve(dir);
+  while (cur !== root && cur.length > root.length) {
+    if (!fs.existsSync(cur)) { cur = path.dirname(cur); continue; }
+    try {
+      if (fs.readdirSync(cur).length === 0) {
+        fs.rmdirSync(cur);
+        cur = path.dirname(cur);
+      } else {
+        break;
+      }
+    } catch { break; }
+  }
 }
 
 /**
@@ -132,6 +151,17 @@ function removeAgentContext(agent: AgentConfig, projectRoot: string): void {
     return; // preserve the shared AGENTS.md section
   }
   removeManagedSection(agent, projectRoot);
+  // Precise inverse (SC-002): if the context file now holds only the auto-
+  // generated H1 (or is empty), it was created by our upsert — delete it.
+  const filePath = path.join(projectRoot, agent.contextFile);
+  try {
+    if (!fs.existsSync(filePath)) return;
+    const residual = fs.readFileSync(filePath, "utf-8").trim();
+    const autoH1 = `# ${path.basename(projectRoot)}`;
+    if (residual === "" || residual === autoH1) {
+      fs.unlinkSync(filePath);
+    }
+  } catch { /* best effort */ }
 }
 
 function otherNonClaudeAgentsInstalled(excludeKey: string, projectRoot: string): boolean {

@@ -53,7 +53,8 @@ try {
   fs.mkdirSync(path.join(t2, ".spec"), { recursive: true });
   runAgentsAdd("claude", t2);
   runAgentsRemove("claude", t2, { force: true });
-  ok("claude skills removed", !fs.readdirSync(path.join(t2, ".claude/skills")).some((d) => d.startsWith("spec-")));
+  ok("claude skills removed", !fs.existsSync(path.join(t2, ".claude/skills")) ||
+    !fs.readdirSync(path.join(t2, ".claude/skills")).some((d) => d.startsWith("spec-")));
   ok("CLAUDE.md block removed", !hasBlock(t2, "CLAUDE.md"));
 
   // --- advisory #1 / FR-011: shared AGENTS.md preserved while another non-claude remains ---
