@@ -9,7 +9,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { loadManifest } from "../manifest.ts";
-import { readState, recordAgent, unrecordAgent, reconcileFromFs, recordContextFileCreated, type InstalledState } from "../state.ts";
+import { readState, recordAgent, unrecordAgent, reconcileFromFs, recordContextFileCreated, readCreatedContextFiles, removeContextFileCreated, type InstalledState } from "../state.ts";
 import { loadAgentConfig, installAllSkills, upsertManagedSection, removeManagedSection, ownedSkillUnits, type AgentConfig } from "../utils.ts";
 
 export interface AgentStatus {
@@ -113,7 +113,7 @@ export function runAgentsRemove(
     return { ok: true, message: `'${key}' is not installed; nothing to do.` };
   }
   removeAgentSkills(agent, projectRoot, state[key]?.createdFiles);
-  removeAgentContext(agent, projectRoot);
+  removeAgentContext(agent, projectRoot, { isOwner: readCreatedContextFiles(projectRoot).includes(agent.contextFile) });
   unrecordAgent(projectRoot, key);
   return { ok: true, message: `Removed ${agent.name} bindings.` };
 }
@@ -180,13 +180,15 @@ function pruneEmptyParents(dir: string, projectRoot: string): void {
  * non-Claude agent, keep the section while any OTHER non-Claude agent remains
  * installed (FR-011 / analysis advisory #1).
  */
-function removeAgentContext(agent: AgentConfig, projectRoot: string): void {
+function removeAgentContext(agent: AgentConfig, projectRoot: string, opts: { isOwner: boolean }): void {
+  // FR-011: preserve the shared AGENTS.md block while any other non-Claude agent remains installed.
   if (agent.contextFile !== "CLAUDE.md" && otherNonClaudeAgentsInstalled(agent.key, projectRoot)) {
-    return; // preserve the shared AGENTS.md section
+    return;
   }
-  removeManagedSection(agent, projectRoot);
-  // Precise inverse (SC-002): if the context file now holds only the auto-
-  // generated H1 (or is empty), it was created by our upsert — delete it.
+  removeManagedSection(agent, projectRoot); // FR-008: strip the managed block
+  // FR-010: a user-authored context file is NEVER deleted, even when empty.
+  if (!opts.isOwner) return;
+  // FR-009: a spec-coach-created file is deleted only when it is now empty / only the auto H1.
   const filePath = path.join(projectRoot, agent.contextFile);
   try {
     if (!fs.existsSync(filePath)) return;
@@ -194,6 +196,7 @@ function removeAgentContext(agent: AgentConfig, projectRoot: string): void {
     const autoH1 = `# ${path.basename(projectRoot)}`;
     if (residual === "" || residual === autoH1) {
       fs.unlinkSync(filePath);
+      removeContextFileCreated(projectRoot, agent.contextFile); // keep the provenance record honest
     }
   } catch { /* best effort */ }
 }

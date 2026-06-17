@@ -93,6 +93,36 @@ try {
   try { runAgentsRemove("claude", idem, { force: true }); } catch { idemThrew = true; }
   ok("T007/FR-018: remove does not throw when a recorded path is gone", !idemThrew);
   ok("T007/FR-018: remaining coach dirs still removed", !exists(idem, ".claude/skills/spec-specify"));
+
+  // ── T008 / FR-008/010/011 (SC-002): context-file preservation ───────────
+
+  // FR-010: a USER-authored context file is never deleted, even when its residual
+  // matches the auto-generated H1 (the old heuristic would delete it).
+  const c = mktmp("pd-ctx-user-");
+  mkdirCorp(c);
+  fs.writeFileSync(path.join(c, "CLAUDE.md"), `# ${path.basename(c)}\n`); // user-authored, matches auto H1
+  runAgentsAdd("claude", c); // appends block; file existed → NOT recorded as created
+  ok("T008: user CLAUDE.md not recorded as created", !readCreatedContextFiles(c).includes("CLAUDE.md"));
+  runAgentsRemove("claude", c, { force: true });
+  ok("T008/FR-010: user-owned CLAUDE.md preserved (heuristic would have deleted it)", exists(c, "CLAUDE.md"));
+
+  // FR-008: managed block stripped, user content survives
+  const c2 = mktmp("pd-ctx-strip-");
+  mkdirCorp(c2);
+  fs.writeFileSync(path.join(c2, "CLAUDE.md"), "# my own notes\n");
+  runAgentsAdd("claude", c2);
+  runAgentsRemove("claude", c2, { force: true });
+  const c2content = fs.readFileSync(path.join(c2, "CLAUDE.md"), "utf-8");
+  ok("T008/FR-008: managed block stripped", !c2content.includes("COACH START"));
+  ok("T008: user content survives strip", c2content.includes("my own notes"));
+
+  // FR-011: shared AGENTS.md block preserved while another non-Claude agent is installed
+  const sh = mktmp("pd-shared-");
+  mkdirCorp(sh);
+  runAgentsAdd("cursor", sh); // creates AGENTS.md (owned)
+  runAgentsAdd("copilot", sh); // appends to existing AGENTS.md
+  runAgentsRemove("cursor", sh, { force: true }); // copilot still installed
+  ok("T008/FR-011: AGENTS.md block preserved while copilot installed", fs.readFileSync(path.join(sh, "AGENTS.md"), "utf-8").includes("COACH START"));
 } catch (e) {
   ok("precise-deletion ran without throwing", false);
   console.log("    error:", (e as Error).message);
