@@ -221,6 +221,21 @@ try {
   fs.writeFileSync(path.join(a, slug, "spec.md"), "# transformed by the skill\n");
   runIntakeScan(a);
   ok("T010/A2: scan flips to absorbed-ai when the spec appears", readManifest(a).find((c) => c.path === "docs/rough-design.md")?.status === "absorbed-ai");
+
+  // ── T012 / SC-003: AI transform is coached by the skill, not coded in the CLI ─
+  // A1: SC-003's "produces a conformant spec" half is AI-suite territory and is
+  // NOT headlessly testable here (npm test is AI-driven). We assert the verifiable
+  // half: the CLI contains no transformation logic and stages via the skill.
+  const intakeSrc = fs.readFileSync(path.join(process.cwd(), "src", "commands", "intake.ts"), "utf-8");
+  ok("SC-003: CLI has no spec-template rendering (transform is the skill's job)", !intakeSrc.includes("spec-template"));
+  ok("SC-003: CLI has no document-template install call", !intakeSrc.includes("installDocumentTemplates"));
+
+  const cap3 = mktmp("intake-sc3-");
+  write(cap3, "docs/plan.md", "# Plan\nOverview\n");
+  runIntakeScan(cap3);
+  const rsc3 = runIntakeProcess(cap3, { mode: "ai", target: "all" });
+  ok("SC-003: ai staging marks absorb-ai-pending", readManifest(cap3).find((c) => c.path === "docs/plan.md")?.status === "absorb-ai-pending");
+  ok("SC-003: ai staging message names the spec-absorb skill", (rsc3.ok === true ? rsc3.message : "").includes("spec-absorb"));
 } catch (e) {
   ok("intake ran without throwing", false);
   console.log("    error:", (e as Error).message);
