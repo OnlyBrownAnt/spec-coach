@@ -9,8 +9,8 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { loadManifest } from "../manifest.ts";
-import { readState, recordAgent, unrecordAgent, reconcileFromFs, type InstalledState } from "../state.ts";
-import { loadAgentConfig, installAllSkills, upsertManagedSection, removeManagedSection, type AgentConfig } from "../utils.ts";
+import { readState, recordAgent, unrecordAgent, reconcileFromFs, recordContextFileCreated, type InstalledState } from "../state.ts";
+import { loadAgentConfig, installAllSkills, upsertManagedSection, removeManagedSection, ownedSkillUnits, type AgentConfig } from "../utils.ts";
 
 export interface AgentStatus {
   key: string;
@@ -82,8 +82,11 @@ export function runAgentsAdd(key: string, projectRoot: string): CmdResult {
     return { ok: false, reason: `Unknown agent '${key}'. Run \`spec-coach agents list\` to see options.` };
   }
   installAllSkills(agent, projectRoot);
-  upsertManagedSection(agent, projectRoot);
-  recordAgent(projectRoot, key, agent.version);
+  const { created } = upsertManagedSection(agent, projectRoot);
+  // Record provenance (spec 004): the leaf paths this agent owns, and whether we
+  // created the context file from scratch. Drives precise deletion on remove.
+  recordAgent(projectRoot, key, agent.version, ownedSkillUnits(agent));
+  if (created) recordContextFileCreated(projectRoot, agent.contextFile);
   return { ok: true, message: `Installed ${agent.name} bindings (${agent.version}).` };
 }
 
