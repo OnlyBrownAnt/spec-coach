@@ -297,8 +297,8 @@ export function installScripts(projectRoot: string): string[] {
 export const COACH_MARKER_START = "<!-- COACH START -->";
 export const COACH_MARKER_END = "<!-- COACH END -->";
 
-/** The managed Spec Coach section body (between markers). Shared by init and update. */
-export function buildClaudeManagedSection(): string {
+/** The managed Spec Coach section body (between markers). Agent-agnostic (FR-010). */
+export function buildManagedSection(): string {
   return [
     "This project uses **Spec Coach** for spec-driven development.",
     "",
@@ -328,27 +328,27 @@ export function buildClaudeManagedSection(): string {
 }
 
 /**
- * Create or refresh the managed Spec Coach section in CLAUDE.md. Preserves any
- * user content outside the COACH markers. init writes a fresh file; update calls
- * this to keep existing projects current (FR-007).
+ * Upsert the managed Spec Coach block into an agent's declared context file
+ * (claude→CLAUDE.md, others→AGENTS.md). Preserves any user content outside the
+ * COACH markers. Idempotent — re-running replaces the block in place (FR-010).
  */
-export function upsertClaudeManagedSection(projectRoot: string): void {
-  const claudePath = path.join(projectRoot, "CLAUDE.md");
-  const section = buildClaudeManagedSection();
+export function upsertManagedSection(agent: AgentConfig, projectRoot: string): void {
+  const filePath = path.join(projectRoot, agent.contextFile);
+  const section = buildManagedSection();
   const block = `${COACH_MARKER_START}
 ${section}${COACH_MARKER_END}
 `;
 
   let existing = "";
   try {
-    existing = fs.existsSync(claudePath) ? fs.readFileSync(claudePath, "utf-8") : "";
+    existing = fs.existsSync(filePath) ? fs.readFileSync(filePath, "utf-8") : "";
   } catch { /* best-effort */ }
 
   const startIdx = existing.indexOf(COACH_MARKER_START);
   const endIdx = existing.indexOf(COACH_MARKER_END);
   if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
     const replaced = existing.slice(0, startIdx) + block + existing.slice(endIdx + COACH_MARKER_END.length);
-    try { fs.writeFileSync(claudePath, replaced); } catch { /* best-effort */ }
+    try { fs.writeFileSync(filePath, replaced); } catch { /* best-effort */ }
     return;
   }
 
@@ -361,5 +361,35 @@ ${block}`
     : `# ${projectName}
 
 ${block}`;
-  try { fs.writeFileSync(claudePath, content); } catch { /* best-effort */ }
+  try { fs.writeFileSync(filePath, content); } catch { /* best-effort */ }
+}
+
+/**
+ * Remove the managed block from an agent's context file, preserving all other
+ * content (FR-011). No-op if the file or block is absent. NOTE: for non-Claude
+ * agents that share AGENTS.md, the caller (runAgentsRemove) must decide whether
+ * to invoke this — skip it while any other non-Claude agent remains installed,
+ * so the shared section is preserved.
+ */
+export function removeManagedSection(agent: AgentConfig, projectRoot: string): void {
+  const filePath = path.join(projectRoot, agent.contextFile);
+  let existing = "";
+  try {
+    existing = fs.existsSync(filePath) ? fs.readFileSync(filePath, "utf-8") : "";
+  } catch { return; }
+
+  const startIdx = existing.indexOf(COACH_MARKER_START);
+  const endIdx = existing.indexOf(COACH_MARKER_END);
+  if (startIdx === -1 || endIdx === -1 || endIdx <= startIdx) return;
+
+  let replaced = existing.slice(0, startIdx) + existing.slice(endIdx + COACH_MARKER_END.length);
+  replaced = replaced.replace(/\n{3,}/g, "\n\n"); // tidy blank lines left behind
+  try { fs.writeFileSync(filePath, replaced); } catch { /* best-effort */ }
+}
+
+/** Backward-compat: upsert the section for Claude specifically (init/update until T014/T015). */
+export function upsertClaudeManagedSection(projectRoot: string): void {
+  const claude = loadAgentConfig("claude");
+  if (!claude) return;
+  upsertManagedSection(claude, projectRoot);
 }
