@@ -2,9 +2,10 @@
 /**
  * Spec Coach — SDD that trusts AI.
  *
- * Two isolated command surfaces (spec 003):
+ * Two isolated command surfaces (spec 003) + document lifecycle (spec 005):
  *   Corpus lifecycle:   init | update | uninstall
  *   Agent lifecycle:    agents { list | add | update | remove }
+ *   Document lifecycle: intake { scan | process | ignore }
  *
  * Usage:
  *   spec-coach init                       # scaffold the spec corpus
@@ -20,6 +21,7 @@ import { runInit } from "./commands/init.js";
 import { runUpdate } from "./commands/update.js";
 import { runUninstall } from "./commands/uninstall.js";
 import { runAgentsList, runAgentsAdd, runAgentsUpdate, runAgentsRemove } from "./commands/agents.js";
+import { runIntakeScan, runIntakeProcess } from "./commands/intake.js";
 
 // ── Banner ─────────────────────────────────────────────────────────────────
 
@@ -49,6 +51,14 @@ Agent lifecycle (ephemeral bindings):
   agents add <key>               Install an agent's skills + context.
   agents update <key|--all>      Refresh installed agent bindings.
   agents remove <key> --force    Remove an agent's bindings (corpus untouched).
+
+Document lifecycle (bring existing docs in):
+  intake scan                    Discover candidate .md docs -> .spec/intake/ manifest.
+  intake process --verbatim      Copy a candidate unchanged into .spec/absorbed/.
+  intake process --ai            Stage a candidate for the spec-absorb skill
+                                 (transforms it into specs/NNN-slug/spec.md).
+  intake process --ignore        Mark a candidate ignored (never re-surfaced).
+  intake ignore <list|add|remove>  Manage the ignore list.
 
 Options:
   --help, -h        Show this help
@@ -146,6 +156,32 @@ async function main(): Promise<void> {
         break;
       }
       console.error(`  ✗  unknown agents verb: ${verb || "(missing)"}\n`);
+      printHelp();
+      process.exit(1);
+    }
+
+    case "intake": {
+      // Document lifecycle (spec 005). scan/process wire here; the `ignore`
+      // subcommand dispatch lands in T014 once runIntakeIgnore exists (A4).
+      const sub = rest[0];
+      if (sub === "scan") {
+        if (!report(runIntakeScan(projectRoot))) process.exit(1);
+        break;
+      }
+      if (sub === "process") {
+        let mode: "verbatim" | "ai" | "ignore" | null = null;
+        if (has("--verbatim")) mode = "verbatim";
+        else if (has("--ai")) mode = "ai";
+        else if (has("--ignore")) mode = "ignore";
+        if (!mode) {
+          console.error("  ✗  usage: spec-coach intake process --verbatim|--ai|--ignore [path|--all]");
+          process.exit(1);
+        }
+        const target = rest.slice(1).find((f) => !f.startsWith("-")) ?? "all";
+        if (!report(runIntakeProcess(projectRoot, { mode, target }))) process.exit(1);
+        break;
+      }
+      console.error(`  ✗  unknown intake subcommand: ${sub || "(missing)"}\n`);
       printHelp();
       process.exit(1);
     }
