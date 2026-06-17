@@ -250,6 +250,26 @@ export function safeAbsorbedName(sourceRel: string, projectRoot: string): string
   return name;
 }
 
+/**
+ * A kebab-case slug unique within `specs/` (FR-010). Used by the AI-transform
+ * path so an AI-chosen name cannot collide with an existing spec dir or escape
+ * `specs/`. Suffixes `-2`, `-3`, … on clash; falls back to `spec` if empty.
+ */
+export function sanitizeSlug(name: string, projectRoot: string): string {
+  let slug = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  if (!slug) slug = "spec";
+  let candidate = slug;
+  let n = 2;
+  while (fs.existsSync(path.join(projectRoot, "specs", candidate))) {
+    candidate = `${slug}-${n}`;
+    n++;
+  }
+  return candidate;
+}
+
 /** Resolve a POSIX candidate path to an absolute source path on this platform. */
 function sourceAbs(projectRoot: string, posixRel: string): string {
   return path.join(projectRoot, ...posixRel.split("/"));

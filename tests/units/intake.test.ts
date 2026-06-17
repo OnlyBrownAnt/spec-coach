@@ -14,6 +14,7 @@ import {
   discoverCandidates,
   runIntakeScan,
   runIntakeProcess,
+  sanitizeSlug,
   type Candidate,
 } from "../../src/commands/intake.ts";
 
@@ -192,6 +193,14 @@ try {
   const reM = readManifest(cap);
   ok("SC-001: re-scan keeps absorbed entry absorbed", reM.find((c) => c.path === "docs/old-spec.md")?.status === "absorbed-verbatim");
   ok("SC-001: re-scan keeps untouched entries pending", ["design/arch.md", "docs/noise.md"].every((p) => reM.find((c) => c.path === p)?.status === "pending"));
+
+  // ── T009: sanitizeSlug (kebab + unique within specs/) ────────────────────
+  const sl = mktmp("intake-slug-");
+  ok("T009: kebab-case normalization", sanitizeSlug("My Design Doc!", sl) === "my-design-doc");
+  ok("T009: collapses separators", sanitizeSlug("A   B/C", sl) === "a-b-c");
+  ok("T009: empty -> spec fallback", sanitizeSlug("!!!", sl) === "spec");
+  fs.mkdirSync(path.join(sl, "specs", "a-b"), { recursive: true });
+  ok("T009: unique within specs/ (suffix on clash)", sanitizeSlug("A B", sl) === "a-b-2");
 } catch (e) {
   ok("intake ran without throwing", false);
   console.log("    error:", (e as Error).message);
