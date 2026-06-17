@@ -8,6 +8,9 @@ import * as os from "node:os";
 import {
   readManifest,
   writeManifest,
+  readIgnoreList,
+  writeIgnoreList,
+  isIgnored,
   type Candidate,
 } from "../../src/commands/intake.ts";
 
@@ -47,6 +50,17 @@ try {
   ok("T002: round-trip preserves status", back[1].status === "absorbed-verbatim");
   ok("T002: round-trip preserves destination", back[1].destination === ".spec/absorbed/arch.md");
   ok("T002: manifest file written to .spec/intake/", fs.existsSync(path.join(t, ".spec/intake/manifest.json")));
+
+  // ── T003: ignore store + isIgnored ───────────────────────────────────────
+  const ig = mktmp("intake-ign-");
+  ok("T003: absent ignore list -> []", readIgnoreList(ig).length === 0);
+  writeIgnoreList(ig, ["docs/noise.md", "vendor"]);
+  ok("T003: round-trip patterns", JSON.stringify(readIgnoreList(ig)) === JSON.stringify(["docs/noise.md", "vendor"]));
+  ok("T003: ignore file written to .spec/intake/", fs.existsSync(path.join(ig, ".spec/intake/ignore.json")));
+  ok("T003: isIgnored exact match", isIgnored("docs/noise.md", ["docs/noise.md", "vendor"]));
+  ok("T003: isIgnored dir-prefix match", isIgnored("vendor/extra.md", ["docs/noise.md", "vendor"]));
+  ok("T003: isIgnored no false positive", !isIgnored("docs/real-spec.md", ["docs/noise.md", "vendor"]));
+  ok("T003: isIgnored empty list matches nothing", !isIgnored("anything.md", []));
 } catch (e) {
   ok("intake ran without throwing", false);
   console.log("    error:", (e as Error).message);

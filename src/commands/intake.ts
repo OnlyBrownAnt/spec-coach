@@ -67,3 +67,41 @@ export function writeManifest(projectRoot: string, candidates: Candidate[]): voi
   fs.mkdirSync(path.dirname(p), { recursive: true });
   fs.writeFileSync(p, JSON.stringify({ candidates }, null, 2) + "\n", "utf-8");
 }
+
+// ── Ignore store (.spec/intake/ignore.json) ────────────────────────────────
+
+const IGNORE_REL = path.join(INTAKE_DIR, "ignore.json");
+
+function ignorePath(projectRoot: string): string {
+  return path.join(projectRoot, IGNORE_REL);
+}
+
+/** Read the ignore list. Returns `[]` when absent/unreadable. Never throws. */
+export function readIgnoreList(projectRoot: string): string[] {
+  const p = ignorePath(projectRoot);
+  if (!fs.existsSync(p)) return [];
+  try {
+    const data = JSON.parse(fs.readFileSync(p, "utf-8"));
+    if (data && Array.isArray(data.patterns)) return data.patterns as string[];
+    return [];
+  } catch {
+    return [];
+  }
+}
+
+/** Write the ignore list (`{ patterns }`). */
+export function writeIgnoreList(projectRoot: string, patterns: string[]): void {
+  const p = ignorePath(projectRoot);
+  fs.mkdirSync(path.dirname(p), { recursive: true });
+  fs.writeFileSync(p, JSON.stringify({ patterns }, null, 2) + "\n", "utf-8");
+}
+
+/**
+ * True iff `relPath` equals a pattern OR lives under a pattern directory
+ * (exact-path + directory-prefix match — zero-dependency, no glob). `relPath`
+ * and `patterns` MUST be POSIX-normalized (`/`-separated) before matching so
+ * the comparison is cross-platform consistent (advisory A5).
+ */
+export function isIgnored(relPath: string, patterns: string[]): boolean {
+  return patterns.some((p) => relPath === p || relPath.startsWith(p + "/"));
+}
