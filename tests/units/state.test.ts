@@ -121,6 +121,14 @@ try {
   ok("reconcile write=true persists .spec/agents.json", fs.existsSync(path.join(proj, ".spec", "agents.json")));
   ok("persisted state matches detected", readState(proj).claude?.version === "1.0.0" && !!readState(proj).cursor);
 
+  // --- FR-015/016 (spec 004): reconcile backfills createdFiles, NOT createdContextFiles ---
+  fs.writeFileSync(path.join(proj, "CLAUDE.md"), "# exists; spec-coach did NOT create it\n");
+  const recon2 = reconcileFromFs(proj, manifest, true);
+  ok("FR-015: reconcile backfills createdFiles (claude)", (recon2.claude?.createdFiles?.length ?? 0) > 0);
+  ok("FR-015: reconcile createdFiles includes on-disk owned path", recon2.claude?.createdFiles?.includes(".claude/skills/spec-specify"));
+  ok("FR-015: reconcile backfills createdFiles (cursor markdown)", recon2.cursor?.createdFiles?.includes(".cursor/commands/spec/specify.md"));
+  ok("FR-016: reconcile does NOT populate createdContextFiles (CLAUDE.md present yet unclaimed)", !readCreatedContextFiles(proj).includes("CLAUDE.md"));
+
   // --- reconcile ignores a dir with no spec content (false-positive guard) ---
   const partial = mktmp("spec-partial-");
   fs.mkdirSync(path.join(partial, ".claude", "skills", "some-other-tool"), { recursive: true }); // not spec-*

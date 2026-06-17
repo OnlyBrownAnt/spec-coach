@@ -10,6 +10,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { loadManifest, type AgentEntry } from "./manifest.ts";
+import { ownedSkillUnits } from "./utils.ts";
 
 export interface InstalledAgent {
   version: string;
@@ -141,12 +142,17 @@ export function reconcileFromFs(
   const state: InstalledState = {};
   for (const agent of manifest) {
     if (hasSpecContent(projectRoot, agent)) {
-      state[agent.key] = { version: agent.version };
+      // FR-015: backfill createdFiles = ownedSkillUnits ∩ on-disk, so legacy projects
+      // get Tier-2 precise skill deletion after one reconcile.
+      const createdFiles = ownedSkillUnits(agent).filter((p) => fs.existsSync(path.join(projectRoot, p)));
+      state[agent.key] = createdFiles.length > 0 ? { version: agent.version, createdFiles } : { version: agent.version };
     }
   }
   if (write && Object.keys(state).length > 0) {
     writeState(projectRoot, state);
   }
+  // FR-016: createdContextFiles is intentionally NOT populated — provenance for
+  // context files created before this feature cannot be reconstructed.
   return state;
 }
 
