@@ -27,7 +27,7 @@
 
 **Purpose**: Externalize agent data and ensure it ships.
 
-- [ ] T001 Create `agents.json` at repo root: extract the 6 agents currently hardcoded in `src/utils.ts` `AGENTS` (claude/cursor/copilot/codex/windsurf/kiro) into entries with fields `key, name, dir, format, separator, frontmatter, contextFile, contextMarkers, argumentHints, version`. Add `"agents.json"` to the `files` array in `package.json`. **Verify**: `npm pack --dry-run` output lists `agents.json`.
+- [x] T001 Create `agents.json` at repo root: extract the 6 agents currently hardcoded in `src/utils.ts` `AGENTS` (claude/cursor/copilot/codex/windsurf/kiro) into entries with fields `key, name, dir, format, separator, frontmatter, contextFile, contextMarkers, argumentHints, version`. Add `"agents.json"` to the `files` array in `package.json`. **Verify**: `npm pack --dry-run` output lists `agents.json`.
 
 ---
 
@@ -37,10 +37,10 @@
 
 **⚠️ CRITICAL**: No user-story command work can begin until this phase is complete.
 
-- [ ] T002 [P] [US1] `src/manifest.ts` — define `AgentEntry` type; `loadManifest()` reads `agents.json` via `PACKAGE_ROOT`; `validateAgentEntry(e)` rejects missing `key/name/dir/format` or unknown `format` value with a field-named error (FR-015). Write `tests/scripts/test-manifest.sh` FIRST (valid load returns 6 agents; each malformed entry — missing key, missing dir, bad format — rejected). Depends T001.
-- [ ] T003 [P] [US3] `src/state.ts` — define `InstalledState` type; `readState(projectRoot)`, `writeState(projectRoot, state)` for `.spec/agents.json`; `reconcileFromFs(projectRoot)` scans known agent dirs (`.claude/skills/spec-*`, `.cursor/commands/spec/*`, etc.) to populate state when `.spec/agents.json` is absent (FR-007, FR-018). Write `tests/scripts/test-state.sh` FIRST (write→read round-trip preserves keys+version; reconcile populates state from a fixture project's agent dirs). No dependencies — parallel with T002.
-- [ ] T004 [US1] `src/utils.ts` — remove the `AGENTS` literal and `AgentKey` enum; add `loadAgentConfig(key): AgentConfig` backed by `loadManifest()` (T002). Keep `installSkill`, `installAllSkills`, `installDocumentTemplates`, `installConstitutionToMemory`, `installScripts`, `ensureDir`, frontmatter helpers unchanged. **Verify**: `loadAgentConfig("claude")` returns the claude config; existing install code still references resolve correctly. Depends T002.
-- [ ] T005 [US5] `src/utils.ts` — generalize `upsertClaudeManagedSection` → `upsertManagedSection(agent, projectRoot)` reading `contextFile` + `contextMarkers` from the agent config (claude→CLAUDE.md, non-claude→AGENTS.md), and add `removeManagedSection(agent, projectRoot)` (FR-010, FR-011). Write `tests/scripts/test-context-inject.sh` FIRST (claude writes CLAUDE.md section; cursor writes AGENTS.md section; remove clears the section; shared AGENTS.md section preserved while a non-claude agent remains; user content outside markers preserved). Depends T004.
+- [x] T002 [P] [US1] `src/manifest.ts` — define `AgentEntry` type; `loadManifest()` reads `agents.json` via `PACKAGE_ROOT`; `validateAgentEntry(e)` rejects missing `key/name/dir/format` or unknown `format` value with a field-named error (FR-015). Write `tests/scripts/test-manifest.sh` FIRST (valid load returns 6 agents; each malformed entry — missing key, missing dir, bad format — rejected). Depends T001.
+- [x] T003 [P] [US3] `src/state.ts` — define `InstalledState` type; `readState(projectRoot)`, `writeState(projectRoot, state)` for `.spec/agents.json`; `reconcileFromFs(projectRoot)` scans known agent dirs (`.claude/skills/spec-*`, `.cursor/commands/spec/*`, etc.) to populate state when `.spec/agents.json` is absent (FR-007, FR-018). Write `tests/scripts/test-state.sh` FIRST (write→read round-trip preserves keys+version; reconcile populates state from a fixture project's agent dirs). No dependencies — parallel with T002.
+- [x] T004 [US1] `src/utils.ts` — remove the `AGENTS` literal and `AgentKey` enum; add `loadAgentConfig(key): AgentConfig` backed by `loadManifest()` (T002). Keep `installSkill`, `installAllSkills`, `installDocumentTemplates`, `installConstitutionToMemory`, `installScripts`, `ensureDir`, frontmatter helpers unchanged. **Verify**: `loadAgentConfig("claude")` returns the claude config; existing install code still references resolve correctly. Depends T002.
+- [x] T005 [US5] `src/utils.ts` — generalize `upsertClaudeManagedSection` → `upsertManagedSection(agent, projectRoot)` reading `contextFile` + `contextMarkers` from the agent config (claude→CLAUDE.md, non-claude→AGENTS.md), and add `removeManagedSection(agent, projectRoot)` (FR-010, FR-011). Write `tests/scripts/test-context-inject.sh` FIRST (claude writes CLAUDE.md section; cursor writes AGENTS.md section; remove clears the section; shared AGENTS.md section preserved while a non-claude agent remains; user content outside markers preserved). Depends T004.
 
 **Checkpoint**: Foundation ready — manifest, state, agent-config resolution, and context injection are all independently usable. User-story verbs can now be built.
 
@@ -54,7 +54,7 @@
 
 ### Tests for User Story 1
 
-- [ ] T006 [US1] Extend `tests/scripts/test-manifest.sh`: append a fixture agent `foo` to a temp `agents.json`, assert `loadAgentConfig("foo")` resolves all fields, and assert the test added NO `.ts` edits (diff check) (FR-001, FR-002, FR-003, SC-001). Depends T002, T004.
+- [x] T006 [US1] Extend `tests/scripts/test-manifest.sh`: append a fixture agent `foo` to a temp `agents.json`, assert `loadAgentConfig("foo")` resolves all fields, and assert the test added NO `.ts` edits (diff check) (FR-001, FR-002, FR-003, SC-001). Depends T002, T004.
 
 **Checkpoint**: Agents are purely data-driven — SC-001 satisfied. This alone is a shippable MVP.
 
