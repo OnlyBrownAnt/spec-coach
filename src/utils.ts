@@ -318,3 +318,75 @@ export function installScripts(projectRoot: string): string[] {
   }
   return installed;
 }
+
+// ── CLAUDE.md managed section ───────────────────────────────────────────────
+
+export const COACH_MARKER_START = "<!-- COACH START -->";
+export const COACH_MARKER_END = "<!-- COACH END -->";
+
+/** The managed Spec Coach section body (between markers). Shared by init and update. */
+export function buildClaudeManagedSection(): string {
+  return [
+    "This project uses **Spec Coach** for spec-driven development.",
+    "",
+    "## SDD Workflow",
+    "",
+    "Run these slash commands in order:",
+    "",
+    "1. /spec-constitution -- Define project principles",
+    "2. /spec-specify -- Create feature specification",
+    "3. /spec-clarify (optional) -- Clarify ambiguities",
+    "4. /spec-plan -- Create technical plan",
+    "5. /spec-tasks -- Generate task breakdown",
+    "6. /spec-analyze (optional) -- Cross-artifact review",
+    "7. /spec-implement -- Execute implementation",
+    "",
+    "See .spec/templates/ for document templates and .spec/scripts/ for helper scripts.",
+    "",
+    "## Workflow State",
+    "",
+    "Current feature & workflow phase: run `scripts/bash/show-sdd-state.sh` (state lives in `.spec/feature.json` + the SDD STATE block in `.spec/memory/constitution.md`).",
+    "",
+    "## Bug Fixes",
+    "",
+    "Run `/spec-fix \"describe the bug\"` for root-cause analysis and targeted fixes.",
+    "",
+  ].join("\n");
+}
+
+/**
+ * Create or refresh the managed Spec Coach section in CLAUDE.md. Preserves any
+ * user content outside the COACH markers. init writes a fresh file; update calls
+ * this to keep existing projects current (FR-007).
+ */
+export function upsertClaudeManagedSection(projectRoot: string): void {
+  const claudePath = path.join(projectRoot, "CLAUDE.md");
+  const section = buildClaudeManagedSection();
+  const block = `${COACH_MARKER_START}
+${section}${COACH_MARKER_END}
+`;
+
+  let existing = "";
+  try {
+    existing = fs.existsSync(claudePath) ? fs.readFileSync(claudePath, "utf-8") : "";
+  } catch { /* best-effort */ }
+
+  const startIdx = existing.indexOf(COACH_MARKER_START);
+  const endIdx = existing.indexOf(COACH_MARKER_END);
+  if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+    const replaced = existing.slice(0, startIdx) + block + existing.slice(endIdx + COACH_MARKER_END.length);
+    try { fs.writeFileSync(claudePath, replaced); } catch { /* best-effort */ }
+    return;
+  }
+
+  // No markers yet: append a managed block (create file with H1 if absent).
+  const projectName = path.basename(projectRoot);
+  const content = existing.trim().length > 0
+    ? `${existing.trimEnd()}
+
+${block}`
+    : `# ${projectName}
+
+${block}`;
+  try { fs.writeFileSync(claudePath, content); } catch { /* best-effort */ }
+}

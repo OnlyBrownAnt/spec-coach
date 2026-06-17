@@ -14,6 +14,7 @@ import {
   installScripts,
   ensureDir,
   parseFrontmatter,
+  upsertClaudeManagedSection,
 } from "../utils.js";
 
 // ── Project structure ──────────────────────────────────────────────────────
@@ -28,27 +29,8 @@ export function createProjectStructure(projectRoot: string): void {
 // ── CLAUDE.md ──────────────────────────────────────────────────────────────
 
 export function createCLAUDEmd(projectRoot: string): void {
-  const claudePath = path.join(projectRoot, "CLAUDE.md");
-  const projectName = path.basename(projectRoot);
-  const content = "# " + projectName + "\n\n" +
-    "<!-- COACH START -->\n" +
-    "This project uses **Spec Coach** for spec-driven development.\n\n" +
-    "## SDD Workflow\n\n" +
-    "Run these slash commands in order:\n\n" +
-    "1. /spec-constitution -- Define project principles\n" +
-    "2. /spec-specify -- Create feature specification\n" +
-    "3. /spec-clarify (optional) -- Clarify ambiguities\n" +
-    "4. /spec-plan -- Create technical plan\n" +
-    "5. /spec-tasks -- Generate task breakdown\n" +
-    "6. /spec-analyze (optional) -- Cross-artifact review\n" +
-    "7. /spec-implement -- Execute implementation\n\n" +
-    "See .spec/templates/ for document templates and .spec/scripts/ for helper scripts.\n\n" +
-    "## Bug Fixes\n\n" +
-    "Run `/spec-fix \"describe the bug\"` for root-cause analysis and targeted fixes.\n\n" +
-    "<!-- COACH END -->\n";
-  try {
-    fs.writeFileSync(claudePath, content);
-  } catch { /* best-effort */ }
+  // Creates or refreshes the managed Spec Coach section (shared with `update`).
+  upsertClaudeManagedSection(projectRoot);
 }
 
 // ── Absorb: scan and migrate existing spec documents ───────────────────────

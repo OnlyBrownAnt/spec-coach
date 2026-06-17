@@ -63,7 +63,33 @@ Write `.spec/memory/constitution.md`. **Follow the template structure exactly.**
 
 Fill in both flexible sections (`[SECTION_2_NAME]`, `[SECTION_3_NAME]`) — rename them to fit your project. Fill in the Governance section and the version footer.
 
-### 4. Initialize SDD State
+### 4. Propagate Amendments & Record Sync Impact Report
+
+**Skip on first creation** — this step applies only when *updating* an existing constitution.
+
+When a principle is added, removed, or renamed, the change must flow to the artifacts that depend on it. The constitution's authority rots the moment an amendment stops at the file.
+
+**Amendment Propagation Checklist** — re-align each dependent artifact:
+
+1. `.spec/templates/plan-template.md` — its `## Constitution Check` section is the only template that references the principles; update it to match the amended set.
+2. Any skill that embeds a principle's wording (e.g., `/spec-plan`'s Constitution Check) — re-read and adjust.
+3. Existing `specs/*/plan.md` files — their Constitution Check may cite superseded principles; flag them for re-review.
+
+**Record a Sync Impact Report** so the change is auditable and machine-detectable. Append this block to `.spec/memory/constitution.md`:
+
+```
+<!-- SYNC IMPACT START -->
+Amended: <old principle> → <new principle>   (or Added: / Removed:)
+Version: <old> → <new>, Last Amended: <date>
+Pending re-alignment: templates/plan-template.md
+<!-- SYNC IMPACT END -->
+```
+
+**Verify with the tool** (non-blocking — it advises, never gates): run `.spec/scripts/bash/verify-constitution-sync.sh`. It reports the current principle set and the amendment status: `AMENDMENT PENDING` while the block exists, `INCOMPLETE` if the block is malformed, and `CLEAN` once you remove the block after re-alignment.
+
+Once every dependent artifact is re-aligned and the script reports `CLEAN`, delete the SYNC IMPACT block.
+
+### 5. Initialize SDD State
 
 Append the managed state section:
 
@@ -76,7 +102,7 @@ Append the managed state section:
 <!-- SDD STATE END -->
 ```
 
-### 5. Autopilot Mode
+### 6. Autopilot Mode
 
 If running without user interaction (from `/spec.autopilot`):
 
@@ -84,7 +110,21 @@ If running without user interaction (from `/spec.autopilot`):
 2. Customize principle names and rationales to the project context.
 3. Write and report: "Constitution created with 5 principles (autopilot defaults). Review at .spec/memory/constitution.md"
 
-### 6. Hand Off
+### 7. Load Team Hooks (optional)
+
+Teams can extend the constitution workflow without editing source skills, via a project-local `.spec/hooks.md`. If it exists, read it before finalizing the constitution and surface any declared `constitution`-phase steps. If the file is absent or malformed, skip silently — never fail the workflow on it.
+
+`.spec/hooks.md` format — a markdown list grouped by phase:
+
+```
+## constitution
+- Run the internal compliance checklist before ratifying.
+- Confirm data-handling principles are reviewed.
+```
+
+Surface each declared step; the team owns their hooks. You surface, they act.
+
+### 8. Hand Off
 
 ```
 Constitution created with {{N}} principles.

@@ -57,6 +57,10 @@ You are a **product thinking partner**. You bring structure to the user's idea a
 
 - **Single, well-scoped feature?** Proceed to step 2.
 
+**Load the constitution.** Read `.spec/memory/constitution.md` before drafting. The spec MUST honor every stated principle; if a requirement tensions a principle, surface it explicitly rather than silently contradicting one.
+
+**Team hooks:** if `.spec/hooks.md` declares `specify`-phase steps, surface them; skip silently if absent/malformed.
+
 ### 2. Propose Approach Options
 
 Before writing the spec, propose 2-3 high-level approaches. Lead with your recommendation:
@@ -103,9 +107,20 @@ The template's sections are:
 - `## Success Criteria` — measurable outcomes (SC-001 format)
 - `## Assumptions` — scope boundaries, dependencies, defaults chosen
 
-### 6. Self-Review
+### 6. Iterative Validation (up to 3 rounds)
 
-Before finishing, ask:
+A spec is not done after one pass. Run up to **3 rounds** of validation. Each round, fix what you find, then re-check. After round 3, anything still unresolved MUST be surfaced explicitly (an `[NEEDS CLARIFICATION]` marker or a stated assumption) — never silently dropped.
+
+**Each round, verify mechanically**: run `.spec/scripts/bash/verify-spec.sh` against the drafted `specs/<FEATURE_ID>/spec.md`. It flags leftover placeholders (`TBD`, `TODO`, unfilled `[ALL_CAPS]`, and generic filler like "add appropriate error handling" without specifics). Resolve every finding before the next round.
+
+**Prioritize unresolved issues in this order** — fix higher tiers first each round:
+
+1. **Scope** — multi-system requests not decomposed; ambiguous purpose
+2. **Security & data** — unvalidated inputs, unhandled data rules
+3. **UX** — untestable user stories, missing acceptance scenarios
+4. **Technical** — untestable FRs, missing edge cases, template deviations
+
+The quality checks still apply — fold them into the rounds:
 - Does the output match the template structure exactly? Every section present, no extra sections?
 - Can a new team member understand this without asking "what does this mean"?
 - Is every functional requirement testable?

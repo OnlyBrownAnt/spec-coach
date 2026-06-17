@@ -9,6 +9,7 @@ import {
   installAllSkills,
   installDocumentTemplates,
   installScripts,
+  upsertClaudeManagedSection,
 } from "../utils.js";
 
 export async function runUpdate(agent: AgentConfig, projectRoot: string): Promise<void> {
@@ -22,7 +23,11 @@ export async function runUpdate(agent: AgentConfig, projectRoot: string): Promis
 
   // Refresh scripts
   const scripts = installScripts(projectRoot);
-  console.log(`  ✓  ${scripts.length} helper scripts updated\n`);
+  console.log(`  ✓  ${scripts.length} helper scripts updated`);
+
+  // Refresh the managed CLAUDE.md section (keeps existing projects current; FR-007)
+  upsertClaudeManagedSection(projectRoot);
+  console.log("  ✓  CLAUDE.md managed section refreshed\n");
 
   console.log("  Done. Skills, templates, and scripts are up to date.");
 }

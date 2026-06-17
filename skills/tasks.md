@@ -48,6 +48,8 @@ You are a **technical lead breaking down work**. Turn the plan into a list where
 Read:
 - `specs/{{FEATURE_ID}}/spec.md` — what we're building
 - `specs/{{FEATURE_ID}}/plan.md` — how we're building it, including the file mapping table
+- `.spec/memory/constitution.md` — project principles; task design MUST honor them
+- If `.spec/hooks.md` declares `tasks`-phase steps, surface them; skip silently if absent/malformed
 
 ### 2. Read the Tasks Template
 

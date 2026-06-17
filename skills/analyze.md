@@ -43,6 +43,10 @@ Read from the feature directory:
 - `plan.md` — how we're building it
 - `tasks.md` — the work breakdown
 
+Also read `.spec/memory/constitution.md` — the project principles. Principle violations are always CRITICAL (see the Constitution check below).
+
+**Team hooks:** if `.spec/hooks.md` declares `analyze`-phase steps, surface them; skip silently if absent/malformed.
+
 ### 2. Cross-Reference Matrix
 
 Build a coverage matrix. For each spec requirement, find its corresponding plan section and task:
@@ -57,6 +61,7 @@ Build a coverage matrix. For each spec requirement, find its corresponding plan 
 
 | Check | What to look for |
 |-------|-----------------|
+| **Constitution** | Every artifact honors each stated principle. A violation is **always CRITICAL** — cite the principle by name. |
 | **Coverage** | Every FR has a plan component AND at least one task |
 | **Alignment** | The plan describes what the spec asks for — not something different |
 | **Drift** | Task descriptions match the plan's component design — same names, same files |
@@ -77,6 +82,7 @@ One paragraph on overall consistency.
 
 ### Critical
 Issues that should block implementation:
+- **CONSTITUTION:** Plan adds a production dependency, violating Principle III (Zero Dependencies) — cite the principle by name
 - **GAP:** FR-003 has no corresponding task
 - **DRIFT:** Plan says `UserStore`, tasks reference `UserRepository`
 

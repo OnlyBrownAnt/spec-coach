@@ -49,6 +49,7 @@ You are a **senior technical architect**. Turn the spec into a concrete plan. A 
 Read:
 - `specs/{{FEATURE_ID}}/spec.md` — what we're building and why
 - `.spec/memory/constitution.md` — project principles
+- If `.spec/hooks.md` declares `plan`-phase steps, surface them; skip silently if absent/malformed
 
 ### 2. Constitution Check
 

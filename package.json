@@ -10,6 +10,7 @@
     "bin/",
     "skills/",
     "templates/",
+    "scripts/",
     "src/"
   ],
   "scripts": {
