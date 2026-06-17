@@ -68,10 +68,10 @@
 
 ### Implementation for User Story 2
 
-- [ ] T007 [P] [US2] `src/commands/agents.ts` — `runAgentsList(projectRoot)`: join manifest (T002) with installed state (T003), print each agent with an installed/available mark (FR-004). Depends T002, T003, T004.
-- [ ] T008 [US2] [US4] `src/commands/agents.ts` — `runAgentsAdd(key, projectRoot)`: guard requires corpus (FR-013) — if `.spec/` absent, print coach-tone guidance ("run `spec-coach init` first") and exit nonzero WITHOUT installing; otherwise install skills via `installSkill` + context via `upsertManagedSection` (T005), idempotently, and write state (FR-005, FR-009). Depends T005, T007.
-- [ ] T009 [US2] [US3] `src/commands/agents.ts` — `runAgentsRemove(key, projectRoot)`: confirm before deleting; remove the agent's `dir` subtree + `removeManagedSection` (T005); NEVER touch corpus files (FR-008); update state (FR-006, FR-014). Depends T005, T007.
-- [ ] T010 [US2] `src/commands/agents.ts` — `runAgentsUpdate(target, projectRoot)`: refresh installed agents' skills + context sections from current sources (FR-012); `--all` refreshes every installed agent. Depends T007.
+- [x] T007 [P] [US2] `src/commands/agents.ts` — `runAgentsList(projectRoot)`: join manifest (T002) with installed state (T003), print each agent with an installed/available mark (FR-004). Depends T002, T003, T004.
+- [x] T008 [US2] [US4] `src/commands/agents.ts` — `runAgentsAdd(key, projectRoot)`: guard requires corpus (FR-013) — if `.spec/` absent, print coach-tone guidance ("run `spec-coach init` first") and exit nonzero WITHOUT installing; otherwise install skills via `installSkill` + context via `upsertManagedSection` (T005), idempotently, and write state (FR-005, FR-009). Depends T005, T007.
+- [x] T009 [US2] [US3] `src/commands/agents.ts` — `runAgentsRemove(key, projectRoot)`: confirm before deleting; remove the agent's `dir` subtree + `removeManagedSection` (T005); NEVER touch corpus files (FR-008); update state (FR-006, FR-014). Depends T005, T007.
+- [x] T010 [US2] `src/commands/agents.ts` — `runAgentsUpdate(target, projectRoot)`: refresh installed agents' skills + context sections from current sources (FR-012); `--all` refreshes every installed agent. Depends T007.
 
 **Checkpoint**: All four verbs implemented (CLI wiring lands in T018).
 
@@ -85,7 +85,7 @@
 
 ### Tests for User Story 3
 
-- [ ] T011 [US3] `tests/scripts/test-lifecycle.sh`: on a fixture project `agents add cursor`, snapshot agent-owned paths, `agents remove cursor`, assert paths match pre-add exactly; assert `.spec/scripts`, `.spec/templates`, `.spec/memory/constitution.md`, `specs/` unchanged; assert state round-trips (FR-006, FR-008, FR-014). Depends T008, T009.
+- [x] T011 [US3] `tests/scripts/test-lifecycle.sh`: on a fixture project `agents add cursor`, snapshot agent-owned paths, `agents remove cursor`, assert paths match pre-add exactly; assert `.spec/scripts`, `.spec/templates`, `.spec/memory/constitution.md`, `specs/` unchanged; assert state round-trips (FR-006, FR-008, FR-014). Depends T008, T009.
 
 **Checkpoint**: Reversibility proven — the core safety property of the lifecycle.
 
@@ -99,7 +99,7 @@
 
 ### Tests for User Story 4
 
-- [ ] T012 [US4] Extend `tests/scripts/test-lifecycle.sh`: `add claude` then `add cursor`, assert both marked installed and both dirs present; `remove cursor` leaves claude intact; `add claude` again produces no duplicate skill files and no duplicate managed section (FR-009). Depends T011.
+- [x] T012 [US4] Extend `tests/scripts/test-lifecycle.sh`: `add claude` then `add cursor`, assert both marked installed and both dirs present; `remove cursor` leaves claude intact; `add claude` again produces no duplicate skill files and no duplicate managed section (FR-009). Depends T011.
 
 **Checkpoint**: Multi-agent coexistence proven.
 
@@ -113,7 +113,7 @@
 
 ### Tests for User Story 5
 
-- [ ] T013 [US5] Extend `tests/scripts/test-context-inject.sh`: via `agents add cursor` (T008), assert `AGENTS.md` gains the managed section (pointing to `show-sdd-state.sh`); removing the last non-Claude agent clears it; claude always writes `CLAUDE.md` (FR-010, FR-011). Depends T005, T008.
+- [x] T013 [US5] Extend `tests/scripts/test-context-inject.sh`: via `agents add cursor` (T008), assert `AGENTS.md` gains the managed section (pointing to `show-sdd-state.sh`); removing the last non-Claude agent clears it; claude always writes `CLAUDE.md` (FR-010, FR-011). Depends T005, T008.
 
 **Checkpoint**: Context injection reaches all six agents — closes the spec-002 reach gap.
 
@@ -127,10 +127,10 @@
 
 ### Implementation for User Story 6
 
-- [ ] T014 [P] [US6] `src/commands/init.ts` rewrite — corpus scaffold ONLY: `createProjectStructure` + `installDocumentTemplates` + `installConstitutionToMemory` + `installScripts` + create empty `.spec/agents.json`; NO `installAllSkills`, NO context section, NO absorb (FR-013, FR-017). Depends T003.
-- [ ] T015 [P] [US6] `src/commands/update.ts` rewrite — refresh `.spec/templates/` + `.spec/scripts/` ONLY; no skills, no context, no user-artifact mutation (FR-013, FR-017). Parallel with T014.
-- [ ] T016 [US6] `src/commands/uninstall.ts` (new) — remove `.spec/scripts`, `.spec/templates`, `.spec/agents.json`, all agent dirs + managed sections; PRESERVE `specs/`, `.spec/memory/constitution.md`, `.spec/absorbed/` unless `--force`; confirm before deleting (FR-014, FR-016). Depends T005, T009.
-- [ ] T017 [US6] Extend `tests/scripts/test-lifecycle.sh`: `init` creates corpus with NO agent files (no `.claude/skills`); `update` touches only templates/scripts; `uninstall` preserves `specs/` + constitution by default (FR-016, FR-017). Depends T014, T015, T016.
+- [x] T014 [P] [US6] `src/commands/init.ts` rewrite — corpus scaffold ONLY: `createProjectStructure` + `installDocumentTemplates` + `installConstitutionToMemory` + `installScripts` + create empty `.spec/agents.json`; NO `installAllSkills`, NO context section, NO absorb (FR-013, FR-017). Depends T003.
+- [x] T015 [P] [US6] `src/commands/update.ts` rewrite — refresh `.spec/templates/` + `.spec/scripts/` ONLY; no skills, no context, no user-artifact mutation (FR-013, FR-017). Parallel with T014.
+- [x] T016 [US6] `src/commands/uninstall.ts` (new) — remove `.spec/scripts`, `.spec/templates`, `.spec/agents.json`, all agent dirs + managed sections; PRESERVE `specs/`, `.spec/memory/constitution.md`, `.spec/absorbed/` unless `--force`; confirm before deleting (FR-014, FR-016). Depends T005, T009.
+- [x] T017 [US6] Extend `tests/scripts/test-lifecycle.sh`: `init` creates corpus with NO agent files (no `.claude/skills`); `update` touches only templates/scripts; `uninstall` preserves `specs/` + constitution by default (FR-016, FR-017). Depends T014, T015, T016.
 
 **Checkpoint**: Corpus and agent lifecycles fully isolated and independently operable.
 
@@ -140,9 +140,9 @@
 
 **Purpose**: CLI wiring, constitution amendment, migration, release smoke.
 
-- [ ] T018 [Cross] `src/cli.ts` — full router: top-level `init` / `update` / `uninstall` + `agents {list, add, update, remove}` with arg parsing; remove the old `--agent` coupling (FR-013). Depends T007–T010, T014, T015, T016.
-- [ ] T019 [Cross] Constitution amendment: update `.spec/memory/constitution.md` Development Constraints — (a) replace "Two commands: init and update" with the two-surface lifecycle, (b) replace the `AGENTS`-map clause with the `agents.json` manifest; add a `<!-- SYNC IMPACT START/END -->` rationale block (run `scripts/bash/verify-constitution-sync.sh`). Bump `package.json` to `2.0.0`; add a changelog entry naming the install-contract change + reconcile migration. Depends on all prior tasks.
-- [ ] T020 [Cross] Migration + release smoke: build a fixture old-project (`.spec/` + agent dirs, NO `.spec/agents.json`), run an `agents` command, assert reconcile populates state non-destructively (FR-018); run `npm test` (all green); `npm pack --dry-run` ships `agents.json`; temp-project `init` → `agents add claude` → `agents remove claude` works end-to-end. Depends T018.
+- [x] T018 [Cross] `src/cli.ts` — full router: top-level `init` / `update` / `uninstall` + `agents {list, add, update, remove}` with arg parsing; remove the old `--agent` coupling (FR-013). Depends T007–T010, T014, T015, T016.
+- [x] T019 [Cross] Constitution amendment: update `.spec/memory/constitution.md` Development Constraints — (a) replace "Two commands: init and update" with the two-surface lifecycle, (b) replace the `AGENTS`-map clause with the `agents.json` manifest; add a `<!-- SYNC IMPACT START/END -->` rationale block (run `scripts/bash/verify-constitution-sync.sh`). Bump `package.json` to `2.0.0`; add a changelog entry naming the install-contract change + reconcile migration. Depends on all prior tasks.
+- [x] T020 [Cross] Migration + release smoke: build a fixture old-project (`.spec/` + agent dirs, NO `.spec/agents.json`), run an `agents` command, assert reconcile populates state non-destructively (FR-018); run `npm test` (all green); `npm pack --dry-run` ships `agents.json`; temp-project `init` → `agents add claude` → `agents remove claude` works end-to-end. Depends T018.
 
 ---
 

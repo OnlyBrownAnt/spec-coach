@@ -4,7 +4,7 @@
 
 **Created**: 2026-06-17
 
-**Status**: Draft
+**Status**: Implemented
 
 **Input**: User description: "需要进行统一设计，后续会频繁遇到 AI工具的安装、更新卸载" — design a unified model for installing, updating, and uninstalling AI-tool (agent) integrations, because these operations will be frequent. Scope chosen by user: **full lifecycle** (manifest-driven agents + list/add/update/remove verbs + installed-state tracking + multi-agent coexistence + universal context injection).
 
