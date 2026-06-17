@@ -140,3 +140,38 @@ function otherNonClaudeAgentsInstalled(excludeKey: string, projectRoot: string):
     (e) => e.key !== excludeKey && e.contextFile !== "CLAUDE.md" && !!state[e.key],
   );
 }
+
+/**
+ * Refresh installed agents' bindings (skills + context) from current sources,
+ * syncing the recorded version to the manifest (FR-012; version-drift upgrade).
+ * Idempotent. `target` is a key or "all". A not-installed single target is an
+ * error; "all" with nothing installed is a no-op ok.
+ */
+export function runAgentsUpdate(target: string, projectRoot: string): CmdResult {
+  const state = readState(projectRoot);
+  let keys: string[];
+  if (target === "all") {
+    keys = Object.keys(state);
+    if (keys.length === 0) {
+      return { ok: true, message: "No agents installed; nothing to update." };
+    }
+  } else {
+    if (!state[target]) {
+      return { ok: false, reason: `'${target}' is not installed.` };
+    }
+    keys = [target];
+  }
+
+  let upgraded = 0;
+  for (const key of keys) {
+    const agent = loadAgentConfig(key);
+    if (!agent) continue; // agent removed from manifest since install
+    const prevVersion = state[key]?.version;
+    installAllSkills(agent, projectRoot);
+    upsertManagedSection(agent, projectRoot);
+    recordAgent(projectRoot, key, agent.version);
+    if (prevVersion !== agent.version) upgraded++;
+  }
+  const note = upgraded ? `, ${upgraded} version-upgraded` : "";
+  return { ok: true, message: `Updated ${keys.length} agent(s)${note}.` };
+}
