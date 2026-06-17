@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
-import { runAgentsAdd, runAgentsRemove } from "../../src/commands/agents.ts";
+import { runAgentsAdd, runAgentsRemove, getAgentsStatus } from "../../src/commands/agents.ts";
 import { runUninstall } from "../../src/commands/uninstall.ts";
 import { readState, readCreatedContextFiles, writeState } from "../../src/state.ts";
 
@@ -194,6 +194,25 @@ try {
   fs.appendFileSync(path.join(agu, "AGENTS.md"), "\n# user agent notes\n");
   runAgentsRemove("cursor", agu, { force: true }); // last non-Claude, but user content present
   ok("US2: AGENTS.md with user content preserved on last remove", exists(agu, "AGENTS.md") && fs.readFileSync(path.join(agu, "AGENTS.md"), "utf-8").includes("user agent notes"));
+
+  // ── T014 / US3 / SC-004: legacy v2.0.0 project gets precise deletion ─────
+  // (behavior spans T007 + T013; this is the US3 end-to-end regression lock.)
+  const lg = mktmp("pd-legacy-");
+  fs.mkdirSync(path.join(lg, ".spec", "memory"), { recursive: true }); // corpus (pre-2.1 shape)
+  fs.mkdirSync(path.join(lg, ".claude", "skills", "spec-specify"), { recursive: true });
+  fs.writeFileSync(path.join(lg, ".claude/skills/spec-specify/SKILL.md"), "# legacy coach skill\n");
+  fs.mkdirSync(path.join(lg, ".claude", "skills", "spec-user-docs"), { recursive: true });
+  fs.writeFileSync(path.join(lg, ".claude/skills/spec-user-docs/README.md"), "user docs\n");
+  ok("SC-004 setup: no state file (legacy)", !exists(lg, ".spec/agents.json"));
+
+  const status = getAgentsStatus(lg); // first agents command → reconcile (writes createdFiles)
+  ok("SC-004: legacy claude reconciled as installed", status.some((a) => a.key === "claude" && a.installed));
+  ok("SC-004: reconcile wrote .spec/agents.json", exists(lg, ".spec/agents.json"));
+  ok("SC-004: reconcile backfilled createdFiles (Tier 2)", (readState(lg).claude?.createdFiles?.length ?? 0) > 0);
+
+  runAgentsRemove("claude", lg, { force: true });
+  ok("SC-004: legacy coach skill dir removed", !exists(lg, ".claude/skills/spec-specify"));
+  ok("SC-004: user spec-* dir preserved on legacy remove (no wildcard)", exists(lg, ".claude/skills/spec-user-docs/README.md"));
 } catch (e) {
   ok("precise-deletion ran without throwing", false);
   console.log("    error:", (e as Error).message);
