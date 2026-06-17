@@ -11,6 +11,7 @@
  */
 import * as fs from "node:fs";
 import * as path from "node:path";
+import * as crypto from "node:crypto";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -104,4 +105,85 @@ export function writeIgnoreList(projectRoot: string, patterns: string[]): void {
  */
 export function isIgnored(relPath: string, patterns: string[]): boolean {
   return patterns.some((p) => relPath === p || relPath.startsWith(p + "/"));
+}
+
+// ── Discovery ───────────────────────────────────────────────────────────────
+// Deterministic + non-interactive (no stdin — FR-003). Bounded to preset dirs
+// (FR-005): project-root top-level files + docs/doc/design/spec/requirements,
+// never a full recursive walk. Excludes corpus-internal and ignored paths.
+
+export const PRESET_SCAN_DIRS = ["docs", "doc", "design", "spec", "requirements"];
+
+const KEYWORDS = ["spec", "plan", "feature", "design", "requirement", "roadmap"];
+const CONTENT_MARKERS = ["Overview", "User Story", "FR-", "## Requirements", "Acceptance"];
+
+/** Normalize a platform path to POSIX forward-slashes (cross-platform — A5). */
+function toPosix(p: string): string {
+  return p.split(path.sep).join("/");
+}
+
+/** A path inside spec-coach's own corpus (never re-discovered). */
+function isCorpusInternal(posixRel: string): boolean {
+  return (
+    posixRel === "specs" || posixRel.startsWith("specs/") ||
+    posixRel === ".spec" || posixRel.startsWith(".spec/") ||
+    posixRel === ".git" || posixRel.startsWith(".git/") ||
+    posixRel.startsWith("node_modules/") || posixRel.includes("/node_modules/")
+  );
+}
+
+/** A `.md` file is a candidate iff its path carries a keyword OR its content carries a marker (FR-001). */
+function isCandidate(posixRel: string, content: string): boolean {
+  const lower = posixRel.toLowerCase();
+  if (KEYWORDS.some((k) => lower.includes(k))) return true;
+  return CONTENT_MARKERS.some((m) => content.includes(m));
+}
+
+function toCandidate(abs: string, posixRel: string, content: string): Candidate {
+  const hash = crypto.createHash("sha256").update(content).digest("hex");
+  let size = content.length;
+  try { size = fs.statSync(abs).size; } catch { /* fall back to content length */ }
+  return { path: posixRel, hash, size, status: "pending" };
+}
+
+function walkMd(absDir: string, projectRoot: string, visit: (abs: string, rel: string) => void): void {
+  let entries: fs.Dirent[];
+  try { entries = fs.readdirSync(absDir, { withFileTypes: true }); } catch { return; }
+  for (const e of entries) {
+    if (e.name === "node_modules" || e.name === ".git") continue;
+    const abs = path.join(absDir, e.name);
+    if (e.isDirectory()) walkMd(abs, projectRoot, visit);
+    else if (e.isFile() && e.name.endsWith(".md")) visit(abs, toPosix(path.relative(projectRoot, abs)));
+  }
+}
+
+/**
+ * Discover candidate documents (FR-001/002/003/005). Returns a deterministic,
+ * path-sorted list. Reads file contents only for `.md` files that survive the
+ * corpus/ignore filters — never blocks on stdin.
+ */
+export function discoverCandidates(projectRoot: string, ignoreList: string[] = []): Candidate[] {
+  const found: Candidate[] = [];
+  const visit = (abs: string, rel: string): void => {
+    if (!rel.endsWith(".md")) return;
+    if (isCorpusInternal(rel) || isIgnored(rel, ignoreList)) return;
+    let content: string;
+    try { content = fs.readFileSync(abs, "utf-8"); } catch { return; }
+    if (content.trim().length === 0) return; // empty file — nothing to absorb
+    if (!isCandidate(rel, content)) return;
+    found.push(toCandidate(abs, rel, content));
+  };
+
+  // Root: top-level files only (never descend into root subdirs here).
+  try {
+    for (const e of fs.readdirSync(projectRoot, { withFileTypes: true })) {
+      if (e.isFile() && e.name.endsWith(".md")) visit(path.join(projectRoot, e.name), e.name);
+    }
+  } catch { /* unreadable root — skip */ }
+
+  for (const dir of PRESET_SCAN_DIRS) {
+    walkMd(path.join(projectRoot, dir), projectRoot, visit);
+  }
+
+  return found.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
 }
