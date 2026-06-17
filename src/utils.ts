@@ -6,6 +6,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
+import { loadManifest, type AgentEntry } from "./manifest.ts";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -16,75 +17,47 @@ export interface AgentConfig {
   format: "skills" | "markdown";
   separator: string;
   frontmatter: Record<string, string | boolean>;
+  contextFile: string;
+  version: string;
   argumentHints?: Record<string, string>;
 }
 
-export type AgentKey = "claude" | "cursor" | "copilot" | "codex" | "windsurf" | "kiro";
+// Agents are data-driven via agents.json (spec 003); AgentKey is now an open
+// string type so manifest additions need no source change. Legacy callers
+// (cli.ts) still import this name.
+export type AgentKey = string;
 
 // ── Agent configurations ───────────────────────────────────────────────────
+// Agents are data-driven via agents.json (spec 003 FR-001/002/003). The former
+// hardcoded enum is removed; AGENTS below is a backward-compat map derived from
+// the manifest, retained until cli.ts is rewritten (T018). Prefer loadAgentConfig.
 
-export const AGENTS: Record<AgentKey, AgentConfig> = {
-  claude: {
-    key: "claude",
-    name: "Claude Code",
-    dir: ".claude/skills",
-    format: "skills",
-    separator: "-",
-    frontmatter: { "user-invocable": true, "disable-model-invocation": false },
-    argumentHints: {
-      specify: "Describe the feature you want to specify",
-      plan: "Optional guidance for the planning phase",
-      tasks: "Optional task generation constraints",
-      implement: "Optional implementation guidance or task filter",
-      analyze: "Optional focus areas for analysis",
-      clarify: "Optional areas to clarify in the spec",
-      constitution: "Principles or values for the project constitution",
-      checklist: "Domain or focus area for the checklist",
-      autopilot: "Describe the feature — AI will run the full SDD cycle autonomously",
-      fix: "Describe the bug — what happened vs what should have happened. Optional: --spec specs/<id>",
-    },
-  },
-  cursor: {
-    key: "cursor",
-    name: "Cursor",
-    dir: ".cursor/commands",
-    format: "markdown",
-    separator: ".",
-    frontmatter: {},
-  },
-  copilot: {
-    key: "copilot",
-    name: "GitHub Copilot",
-    dir: ".github/copilot/commands",
-    format: "markdown",
-    separator: ".",
-    frontmatter: {},
-  },
-  codex: {
-    key: "codex",
-    name: "OpenAI Codex",
-    dir: ".codex/skills",
-    format: "skills",
-    separator: "-",
-    frontmatter: { "user-invocable": true, "disable-model-invocation": false },
-  },
-  windsurf: {
-    key: "windsurf",
-    name: "Windsurf",
-    dir: ".windsurf/commands",
-    format: "markdown",
-    separator: ".",
-    frontmatter: {},
-  },
-  kiro: {
-    key: "kiro",
-    name: "Kiro",
-    dir: ".kiro/skills",
-    format: "skills",
-    separator: "-",
-    frontmatter: {},
-  },
-};
+/** Convert a validated manifest entry into an AgentConfig. */
+function entryToConfig(e: AgentEntry): AgentConfig {
+  const config: AgentConfig = {
+    key: e.key,
+    name: e.name,
+    dir: e.dir,
+    format: e.format,
+    separator: e.separator,
+    frontmatter: e.frontmatter,
+    contextFile: e.contextFile,
+    version: e.version,
+  };
+  if (e.argumentHints) config.argumentHints = e.argumentHints;
+  return config;
+}
+
+/** Resolve an agent's config from the manifest at runtime (FR-003). Null if unknown. */
+export function loadAgentConfig(key: string): AgentConfig | null {
+  const entry = loadManifest().find((e) => e.key === key);
+  return entry ? entryToConfig(entry) : null;
+}
+
+/** Backward-compat agent map, manifest-derived. Legacy callers: cli.ts/init.ts/update.ts. */
+export const AGENTS: Record<string, AgentConfig> = Object.fromEntries(
+  loadManifest().map((e) => [e.key, entryToConfig(e)] as const),
+);
 
 // ── Package root resolution ────────────────────────────────────────────────
 
