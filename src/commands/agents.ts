@@ -9,7 +9,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { loadManifest } from "../manifest.ts";
-import { readState, recordAgent, unrecordAgent } from "../state.ts";
+import { readState, recordAgent, unrecordAgent, reconcileFromFs, type InstalledState } from "../state.ts";
 import { loadAgentConfig, installAllSkills, upsertManagedSection, removeManagedSection, type AgentConfig } from "../utils.ts";
 
 export interface AgentStatus {
@@ -22,7 +22,7 @@ export interface AgentStatus {
 /** Compute manifest ∩ installed-state (FR-004). Pure — testable. */
 export function getAgentsStatus(projectRoot: string): AgentStatus[] {
   const manifest = loadManifest();
-  const state = readState(projectRoot);
+  const state = ensureState(projectRoot);
   return manifest.map((entry) => {
     const rec = state[entry.key];
     return { key: entry.key, name: entry.name, installed: !!rec, version: rec?.version };
@@ -50,6 +50,21 @@ export type CmdResult = { ok: true; message: string } | { ok: false; reason: str
 /** A project has a spec corpus when `.spec/` exists (created by `spec-coach init`). */
 export function corpusExists(projectRoot: string): boolean {
   return fs.existsSync(path.join(projectRoot, ".spec"));
+}
+
+/**
+ * Read installed state, reconciling from the filesystem when the state file is
+ * absent but a corpus exists — migrating projects created by a prior version
+ * whose agent bindings are on disk but unrecorded (FR-018). One-time write.
+ */
+function ensureState(projectRoot: string): InstalledState {
+  if (fs.existsSync(path.join(projectRoot, ".spec", "agents.json"))) {
+    return readState(projectRoot);
+  }
+  if (corpusExists(projectRoot)) {
+    return reconcileFromFs(projectRoot, loadManifest(), true);
+  }
+  return readState(projectRoot);
 }
 
 /**
@@ -90,7 +105,7 @@ export function runAgentsRemove(
   if (!opts.force) {
     return { ok: false, reason: `Refusing to remove '${key}' without confirmation. Re-run with --force.` };
   }
-  if (!readState(projectRoot)[key]) {
+  if (!ensureState(projectRoot)[key]) {
     return { ok: true, message: `'${key}' is not installed; nothing to do.` };
   }
   removeAgentSkills(agent, projectRoot);
@@ -165,7 +180,7 @@ function removeAgentContext(agent: AgentConfig, projectRoot: string): void {
 }
 
 function otherNonClaudeAgentsInstalled(excludeKey: string, projectRoot: string): boolean {
-  const state = readState(projectRoot);
+  const state = ensureState(projectRoot);
   return loadManifest().some(
     (e) => e.key !== excludeKey && e.contextFile !== "CLAUDE.md" && !!state[e.key],
   );
@@ -178,7 +193,7 @@ function otherNonClaudeAgentsInstalled(excludeKey: string, projectRoot: string):
  * error; "all" with nothing installed is a no-op ok.
  */
 export function runAgentsUpdate(target: string, projectRoot: string): CmdResult {
-  const state = readState(projectRoot);
+  const state = ensureState(projectRoot);
   let keys: string[];
   if (target === "all") {
     keys = Object.keys(state);
