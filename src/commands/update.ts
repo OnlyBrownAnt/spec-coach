@@ -1,33 +1,26 @@
 /**
- * Spec Coach — `update` command.
- * Refreshes skills, templates, and scripts in place. Preserves project
- * structure, metadata, and constitution.md.
+ * Spec Coach — `update` command (spec-corpus lifecycle).
+ *
+ * Refreshes corpus infrastructure: document templates + helper scripts. Installs
+ * NO agent bindings (skills/context) — those are refreshed per-agent by
+ * `agents update`. Never modifies user artifacts (`specs/`, constitution, etc.)
+ * (spec 003 FR-013/017).
  */
-
 import type { AgentConfig } from "../utils.js";
-import {
-  installAllSkills,
-  installDocumentTemplates,
-  installScripts,
-  upsertClaudeManagedSection,
-} from "../utils.js";
+import { installDocumentTemplates, installScripts } from "../utils.js";
 
-export async function runUpdate(agent: AgentConfig, projectRoot: string): Promise<void> {
-  // Refresh skills
-  const skills = installAllSkills(agent, projectRoot);
-  console.log(`  ✓  ${skills.length} skill templates updated`);
+/**
+ * Refresh the spec corpus infrastructure. `agent` is accepted for backward
+ * compatibility with the current CLI (T018 removes it) but is ignored: update is
+ * corpus-scoped. To refresh an installed agent's bindings, use `agents update`.
+ */
+export async function runUpdate(_agent: AgentConfig | null, projectRoot: string): Promise<void> {
+  const docTemplates = installDocumentTemplates(projectRoot);
+  console.log(`  ✓  ${docTemplates.length} document templates refreshed`);
 
-  // Refresh document templates (does NOT touch .spec/memory/constitution.md)
-  const docTemplates = installDocumentTemplates(agent, projectRoot);
-  console.log(`  ✓  ${docTemplates.length} document templates updated`);
-
-  // Refresh scripts
   const scripts = installScripts(projectRoot);
-  console.log(`  ✓  ${scripts.length} helper scripts updated`);
+  console.log(`  ✓  ${scripts.length} helper scripts refreshed`);
 
-  // Refresh the managed CLAUDE.md section (keeps existing projects current; FR-007)
-  upsertClaudeManagedSection(projectRoot);
-  console.log("  ✓  CLAUDE.md managed section refreshed\n");
-
-  console.log("  Done. Skills, templates, and scripts are up to date.");
+  console.log("  Done. Corpus infrastructure (templates + scripts) is up to date.");
+  console.log("  To refresh agent bindings, run: spec-coach agents update [--all]");
 }
