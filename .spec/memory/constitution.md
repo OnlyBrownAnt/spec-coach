@@ -59,8 +59,8 @@ This constitution defines the non-negotiable principles for spec-coach. It super
 **Version**: 1.1.0 | **Ratified**: 2025-06-15 | **Last Amended**: 2026-06-17
 
 <!-- SDD STATE START -->
-**Current feature**: 004-precise-deletion
-**Last phase**: implement
+**Current feature**: 005-document-intake
+**Last phase**: specify
 **Skipped phases**: none
-**Decisions**: 2.0.1 precise deletion — three-layer ownership (per-agent createdFiles + project-level createdContextFiles + COACH markers); skill-name whitelist fallback; directory-integrity guard; conservative legacy reconcile (no createdContextFiles backfill)
+**Decisions**: 2.1.0 document intake — three-subcommand pipeline (scan/process/ignore) + .spec/intake manifest (no body copy) + dual absorb modes (verbatim→.spec/absorbed/, AI→specs/NNN-slug/ via new spec-absorb SKILL); init detect-and-nudge (no block); non-TTY-safe (closes spec 001 blocking class); constitution amendment v1.2.0 (third CLI surface: document lifecycle)
 <!-- SDD STATE END -->
