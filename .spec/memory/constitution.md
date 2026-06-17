@@ -59,8 +59,8 @@ This constitution defines the non-negotiable principles for spec-coach. It super
 **Version**: 1.1.0 | **Ratified**: 2025-06-15 | **Last Amended**: 2026-06-17
 
 <!-- SDD STATE START -->
-**Current feature**: 003-unified-agent-lifecycle
+**Current feature**: 004-precise-deletion
 **Last phase**: implement
 **Skipped phases**: none
-**Decisions**: 2.0.0 unified agent lifecycle — two isolated surfaces (corpus + agent), agents.json manifest; constitution v1.1.0
+**Decisions**: 2.0.1 precise deletion — three-layer ownership (per-agent createdFiles + project-level createdContextFiles + COACH markers); skill-name whitelist fallback; directory-integrity guard; conservative legacy reconcile (no createdContextFiles backfill)
 <!-- SDD STATE END -->

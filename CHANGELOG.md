@@ -16,7 +16,12 @@
   is empty after teardown (replaces the `# projectName` content heuristic). A
   directory-integrity guard preserves a coach skill dir that has accumulated
   unexpected user files.
-- _(details finalized at release — see spec 004.)_
+- State-schema additions (`agents[key].createdFiles`, top-level
+  `createdContextFiles`) are optional and backward compatible; `update`
+  recomputes provenance so it is never dropped. Legacy v2.0.0 projects reconcile
+  on first use and get precise deletion with zero regression.
+- Versioned **PATCH 2.0.1** per the constitution rule (a fix that does not change
+  the install contract) — no CLI, agent-support, or constitution change.
 
 ## 2.0.0 — 2026-06-17
 
