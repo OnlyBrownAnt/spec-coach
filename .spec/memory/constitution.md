@@ -60,7 +60,7 @@ This constitution defines the non-negotiable principles for spec-coach. It super
 
 <!-- SDD STATE START -->
 **Current feature**: 005-document-intake
-**Last phase**: specify
+**Last phase**: plan
 **Skipped phases**: none
 **Decisions**: 2.1.0 document intake — three-subcommand pipeline (scan/process/ignore) + .spec/intake manifest (no body copy) + dual absorb modes (verbatim→.spec/absorbed/, AI→specs/NNN-slug/ via new spec-absorb SKILL); init detect-and-nudge (no block); non-TTY-safe (closes spec 001 blocking class); constitution amendment v1.2.0 (third CLI surface: document lifecycle)
 <!-- SDD STATE END -->
