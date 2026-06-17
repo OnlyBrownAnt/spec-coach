@@ -9,8 +9,8 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { loadManifest } from "../manifest.ts";
-import { readState, recordAgent } from "../state.ts";
-import { loadAgentConfig, installAllSkills, upsertManagedSection } from "../utils.ts";
+import { readState, recordAgent, unrecordAgent } from "../state.ts";
+import { loadAgentConfig, installAllSkills, upsertManagedSection, removeManagedSection, type AgentConfig } from "../utils.ts";
 
 export interface AgentStatus {
   key: string;
@@ -70,4 +70,73 @@ export function runAgentsAdd(key: string, projectRoot: string): CmdResult {
   upsertManagedSection(agent, projectRoot);
   recordAgent(projectRoot, key, agent.version);
   return { ok: true, message: `Installed ${agent.name} bindings (${agent.version}).` };
+}
+
+/**
+ * Remove an agent's bindings: its skill files + managed context section (subject
+ * to shared-AGENTS.md preservation) + state record. NEVER touches the corpus
+ * (FR-008). Requires --force (FR-014); without it, refuses and deletes nothing.
+ * A not-installed agent is a no-op (ok), never an error (FR-014).
+ */
+export function runAgentsRemove(
+  key: string,
+  projectRoot: string,
+  opts: { force?: boolean } = {},
+): CmdResult {
+  const agent = loadAgentConfig(key);
+  if (!agent) {
+    return { ok: false, reason: `Unknown agent '${key}'. Run \`spec-coach agents list\` to see options.` };
+  }
+  if (!opts.force) {
+    return { ok: false, reason: `Refusing to remove '${key}' without confirmation. Re-run with --force.` };
+  }
+  if (!readState(projectRoot)[key]) {
+    return { ok: true, message: `'${key}' is not installed; nothing to do.` };
+  }
+  removeAgentSkills(agent, projectRoot);
+  removeAgentContext(agent, projectRoot);
+  unrecordAgent(projectRoot, key);
+  return { ok: true, message: `Removed ${agent.name} bindings.` };
+}
+
+/** Remove exactly the skill files installAllSkills wrote (precise inverse of add). */
+function removeAgentSkills(agent: AgentConfig, projectRoot: string): void {
+  const agentDir = path.join(projectRoot, agent.dir);
+  if (!fs.existsSync(agentDir)) return;
+  let entries: fs.Dirent[];
+  try { entries = fs.readdirSync(agentDir, { withFileTypes: true }); } catch { return; }
+
+  if (agent.format === "skills") {
+    const prefix = "spec" + agent.separator;
+    for (const e of entries) {
+      if (e.isDirectory() && e.name.startsWith(prefix)) {
+        try { fs.rmSync(path.join(agentDir, e.name), { recursive: true, force: true }); } catch { /* best effort */ }
+      }
+    }
+  } else {
+    // markdown format: commands live under a spec/ subdir
+    const specDir = path.join(agentDir, "spec");
+    if (fs.existsSync(specDir)) {
+      try { fs.rmSync(specDir, { recursive: true, force: true }); } catch { /* best effort */ }
+    }
+  }
+}
+
+/**
+ * Remove the agent's managed context section, honoring shared AGENTS.md: for a
+ * non-Claude agent, keep the section while any OTHER non-Claude agent remains
+ * installed (FR-011 / analysis advisory #1).
+ */
+function removeAgentContext(agent: AgentConfig, projectRoot: string): void {
+  if (agent.contextFile !== "CLAUDE.md" && otherNonClaudeAgentsInstalled(agent.key, projectRoot)) {
+    return; // preserve the shared AGENTS.md section
+  }
+  removeManagedSection(agent, projectRoot);
+}
+
+function otherNonClaudeAgentsInstalled(excludeKey: string, projectRoot: string): boolean {
+  const state = readState(projectRoot);
+  return loadManifest().some(
+    (e) => e.key !== excludeKey && e.contextFile !== "CLAUDE.md" && !!state[e.key],
+  );
 }
