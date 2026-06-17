@@ -108,38 +108,54 @@ export function runAgentsRemove(
   if (!opts.force) {
     return { ok: false, reason: `Refusing to remove '${key}' without confirmation. Re-run with --force.` };
   }
-  if (!ensureState(projectRoot)[key]) {
+  const state = ensureState(projectRoot);
+  if (!state[key]) {
     return { ok: true, message: `'${key}' is not installed; nothing to do.` };
   }
-  removeAgentSkills(agent, projectRoot);
+  removeAgentSkills(agent, projectRoot, state[key]?.createdFiles);
   removeAgentContext(agent, projectRoot);
   unrecordAgent(projectRoot, key);
   return { ok: true, message: `Removed ${agent.name} bindings.` };
 }
 
-/** Remove exactly the skill files installAllSkills wrote (precise inverse of add). */
-export function removeAgentSkills(agent: AgentConfig, projectRoot: string): void {
-  const agentDir = path.join(projectRoot, agent.dir);
-  if (!fs.existsSync(agentDir)) return;
-  let entries: fs.Dirent[];
-  try { entries = fs.readdirSync(agentDir, { withFileTypes: true }); } catch { return; }
-
-  if (agent.format === "skills") {
-    const prefix = "spec" + agent.separator;
-    for (const e of entries) {
-      if (e.isDirectory() && e.name.startsWith(prefix)) {
-        try { fs.rmSync(path.join(agentDir, e.name), { recursive: true, force: true }); } catch { /* best effort */ }
+/**
+ * Remove exactly the skill paths spec-coach created (precise inverse of add).
+ * When `createdFiles` is recorded (Tier 2, FR-004), delete those exact leaf
+ * paths; skills-format directories pass the `dirContainsOnlyManaged` integrity
+ * guard (FR-007). When `createdFiles` is absent (legacy install), fall back to
+ * the skill-name whitelist via `ownedSkillUnits` (Tier 1, FR-005) — NEVER a
+ * wildcard/prefix match. Missing paths are skipped without error (FR-018).
+ */
+export function removeAgentSkills(agent: AgentConfig, projectRoot: string, createdFiles?: string[]): void {
+  const units = createdFiles ?? ownedSkillUnits(agent);
+  for (const rel of units) {
+    const abs = path.join(projectRoot, rel);
+    if (!fs.existsSync(abs)) continue; // FR-018: idempotent — recorded path already gone
+    let stat: fs.Stats;
+    try { stat = fs.statSync(abs); } catch { continue; }
+    if (stat.isDirectory()) {
+      // FR-007: delete a dir only when it holds solely spec-coach-managed content.
+      if (!dirContainsOnlyManaged(abs)) {
+        console.warn(`  ⚠  Preserving spec-coach-owned dir with unexpected content: ${rel}`);
+        continue;
       }
-    }
-  } else {
-    // markdown format: commands live under a spec/ subdir
-    const specDir = path.join(agentDir, "spec");
-    if (fs.existsSync(specDir)) {
-      try { fs.rmSync(specDir, { recursive: true, force: true }); } catch { /* best effort */ }
+      try { fs.rmSync(abs, { recursive: true, force: true }); } catch { /* best effort */ }
+    } else {
+      try { fs.unlinkSync(abs); } catch { /* best effort */ }
     }
   }
   // Precise inverse (SC-002): prune now-empty parent dirs up to projectRoot.
-  pruneEmptyParents(agentDir, projectRoot);
+  for (const rel of units) pruneEmptyParents(path.join(projectRoot, path.dirname(rel)), projectRoot);
+}
+
+/**
+ * A spec-coach skills-format skill directory is managed iff it is empty or holds
+ * exactly `SKILL.md`. Anything else means the user added content — preserve it.
+ */
+function dirContainsOnlyManaged(dirPath: string): boolean {
+  let entries: string[];
+  try { entries = fs.readdirSync(dirPath); } catch { return false; }
+  return entries.length === 0 || (entries.length === 1 && entries[0] === "SKILL.md");
 }
 
 /** Remove empty directories from `dir` upward, stopping at projectRoot or the first non-empty dir. */
