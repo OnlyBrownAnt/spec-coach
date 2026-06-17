@@ -1,5 +1,23 @@
 # Changelog
 
+## 2.0.1 — 2026-06-17
+
+### Precise deletion — only remove what spec-coach owns (spec 004)
+
+- `agents remove` / `uninstall` now delete only paths spec-coach can attribute
+  to itself, replacing the `spec-*` prefix wildcard (skills format) and the
+  whole-`spec/`-subdir delete (markdown format). User-authored content in those
+  namespaces now survives every lifecycle operation.
+- Per-agent `createdFiles` (recorded at install) and a project-level
+  `createdContextFiles` list drive deletion. A skill-name whitelist is the
+  fallback when provenance is absent, so legacy projects get precise deletion
+  too — never a wildcard.
+- Context-file bodies are deleted only when spec-coach created the file AND it
+  is empty after teardown (replaces the `# projectName` content heuristic). A
+  directory-integrity guard preserves a coach skill dir that has accumulated
+  unexpected user files.
+- _(details finalized at release — see spec 004.)_
+
 ## 2.0.0 — 2026-06-17
 
 ### Breaking — unified agent lifecycle (spec 003)
