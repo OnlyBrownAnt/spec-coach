@@ -14,6 +14,7 @@ import {
   discoverCandidates,
   runIntakeScan,
   runIntakeProcess,
+  runIntakeIgnore,
   sanitizeSlug,
   type Candidate,
 } from "../../src/commands/intake.ts";
@@ -250,6 +251,20 @@ try {
   // idempotent union: ignoring again does not duplicate the pattern
   runIntakeProcess(igp, { mode: "ignore", target: "all" });
   ok("T013: ignore is idempotent union (no duplicate pattern)", readIgnoreList(igp).filter((p) => p === "docs/b-spec.md").length === 1);
+
+  // ── T014: runIntakeIgnore (list/add/remove, FR-012) ──────────────────────
+  const it = mktmp("intake-ignore-");
+  ok("T014: list on empty -> ok", runIntakeIgnore(it, "list").ok === true);
+  runIntakeIgnore(it, "add", "docs/noise.md");
+  runIntakeIgnore(it, "add", "vendor");
+  ok("T014: add persists patterns", readIgnoreList(it).length === 2);
+  const listRes = runIntakeIgnore(it, "list");
+  ok("T014: list message shows a pattern", listRes.ok === true && listRes.message.includes("docs/noise.md"));
+  runIntakeIgnore(it, "add", "docs/noise.md");
+  ok("T014: add is idempotent", readIgnoreList(it).length === 2);
+  runIntakeIgnore(it, "remove", "vendor");
+  ok("T014: remove drops the pattern", !readIgnoreList(it).includes("vendor"));
+  ok("T014: add without pattern -> not ok", runIntakeIgnore(it, "add").ok === false);
 } catch (e) {
   ok("intake ran without throwing", false);
   console.log("    error:", (e as Error).message);

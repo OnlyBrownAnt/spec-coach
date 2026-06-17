@@ -21,7 +21,7 @@ import { runInit } from "./commands/init.js";
 import { runUpdate } from "./commands/update.js";
 import { runUninstall } from "./commands/uninstall.js";
 import { runAgentsList, runAgentsAdd, runAgentsUpdate, runAgentsRemove } from "./commands/agents.js";
-import { runIntakeScan, runIntakeProcess } from "./commands/intake.js";
+import { runIntakeScan, runIntakeProcess, runIntakeIgnore } from "./commands/intake.js";
 
 // ── Banner ─────────────────────────────────────────────────────────────────
 
@@ -179,6 +179,15 @@ async function main(): Promise<void> {
         }
         const target = rest.slice(1).find((f) => !f.startsWith("-")) ?? "all";
         if (!report(runIntakeProcess(projectRoot, { mode, target }))) process.exit(1);
+        break;
+      }
+      if (sub === "ignore") {
+        const verb = rest[1];
+        if (verb !== "list" && verb !== "add" && verb !== "remove") {
+          console.error("  ✗  usage: spec-coach intake ignore <list|add|remove> [pattern]");
+          process.exit(1);
+        }
+        if (!report(runIntakeIgnore(projectRoot, verb, rest[2]))) process.exit(1);
         break;
       }
       console.error(`  ✗  unknown intake subcommand: ${sub || "(missing)"}\n`);

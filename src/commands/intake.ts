@@ -391,3 +391,40 @@ function markIgnored(projectRoot: string, manifest: Candidate[], targets: Candid
   writeManifest(projectRoot, manifest.map((c) => byPath.get(c.path) ?? c));
   return { ok: true, message: `ignored ${targets.length} doc(s); future scans will skip them.` };
 }
+
+// ── runIntakeIgnore ─────────────────────────────────────────────────────────
+
+/**
+ * `intake ignore` (FR-012): `list` prints the ignore list; `add <pattern>`
+ * appends (idempotent); `remove <pattern>` filters it out. Matching is
+ * exact-path / directory-prefix (see `isIgnored`).
+ */
+export function runIntakeIgnore(
+  projectRoot: string,
+  verb: "list" | "add" | "remove",
+  pattern?: string,
+): CmdResult {
+  const patterns = readIgnoreList(projectRoot);
+
+  if (verb === "list") {
+    if (patterns.length === 0) return { ok: true, message: "ignore list is empty." };
+    return {
+      ok: true,
+      message: `ignore list (${patterns.length}):\n${patterns.map((p) => `    • ${p}`).join("\n")}`,
+    };
+  }
+
+  if (!pattern) {
+    return { ok: false, reason: `usage: spec-coach intake ignore ${verb} <pattern>` };
+  }
+
+  if (verb === "add") {
+    if (!patterns.includes(pattern)) patterns.push(pattern);
+    writeIgnoreList(projectRoot, patterns);
+    return { ok: true, message: `added '${pattern}' to the ignore list.` };
+  }
+
+  // remove
+  writeIgnoreList(projectRoot, patterns.filter((p) => p !== pattern));
+  return { ok: true, message: `removed '${pattern}' from the ignore list.` };
+}
