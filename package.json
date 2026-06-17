@@ -1,6 +1,6 @@
 {
   "name": "spec-coach",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "description": "SDD that trusts AI. Guidance over gates. Craftsmanship over compliance.",
   "type": "module",
   "bin": {

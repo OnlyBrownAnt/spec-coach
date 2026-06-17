@@ -1,5 +1,31 @@
 # Changelog
 
+## 2.1.0 — 2026-06-18
+
+### Document intake pipeline — bring existing docs into the corpus (spec 005)
+
+- New `intake` top-level command (the document lifecycle): `intake scan`,
+  `intake process`, `intake ignore`.
+- `intake scan` discovers existing `.md` docs in preset directories and writes a
+  staging registry at `.spec/intake/manifest.json` (a manifest of candidates, not
+  a copy of bodies). It is deterministic and non-interactive — never blocking on
+  stdin — closing the non-TTY blocking class that caused spec 001 to remove
+  auto-absorb from `init`.
+- Two absorb modes via `intake process`: `--verbatim` copies a candidate
+  unchanged into `.spec/absorbed/`; `--ai` stages it for the new `spec-absorb`
+  skill, which coaches the AI to transform the source into a
+  `specs/NNN-slug/spec.md` (the CLI contains no transformation logic).
+- `intake ignore {list|add|remove}` manages an ignore list; scans exclude
+  ignored paths and are idempotent (absorbed/ignored sources never re-surface).
+- `init` now detects candidate docs and prints a one-line nudge
+  ("run `spec-coach intake scan`") without ever blocking or refusing.
+- New `spec-absorb` skill (the install set grows 11 → 12; existing projects get
+  it via `agents update --all`). `uninstall` removes the regenerable
+  `.spec/intake/` and preserves `.spec/absorbed/` (user content) unless `--force`.
+- Constitution amendment **v1.2.0**: the CLI surface grows from two lifecycles
+  (corpus, agent) to three (adds the document lifecycle).
+- Versioned **MINOR 2.1.0** per the constitution rule (a new skill ships).
+
 ## 2.0.1 — 2026-06-17
 
 ### Precise deletion — only remove what spec-coach owns (spec 004)
