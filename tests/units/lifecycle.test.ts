@@ -60,6 +60,10 @@ try {
   fs.mkdirSync(path.join(t, "specs"), { recursive: true });
   fs.writeFileSync(path.join(t, "specs", "feature.md"), "# feature\n");
 
+  // spec 004 collision: user content in the shared spec/ command dir must survive.
+  fs.mkdirSync(path.join(t, ".cursor", "commands", "spec"), { recursive: true });
+  fs.writeFileSync(path.join(t, ".cursor/commands/spec/notes.md"), "user notes\n");
+
   const before = snapshot(t);
   const corpusHashBefore = fileHash(t, ".spec/scripts/canary.sh");
 

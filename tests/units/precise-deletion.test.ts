@@ -6,6 +6,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
 import { runAgentsAdd, runAgentsRemove } from "../../src/commands/agents.ts";
+import { runUninstall } from "../../src/commands/uninstall.ts";
 import { readState, readCreatedContextFiles, writeState } from "../../src/state.ts";
 
 let pass = 0;
@@ -123,6 +124,36 @@ try {
   runAgentsAdd("copilot", sh); // appends to existing AGENTS.md
   runAgentsRemove("cursor", sh, { force: true }); // copilot still installed
   ok("T008/FR-011: AGENTS.md block preserved while copilot installed", fs.readFileSync(path.join(sh, "AGENTS.md"), "utf-8").includes("COACH START"));
+
+  // ── T011 / SC-001: full add→remove→uninstall cycle, zero user deletions ──
+  // (integration capstone — behavior implemented in T006–T010; this is the
+  //  end-to-end proof that colliding user content survives every lifecycle op.)
+  const k = mktmp("pd-sc001-");
+  mkdirCorp(k);
+  fs.mkdirSync(path.join(k, ".claude", "skills", "spec-user"), { recursive: true });
+  fs.writeFileSync(path.join(k, ".claude/skills/spec-user/keep.md"), "user skill\n");
+  fs.mkdirSync(path.join(k, ".cursor", "commands", "spec"), { recursive: true });
+  fs.writeFileSync(path.join(k, ".cursor/commands/spec/notes.md"), "user notes\n");
+  fs.writeFileSync(path.join(k, "CLAUDE.md"), "# user claude\n");
+  const userSkillBefore = fs.readFileSync(path.join(k, ".claude/skills/spec-user/keep.md"), "utf-8");
+  const userNotesBefore = fs.readFileSync(path.join(k, ".cursor/commands/spec/notes.md"), "utf-8");
+
+  runAgentsAdd("claude", k);
+  runAgentsAdd("cursor", k);
+  runAgentsRemove("claude", k, { force: true });
+  runAgentsRemove("cursor", k, { force: true });
+  ok("SC-001: user skill unchanged through add→remove", fs.readFileSync(path.join(k, ".claude/skills/spec-user/keep.md"), "utf-8") === userSkillBefore);
+  ok("SC-001: user notes unchanged through add→remove", fs.readFileSync(path.join(k, ".cursor/commands/spec/notes.md"), "utf-8") === userNotesBefore);
+  ok("SC-001: user CLAUDE.md text survives (block stripped)", fs.readFileSync(path.join(k, "CLAUDE.md"), "utf-8").includes("user claude"));
+  ok("SC-001: coach claude skill gone after remove", !exists(k, ".claude/skills/spec-specify"));
+  ok("SC-001: coach cursor md gone after remove", !exists(k, ".cursor/commands/spec/specify.md"));
+
+  // re-add then uninstall — user content still intact, coach bindings gone
+  runAgentsAdd("claude", k);
+  runUninstall(k, { confirmed: true });
+  ok("SC-001: user skill survives uninstall", fs.readFileSync(path.join(k, ".claude/skills/spec-user/keep.md"), "utf-8") === userSkillBefore);
+  ok("SC-001: user notes survives uninstall", fs.readFileSync(path.join(k, ".cursor/commands/spec/notes.md"), "utf-8") === userNotesBefore);
+  ok("SC-001: coach bindings gone after uninstall", !exists(k, ".claude/skills/spec-specify"));
 } catch (e) {
   ok("precise-deletion ran without throwing", false);
   console.log("    error:", (e as Error).message);
