@@ -214,7 +214,7 @@ export function installSkill(
   }
 }
 
-const SKILL_NAMES = [
+export const SKILL_NAMES = [
   "specify", "plan", "tasks", "implement",
   "analyze", "clarify", "checklist", "constitution",
   "taskstoissues", "autopilot", "fix",
@@ -227,6 +227,23 @@ export function installAllSkills(agent: AgentConfig, projectRoot: string): strin
     installed.push(name);
   }
   return installed;
+}
+
+/**
+ * The leaf paths an agent owns on disk (relative to project root) — the single
+ * source of truth shared by provenance recording, precise removal, and legacy
+ * reconcile (spec 004). skills format → a `spec-{name}` dir; markdown → a
+ * `spec/{name}.md` file. Mirrors installSkill's path computation exactly, so
+ * removal is a precise inverse of installation.
+ */
+export function ownedSkillUnits(agent: AgentConfig): string[] {
+  return SKILL_NAMES.map((name) => {
+    if (agent.format === "skills") {
+      const skillId = `spec${agent.separator}${name.replace(".", agent.separator)}`;
+      return path.join(agent.dir, skillId);
+    }
+    return path.join(agent.dir, "spec", `${name}.md`);
+  });
 }
 
 // ── Document templates ─────────────────────────────────────────────────────
