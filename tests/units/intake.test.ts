@@ -16,6 +16,7 @@ import {
   runIntakeProcess,
   runIntakeIgnore,
   sanitizeSlug,
+  intakeNudge,
   type Candidate,
 } from "../../src/commands/intake.ts";
 
@@ -280,6 +281,13 @@ try {
   ok("SC-004: ignored path still tracked in ignore list", readIgnoreList(cap4).includes("docs/noise-spec.md"));
   ok("SC-004: absorbed source stays absorbed through re-scan", m4.find((c) => c.path === "docs/keep-spec.md")?.status === "absorbed-verbatim");
   ok("SC-004: genuinely-new doc surfaces as pending", m4.find((c) => c.path === "docs/new-spec.md")?.status === "pending");
+
+  // ── T016: init nudge (FR-014, SC-005) ────────────────────────────────────
+  const n1 = mktmp("intake-nudge1-");
+  write(n1, "docs/old.md", "# Old\nOverview\n");
+  ok("T016: nudge message present when candidates exist", (intakeNudge(n1) ?? "").includes("intake scan"));
+  const n2 = mktmp("intake-nudge2-");
+  ok("T016: nudge is null when no candidates", intakeNudge(n2) === null);
 } catch (e) {
   ok("intake ran without throwing", false);
   console.log("    error:", (e as Error).message);

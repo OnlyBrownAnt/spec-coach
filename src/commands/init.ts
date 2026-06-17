@@ -15,6 +15,7 @@ import {
   ensureDir,
 } from "../utils.js";
 import { writeState } from "../state.ts";
+import { intakeNudge } from "./intake.ts";
 
 // ── Project structure ──────────────────────────────────────────────────────
 
@@ -75,6 +76,10 @@ export async function runInit(
 
   // 5. Empty installed-agent state — marks the corpus as spec-coach-managed.
   writeState(projectRoot, {});
+
+  // 6. Intake nudge (FR-014): non-blocking. Detect candidates and hint; never prompt.
+  const nudge = intakeNudge(projectRoot);
+  if (nudge) console.log(nudge);
 
   printNextSteps(projectRoot, templates.length, scripts.length);
 }

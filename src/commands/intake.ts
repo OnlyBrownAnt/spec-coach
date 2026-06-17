@@ -428,3 +428,16 @@ export function runIntakeIgnore(
   writeIgnoreList(projectRoot, patterns.filter((p) => p !== pattern));
   return { ok: true, message: `removed '${pattern}' from the ignore list.` };
 }
+
+// ── init nudge (FR-014) ─────────────────────────────────────────────────────
+
+/**
+ * The one-line intake nudge for `init`: returns a hint message when candidate
+ * documents exist, or `null` when there are none. `init` prints this and exits
+ * normally — it NEVER prompts or blocks (Constitution Principle II + spec 001).
+ */
+export function intakeNudge(projectRoot: string): string | null {
+  const n = discoverCandidates(projectRoot, readIgnoreList(projectRoot)).length;
+  if (n === 0) return null;
+  return `  ℹ  Found ${n} candidate document(s) — run \`spec-coach intake scan\` to bring them into the corpus.`;
+}
