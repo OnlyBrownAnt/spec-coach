@@ -23,18 +23,19 @@ console.log("=== owned-paths.test (spec 004) ===");
 
 try {
   ok("SKILL_NAMES is exported as an array", Array.isArray(SKILL_NAMES));
-  ok("SKILL_NAMES has 11 entries", SKILL_NAMES.length === 11);
+  ok("SKILL_NAMES has 12 entries", SKILL_NAMES.length === 12);
 
   // skills format → spec-{name} dirs relative to project root
   const claudePaths = ownedSkillUnits(claude);
-  ok("claude owns 11 units", claudePaths.length === 11);
+  ok("claude owns 12 units", claudePaths.length === 12);
   ok("claude units are spec-* dirs", claudePaths.every((p) => p.startsWith(".claude/skills/spec-")));
   ok("claude includes spec-specify", claudePaths.includes(".claude/skills/spec-specify"));
   ok("claude includes spec-taskstoissues", claudePaths.includes(".claude/skills/spec-taskstoissues"));
+  ok("claude includes spec-absorb (spec 005)", claudePaths.includes(".claude/skills/spec-absorb"));
 
   // markdown format → spec/{name}.md files
   const cursorPaths = ownedSkillUnits(cursor);
-  ok("cursor owns 11 units", cursorPaths.length === 11);
+  ok("cursor owns 12 units", cursorPaths.length === 12);
   ok("cursor units are spec/*.md files", cursorPaths.every((p) => p.startsWith(".cursor/commands/spec/") && p.endsWith(".md")));
   ok("cursor includes spec/specify.md", cursorPaths.includes(".cursor/commands/spec/specify.md"));
 

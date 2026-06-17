@@ -38,7 +38,7 @@ try {
   runAgentsAdd("claude", t);
   const claudeState = readState(t).claude;
   ok("T006: add records createdFiles (array)", Array.isArray(claudeState?.createdFiles));
-  ok("T006: add records 11 createdFiles", claudeState?.createdFiles?.length === 11);
+  ok("T006: add records 12 createdFiles", claudeState?.createdFiles?.length === 12);
   ok("T006: createdFiles are spec-* skill dirs", claudeState?.createdFiles?.every((p) => p.startsWith(".claude/skills/spec-")));
   ok("T006: CLAUDE.md recorded as created (file was absent)", readCreatedContextFiles(t).includes("CLAUDE.md"));
   ok("T006: version still recorded", claudeState?.version === "1.0.0");

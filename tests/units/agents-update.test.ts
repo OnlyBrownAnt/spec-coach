@@ -56,6 +56,7 @@ try {
   ok("update all -> ok:true", all.ok === true);
   ok("cursor still installed after update all", !!readState(t2).cursor);
   ok("claude still installed after update all", !!readState(t2).claude);
+  ok("T011/A6: update --all installs spec-absorb (spec 005)", fs.existsSync(path.join(t2, ".claude/skills/spec-absorb/SKILL.md")));
 
   // --- update --all with nothing installed -> ok (nothing to do) ---
   const t3 = mktmp("up-empty-");
@@ -73,14 +74,14 @@ try {
   const t5 = mktmp("up-cf-");
   fs.mkdirSync(path.join(t5, ".spec"), { recursive: true });
   runAgentsAdd("claude", t5);
-  ok("add recorded createdFiles", (readState(t5).claude?.createdFiles?.length ?? 0) === 11);
+  ok("add recorded createdFiles", (readState(t5).claude?.createdFiles?.length ?? 0) === 12);
   runAgentsUpdate("claude", t5);
-  ok("T009/FR-017: update recomputes createdFiles (not dropped)", (readState(t5).claude?.createdFiles?.length ?? 0) === 11);
+  ok("T009/FR-017: update recomputes createdFiles (not dropped)", (readState(t5).claude?.createdFiles?.length ?? 0) === 12);
   // a dir not in ownedSkillUnits must not be claimed after update
   fs.mkdirSync(path.join(t5, ".claude/skills/spec-future-user"), { recursive: true });
   runAgentsUpdate("claude", t5);
   ok("T009: update createdFiles excludes non-owned dir", !readState(t5).claude?.createdFiles?.includes(".claude/skills/spec-future-user"));
-  ok("T009: update createdFiles still has the owned set", (readState(t5).claude?.createdFiles?.length ?? 0) === 11);
+  ok("T009: update createdFiles still has the owned set", (readState(t5).claude?.createdFiles?.length ?? 0) === 12);
 
   // --- advisory #5: update is idempotent (twice → no dup) ---
   runAgentsUpdate("cursor", t1);

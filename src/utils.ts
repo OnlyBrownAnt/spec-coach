@@ -217,7 +217,7 @@ export function installSkill(
 export const SKILL_NAMES = [
   "specify", "plan", "tasks", "implement",
   "analyze", "clarify", "checklist", "constitution",
-  "taskstoissues", "autopilot", "fix",
+  "taskstoissues", "autopilot", "fix", "absorb",
 ];
 
 export function installAllSkills(agent: AgentConfig, projectRoot: string): string[] {
