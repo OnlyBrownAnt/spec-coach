@@ -85,6 +85,23 @@ try {
   let threw = false;
   try { removeManagedSection(claude, t4); } catch { threw = true; }
   ok("removeManagedSection on absent file does not throw", !threw);
+
+  // --- FR-003: upsertManagedSection reports whether it created the file (spec 004) ---
+  const t5 = mktmp("ctx-created-");
+  const r1 = upsertManagedSection(claude, t5);
+  ok("upsert into absent file reports created:true", !!r1 && r1.created === true);
+  const r2 = upsertManagedSection(claude, t5); // markers present → replace, file existed
+  ok("re-upsert (markers present) reports created:false", !!r2 && r2.created === false);
+
+  const t6 = mktmp("ctx-existing-");
+  fs.writeFileSync(path.join(t6, "CLAUDE.md"), "# user content\n");
+  const r3 = upsertManagedSection(claude, t6);
+  ok("upsert into existing user file reports created:false", !!r3 && r3.created === false);
+
+  const t7 = mktmp("ctx-empty-");
+  fs.writeFileSync(path.join(t7, "CLAUDE.md"), ""); // exists but empty
+  const r4 = upsertManagedSection(claude, t7);
+  ok("upsert into existing empty file reports created:false", !!r4 && r4.created === false);
 } finally {
   for (const d of tmpDirs) {
     try { fs.rmSync(d, { recursive: true, force: true }); } catch { /* best effort */ }

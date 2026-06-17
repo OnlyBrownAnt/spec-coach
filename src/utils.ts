@@ -348,9 +348,13 @@ export function buildManagedSection(): string {
  * Upsert the managed Spec Coach block into an agent's declared context file
  * (claude→CLAUDE.md, others→AGENTS.md). Preserves any user content outside the
  * COACH markers. Idempotent — re-running replaces the block in place (FR-010).
+ * Returns `{ created }` (spec 004): true iff the context file did NOT exist
+ * immediately before this call (i.e. spec-coach created it from scratch). Callers
+ * record that fact to decide whether the file body may be deleted on teardown.
  */
-export function upsertManagedSection(agent: AgentConfig, projectRoot: string): void {
+export function upsertManagedSection(agent: AgentConfig, projectRoot: string): { created: boolean } {
   const filePath = path.join(projectRoot, agent.contextFile);
+  const existedBefore = fs.existsSync(filePath);
   const section = buildManagedSection();
   const block = `${COACH_MARKER_START}
 ${section}${COACH_MARKER_END}
@@ -358,7 +362,7 @@ ${section}${COACH_MARKER_END}
 
   let existing = "";
   try {
-    existing = fs.existsSync(filePath) ? fs.readFileSync(filePath, "utf-8") : "";
+    existing = existedBefore ? fs.readFileSync(filePath, "utf-8") : "";
   } catch { /* best-effort */ }
 
   const startIdx = existing.indexOf(COACH_MARKER_START);
@@ -366,7 +370,7 @@ ${section}${COACH_MARKER_END}
   if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
     const replaced = existing.slice(0, startIdx) + block + existing.slice(endIdx + COACH_MARKER_END.length);
     try { fs.writeFileSync(filePath, replaced); } catch { /* best-effort */ }
-    return;
+    return { created: false };
   }
 
   // No markers yet: append a managed block (create file with H1 if absent).
@@ -379,6 +383,7 @@ ${block}`
 
 ${block}`;
   try { fs.writeFileSync(filePath, content); } catch { /* best-effort */ }
+  return { created: !existedBefore };
 }
 
 /**
