@@ -154,6 +154,46 @@ try {
   ok("SC-001: user skill survives uninstall", fs.readFileSync(path.join(k, ".claude/skills/spec-user/keep.md"), "utf-8") === userSkillBefore);
   ok("SC-001: user notes survives uninstall", fs.readFileSync(path.join(k, ".cursor/commands/spec/notes.md"), "utf-8") === userNotesBefore);
   ok("SC-001: coach bindings gone after uninstall", !exists(k, ".claude/skills/spec-specify"));
+
+  // ── T012 / US2 / SC-003: own shells cleaned ─────────────────────────────
+  // (FR-009 owned-shell deletion landed in T008 — US3's precise-inverse required
+  //  it. T012 adds the dedicated US2 acceptance + shared-AGENTS.md coverage.)
+
+  // SC-003: a coach-created empty context file IS deleted on remove (+ unrecorded)
+  const o = mktmp("pd-owned-");
+  mkdirCorp(o);
+  ok("SC-003 setup: no CLAUDE.md before add", !exists(o, "CLAUDE.md"));
+  runAgentsAdd("claude", o); // creates CLAUDE.md (owned)
+  ok("SC-003 setup: CLAUDE.md recorded as created", readCreatedContextFiles(o).includes("CLAUDE.md"));
+  runAgentsRemove("claude", o, { force: true });
+  ok("SC-003: coach-created empty CLAUDE.md deleted", !exists(o, "CLAUDE.md"));
+  ok("SC-003: CLAUDE.md unrecorded after deletion", !readCreatedContextFiles(o).includes("CLAUDE.md"));
+
+  // complement: coach-created CLAUDE.md with user content → preserved
+  const o2 = mktmp("pd-owned-content-");
+  mkdirCorp(o2);
+  runAgentsAdd("claude", o2);
+  fs.appendFileSync(path.join(o2, "CLAUDE.md"), "\n# user section\n");
+  runAgentsRemove("claude", o2, { force: true });
+  ok("US2: coach CLAUDE.md with user content preserved", exists(o2, "CLAUDE.md") && fs.readFileSync(path.join(o2, "CLAUDE.md"), "utf-8").includes("user section"));
+
+  // shared AGENTS.md: remove one of two non-Claude keeps it; remove last deletes it (owned+empty)
+  const ag = mktmp("pd-ag-");
+  mkdirCorp(ag);
+  runAgentsAdd("cursor", ag); // creates AGENTS.md (owned)
+  runAgentsAdd("copilot", ag);
+  runAgentsRemove("cursor", ag, { force: true }); // copilot remains → block kept
+  ok("US2: AGENTS.md kept after removing one of two non-Claude", exists(ag, "AGENTS.md"));
+  runAgentsRemove("copilot", ag, { force: true }); // last non-Claude → delete (owned+empty)
+  ok("US2: AGENTS.md deleted after removing last non-Claude (owned+empty)", !exists(ag, "AGENTS.md"));
+
+  // shared AGENTS.md with user content: remove last → preserved (non-empty)
+  const agu = mktmp("pd-ag-user-");
+  mkdirCorp(agu);
+  runAgentsAdd("cursor", agu);
+  fs.appendFileSync(path.join(agu, "AGENTS.md"), "\n# user agent notes\n");
+  runAgentsRemove("cursor", agu, { force: true }); // last non-Claude, but user content present
+  ok("US2: AGENTS.md with user content preserved on last remove", exists(agu, "AGENTS.md") && fs.readFileSync(path.join(agu, "AGENTS.md"), "utf-8").includes("user agent notes"));
 } catch (e) {
   ok("precise-deletion ran without throwing", false);
   console.log("    error:", (e as Error).message);
