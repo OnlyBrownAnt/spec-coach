@@ -1,11 +1,2 @@
 node_modules
-.claude/
-.kiro/
-# .spec/ is mostly regenerable/runtime for consumer projects. Track only the
-# authored governance dir (.spec/memory/ — constitution, decisions, hooks);
-# ignore .spec/templates + .spec/scripts (regenerable from root source) and
-# .spec/agents.json (runtime, churns on every agents add/remove).
-.spec/*
-!.spec/memory/
-CLAUDE.md
 tests/.test-output/

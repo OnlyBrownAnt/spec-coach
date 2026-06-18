@@ -1,0 +1,21 @@
+{
+  "agents": {
+    "claude": {
+      "version": "1.0.0",
+      "createdFiles": [
+        ".claude/skills/spec-specify",
+        ".claude/skills/spec-plan",
+        ".claude/skills/spec-tasks",
+        ".claude/skills/spec-implement",
+        ".claude/skills/spec-analyze",
+        ".claude/skills/spec-clarify",
+        ".claude/skills/spec-checklist",
+        ".claude/skills/spec-constitution",
+        ".claude/skills/spec-taskstoissues",
+        ".claude/skills/spec-autopilot",
+        ".claude/skills/spec-fix",
+        ".claude/skills/spec-absorb"
+      ]
+    }
+  }
+}
