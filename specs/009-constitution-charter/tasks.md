@@ -57,7 +57,7 @@
   - **Verify**: `npx tsx tests/units/constitution-charter.test.ts` GREEN; `diff` confirms installed copy matches source body.
   - **Depends on**: T002 (skill branches on advisor status).
 
-- [ ] **T004** `[US1,US2]` Edit `skills/constitution.md`: add **constitution-doc semver** rules (MAJOR = principle removed/redefined/renamed; MINOR = principle/section added or materially expanded; PATCH = wording) applied to the footer on amendment with a stated rationale; **expand the propagation checklist** (step 4) to `spec-template.md`, `plan-template.md`, `tasks-template.md`, and every installed skill embedding principle wording (not only `plan-template.md`). Regenerate the installed copy via `npx tsx src/cli.ts agents update`. Add content-assertion tests for the semver rules + the expanded propagation list.
+- [x] **T004** `[US1,US2]` Edit `skills/constitution.md`: add **constitution-doc semver** rules (MAJOR = principle removed/redefined/renamed; MINOR = principle/section added or materially expanded; PATCH = wording) applied to the footer on amendment with a stated rationale; **expand the propagation checklist** (step 4) to `spec-template.md`, `plan-template.md`, `tasks-template.md`, and every installed skill embedding principle wording (not only `plan-template.md`). Regenerate the installed copy via `npx tsx src/cli.ts agents update`. Add content-assertion tests for the semver rules + the expanded propagation list.
   - **Files**: `skills/constitution.md` (edit); `.claude/skills/spec-constitution/SKILL.md` (regenerate); `tests/units/constitution-charter.test.ts` (extend).
   - **Verify**: `npx tsx tests/units/constitution-charter.test.ts` GREEN.
   - **Depends on**: T003 (same skill file — serial).

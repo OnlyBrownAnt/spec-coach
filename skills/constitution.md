@@ -91,10 +91,16 @@ Fill in both flexible sections (`[SECTION_2_NAME]`, `[SECTION_3_NAME]`) — rena
 
 When a principle is added, removed, or renamed, the change must flow to the artifacts that depend on it. The constitution's authority rots the moment an amendment stops at the file.
 
+**Version the amendment** — bump the footer `Version` per semantic rules and state the rationale:
+
+- **MAJOR** — a principle removed, redefined, or renamed.
+- **MINOR** — a principle or section added, or guidance materially expanded.
+- **PATCH** — wording or clarification with no semantic change.
+
 **Amendment Propagation Checklist** — re-align each dependent artifact:
 
-1. `.spec/templates/plan-template.md` — its `## Constitution Check` section is the only template that references the principles; update it to match the amended set.
-2. Any skill that embeds a principle's wording (e.g., `/spec-plan`'s Constitution Check) — re-read and adjust.
+1. `.spec/templates/spec-template.md`, `.spec/templates/plan-template.md`, and `.spec/templates/tasks-template.md` — any section that references the principles (especially `## Constitution Check`); update to match the amended set.
+2. Every installed skill that embeds principle wording (e.g., `/spec-plan`'s Constitution Check, `/spec-specify`'s principle-loading step) — re-read and adjust.
 3. Existing `specs/*/plan.md` files — their Constitution Check may cite superseded principles; flag them for re-review.
 
 **Record a Sync Impact Report** so the change is auditable and machine-detectable. Append this block to `.spec/memory/constitution.md`:

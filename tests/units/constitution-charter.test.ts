@@ -138,6 +138,17 @@ try {
   console.log("    error:", (e as Error).message);
 }
 
+console.log("=== constitution-charter.test (T004: skill semvar + propagation) ===");
+
+try {
+  const skill = fs.readFileSync(path.join(REPO, "skills", "constitution.md"), "utf8");
+  ok("skill codifies constitution-doc semver (MAJOR/MINOR/PATCH)", /MAJOR/.test(skill) && /MINOR/.test(skill) && /PATCH/.test(skill));
+  ok("skill propagation covers spec-template + tasks-template (not only plan)", /spec-template/.test(skill) && /tasks-template/.test(skill));
+} catch (e) {
+  ok("semvar/propagation block ran without throwing", false);
+  console.log("    error:", (e as Error).message);
+}
+
 assert.ok(pass > 0, "test ran");
 console.log("");
 console.log(`=== Results: ${pass} passed, ${fail} failed ===`);
