@@ -75,6 +75,40 @@ try {
   );
   ok("FR-009: init creates no .spec/intake (no external scan)", !exists(t3, ".spec/intake"));
   ok("FR-009: init creates no .spec/absorbed", !exists(t3, ".spec/absorbed"));
+
+  // --- US4 (spec 007): init guidance — pure existingSpecs() + guidanceText() ---
+  const initMod: any = await import("../../src/commands/init.ts");
+  ok("US4: existingSpecs exported", typeof initMod.existingSpecs === "function");
+  ok("US4: guidanceText exported", typeof initMod.guidanceText === "function");
+
+  if (typeof initMod.existingSpecs === "function" && typeof initMod.guidanceText === "function") {
+    // existing-specs case
+    const t4 = mktmp("init-guide-existing-");
+    fs.mkdirSync(path.join(t4, "specs", "003-thing"), { recursive: true });
+    fs.writeFileSync(path.join(t4, "specs/003-thing/spec.md"), "# thing\n");
+    const beforeThing = fs.readFileSync(path.join(t4, "specs/003-thing/spec.md"), "utf-8");
+    const exSpecs = initMod.existingSpecs(t4);
+    ok("US4: existingSpecs counts 1 / highest 3", exSpecs.count === 1 && exSpecs.highest === 3);
+    const gExisting = initMod.guidanceText(exSpecs);
+    ok("US4: guidance acknowledges existing spec", /003|existing/i.test(gExisting));
+    ok("US4: guidance states the safety rule", /never/i.test(gExisting));
+    ok("US4: guidance shows /spec-absorb", gExisting.includes("/spec-absorb"));
+    await runInit(t4);
+    ok(
+      "US4: existing spec untouched by init",
+      fs.readFileSync(path.join(t4, "specs/003-thing/spec.md"), "utf-8") === beforeThing,
+    );
+
+    // fresh case (no specs)
+    const t5 = mktmp("init-guide-fresh-");
+    const exNone = initMod.existingSpecs(t5);
+    ok("US4: fresh existingSpecs is 0/0", exNone.count === 0 && exNone.highest === 0);
+    const gFresh = initMod.guidanceText(exNone);
+    ok(
+      "US4: fresh guidance has /spec-absorb + safety, no existing line",
+      gFresh.includes("/spec-absorb") && !/existing/i.test(gFresh),
+    );
+  }
 } catch (e) {
   ok("init ran without throwing", false);
   console.log("    error:", (e as Error).message);

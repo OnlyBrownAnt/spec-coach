@@ -44,6 +44,47 @@ function printNextSteps(projectRoot: string, templates: number, scripts: number)
 `);
 }
 
+// ── Existing-specs detection + document-safety guidance (spec 007 US4) ──────
+
+/** Existing `NNN-slug` spec dirs under `specs/` and the highest leading number
+ *  (0 when `specs/` is absent or has no conforming dirs). Pure — reads only. */
+export function existingSpecs(projectRoot: string): { count: number; highest: number } {
+  const specsDir = path.join(projectRoot, "specs");
+  let entries: string[];
+  try {
+    entries = fs.readdirSync(specsDir, { withFileTypes: true })
+      .filter((e) => e.isDirectory())
+      .map((e) => e.name);
+  } catch {
+    return { count: 0, highest: 0 };
+  }
+  const nums = entries
+    .map((e) => (/^(\d{3})-/.exec(e) ? parseInt(e.slice(0, 3), 10) : NaN))
+    .filter((n) => !Number.isNaN(n));
+  return { count: nums.length, highest: nums.length ? Math.max(...nums) : 0 };
+}
+
+/** Pure guidance text: the document-safety rule + the `/spec-absorb` how-to,
+ *  preceded by an existing-specs line when `count > 0`. Never mutates anything. */
+export function guidanceText(specs: { count: number; highest: number }): string {
+  const pad3 = (n: number): string => String(n).padStart(3, "0");
+  const lines: string[] = [];
+  if (specs.count > 0) {
+    lines.push(
+      `Existing specs/ has ${specs.count} spec(s) (highest ${pad3(specs.highest)}). ` +
+        `Adopted as-is — nothing was modified. Review with \`ls specs/\`; new specs continue from ${pad3(specs.highest + 1)}.`,
+    );
+  }
+  lines.push(
+    "Your own documents (docs/, *.md, wherever they live) are NEVER moved, deleted, or overwritten by spec-coach.",
+  );
+  lines.push(
+    "To turn a document into a spec, run: /spec-absorb <path>  (it reads the doc in place and writes specs/NNN-slug/spec.md; the original stays put).",
+  );
+  lines.push("Documents you don't want as specs need nothing — leave them; they're safe.");
+  return lines.join("\n");
+}
+
 // ── Main ───────────────────────────────────────────────────────────────────
 
 /**
@@ -77,4 +118,8 @@ export async function runInit(projectRoot: string): Promise<void> {
   }
 
   printNextSteps(projectRoot, templates.length, scripts.length);
+
+  // 7. Document-safety guidance (spec 007 US4): non-blocking. States what
+  //    spec-coach will/won't touch and how to bring a document in (/spec-absorb).
+  console.log(guidanceText(existingSpecs(projectRoot)));
 }
