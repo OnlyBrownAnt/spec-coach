@@ -134,7 +134,12 @@ For every task, follow these steps in exact order. Do not skip. Do not reorder. 
    - **Blocked** → stop. Explain what's blocking. Do NOT continue.
 
 10. COMMIT
-    - Commit with the task ID and a clear description.
+    - Commit using the project's commit convention. `.spec/convention.md` is the
+      source of truth; the default is Conventional Commits — `type(scope): subject`
+      — with the task folded in as a `Task: Txxx` trailer so every commit maps back
+      to its line in tasks.md. Allowed types: feat, fix, docs, refactor, test, chore;
+      use the feature slug as the scope (e.g. `feat(spec-010): seed convention.md`).
+      If `.spec/convention.md` is absent or still the template, coach this default.
     - One commit per task — no bundling.
 ```
 

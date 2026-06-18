@@ -85,6 +85,23 @@ try {
 
 // ─── (later task blocks T003–T007 are inserted here) ────────────────────────
 
+// ─── T004: skill + tasks-template coaching conforms (FR-003) ────────────────
+console.log("=== commit-convention.test (T004: skill coaching conforms) ===");
+try {
+  const skill = fs.readFileSync(path.join(REPO, "skills", "implement.md"), "utf8");
+  ok("implement.md references .spec/convention.md (source of truth)", /convention\.md/.test(skill));
+  ok("implement.md coaches the Task: Txxx trailer fold-in", /Task: Txxx/.test(skill));
+  ok("implement.md coaches Conventional Commits", /Conventional Commits/i.test(skill));
+  ok("implement.md names the allowed types (feat + chore)", /feat/.test(skill) && /chore/.test(skill));
+  ok("implement.md no longer coaches bare 'Commit with the task ID'", !/Commit with the task ID/.test(skill));
+
+  const tasksTpl = fs.readFileSync(path.join(REPO, "templates", "tasks-template.md"), "utf8");
+  ok("tasks-template.md is convention-aware (references convention.md)", /convention\.md/.test(tasksTpl));
+} catch (e) {
+  ok("T004 block ran without throwing", false);
+  console.log("    error:", (e as Error).message);
+}
+
 // ─── T003: status-aware uninstall preserve (FR-001 charter-as-IP) ───────────
 console.log("=== commit-convention.test (T003: uninstall preserve) ===");
 try {
