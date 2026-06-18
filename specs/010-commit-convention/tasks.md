@@ -24,7 +24,7 @@ Single project: `templates/` (package source), `scripts/bash/` (package source f
 
 **Purpose**: Release-version skeleton (matches the spec 008/009 T001 convention — bump early, finalize CHANGELOG last).
 
-- [ ] **T001** `[P]` `[infra]` Bump `package.json` version `2.4.0` → `2.5.0` (MINOR; new `convention-template` + new `verify-commit.sh` = install-contract expansion, additive; `update` not broken).
+- [x] **T001** `[P]` `[infra]` Bump `package.json` version `2.4.0` → `2.5.0` (MINOR; new `convention-template` + new `verify-commit.sh` = install-contract expansion, additive; `update` not broken).
   - **File**: `package.json`.
   - **Verify**: `node -e "console.log(require('./package.json').version)"` → `2.5.0`.
   - **Depends on**: nothing.
