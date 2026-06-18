@@ -20,7 +20,7 @@
 
 **Purpose**: Release-version skeleton (matches the spec 008 T001 convention — bump early, finalize CHANGELOG last).
 
-- [ ] **T001** `[P]` `[infra]` Bump `package.json` version `2.3.0` → `2.4.0` (MINOR; constitution-as-charter — new skill behavior + uninstall behavior, no install file-structure change).
+- [x] **T001** `[P]` `[infra]` Bump `package.json` version `2.3.0` → `2.4.0` (MINOR; constitution-as-charter — new skill behavior + uninstall behavior, no install file-structure change).
   - **File**: `package.json`.
   - **Verify**: `node -e "console.log(require('./package.json').version)"` → `2.4.0`.
   - **Depends on**: nothing.
@@ -35,7 +35,7 @@
 
 **⚠️ CRITICAL**: No user-story work can begin until this phase is complete — the skill branches on the advisor's status output, and uninstall reuses its token set.
 
-- [ ] **T002** `[foundational]` Extend `verify-constitution-sync.sh` to report constitution **status**: scan for the template's signature tokens (`[CONSTITUTION_VERSION]`, `[RATIFICATION_DATE]`, `[LAST_AMENDED_DATE]`, `[PROJECT_NAME]`, `[PRINCIPLE_1_NAME]`) → `TEMPLATE` (≥1 token present); else (no tokens) → `AUTHORED` (report the principle count alongside — MAY be 0, so an authored shell classifies as AUTHORED, per the spec edge case); file missing → `ABSENT` (existing "not found" path). Additive (no existing output removed); non-blocking (exit 0). Create `tests/units/constitution-charter.test.ts` with **RED-first** advisor tests via `execSync` in `mkdtemp`: write a template fixture → assert status `TEMPLATE`; write an authored fixture (principles, no placeholders) → `AUTHORED`; write an authored shell (no placeholders, zero principles) → `AUTHORED` (edge case); missing file → `ABSENT`.
+- [x] **T002** `[foundational]` Extend `verify-constitution-sync.sh` to report constitution **status**: scan for the template's signature tokens (`[CONSTITUTION_VERSION]`, `[RATIFICATION_DATE]`, `[LAST_AMENDED_DATE]`, `[PROJECT_NAME]`, `[PRINCIPLE_1_NAME]`) → `TEMPLATE` (≥1 token present); else (no tokens) → `AUTHORED` (report the principle count alongside — MAY be 0, so an authored shell classifies as AUTHORED, per the spec edge case); file missing → `ABSENT` (existing "not found" path). Additive (no existing output removed); non-blocking (exit 0). Create `tests/units/constitution-charter.test.ts` with **RED-first** advisor tests via `execSync` in `mkdtemp`: write a template fixture → assert status `TEMPLATE`; write an authored fixture (principles, no placeholders) → `AUTHORED`; write an authored shell (no placeholders, zero principles) → `AUTHORED` (edge case); missing file → `ABSENT`.
   - **Files**: `.spec/scripts/bash/verify-constitution-sync.sh` (edit); `tests/units/constitution-charter.test.ts` (create).
   - **Verify**: `npx tsx tests/units/constitution-charter.test.ts` (RED before edit → GREEN after); `bash .spec/scripts/bash/verify-spec.sh specs/009-constitution-charter/spec.md` still CLEAN.
   - **Depends on**: nothing (base layer).

@@ -36,9 +36,19 @@ CONST_FILE="${1:-$REPO_ROOT/.spec/memory/constitution.md}"
 echo "Constitution: $CONST_FILE"
 
 if [ ! -f "$CONST_FILE" ]; then
+  echo "Constitution state: ABSENT"
   echo "Constitution not found at the path above."
   echo "Status: CLEAN (no constitution present to check)"
   exit 0
+fi
+
+# Constitution authoring state (spec 009): TEMPLATE while unfilled signature
+# placeholders remain, else AUTHORED. The principle count is informational (it
+# MAY be 0, e.g. an authored shell) — it does not gate the AUTHORED classification.
+if grep -qE '\[(CONSTITUTION_VERSION|RATIFICATION_DATE|LAST_AMENDED_DATE|PROJECT_NAME|PRINCIPLE_1_NAME)\]' "$CONST_FILE" 2>/dev/null; then
+  echo "Constitution state: TEMPLATE"
+else
+  echo "Constitution state: AUTHORED"
 fi
 
 # Principles = level-3 headings; strip a leading roman-numeral prefix if present
@@ -46,7 +56,7 @@ fi
 principles="$(grep -E '^### ' "$CONST_FILE" 2>/dev/null \
   | sed -E 's/^### +[IVXivx]+\.?[[:space:]]*//' \
   | sed -E 's/^### +//')"
-count="$(printf '%s\n' "$principles" | grep -c . 2>/dev/null || echo 0)"
+count="$(printf '%s\n' "$principles" | grep -c . 2>/dev/null)"
 
 if [ "$count" -gt 0 ]; then
   names="$(printf '%s\n' "$principles" | awk 'NR>1{printf ", "} {printf "%s", $0}')"
