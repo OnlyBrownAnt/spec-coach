@@ -4,7 +4,7 @@
 
 **Created**: 2026-06-18 (revised — consolidated design)
 
-**Status**: Draft
+**Status**: Implemented
 
 **Input**: User-driven redesign of spec-coach's project footprint around one iron rule — **spec-coach is read-only on user documents; it only ever appends to `specs/`.** This removes the over-built, user-exposed `intake` subsystem (its CLI command, manifest, ignore list, `.spec/absorbed/`, `.spec/intake/`); `/spec-absorb` (function unchanged) becomes the sole document→spec path, reading originals in place and leaving them untouched. It hardens `init` (re-run no longer clobbers `agents.json`; recognizes and guides on existing `specs/`) and sets the `uninstall` ownership boundary (constitution = regenerable tooling, removed on plain uninstall; only `specs/` preserved as user content). The model is codified in a constitution amendment.
 
