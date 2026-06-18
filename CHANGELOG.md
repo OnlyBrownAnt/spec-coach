@@ -1,5 +1,37 @@
 # Changelog
 
+## 2.5.0 — 2026-06-18
+
+### Configurable commit convention (spec 010)
+
+spec-coach's SDD workflow is commit-coupled (one commit per task) but had no
+source of truth for commit format — the constitution delegated commit style to an
+empty `CLAUDE.md`, and the implement skill actively coached a `Txxx:`-first form
+that violated Conventional Commits. spec 010 makes the convention a user-owned,
+.spec-configurable charter, retargets the skills, and ships a non-blocking
+advisor. Coach-Not-Gatekeeper + Zero Dependencies (pure bash, no commitlint/husky
+hook).
+
+- **`.spec/convention.md`** is the single, project-owned source of truth for the
+  commit convention (charter-as-IP tier, like the constitution). `init` seeds it
+  from `convention-template.md` only when absent; `init`/`update` never overwrite
+  an AUTHORED convention; `uninstall` preserves an AUTHORED convention (only
+  `--force`/purge or a never-authored TEMPLATE removes it).
+- The convention ships **Conventional Commits** as the default —
+  `type(scope): subject` — with spec-coach's task ID folded in as an optional
+  `Task: Txxx` trailer (preserving tasks.md↔commit traceability).
+- The SDD skills (`spec-implement`, `spec-tasks`) now coach the declared
+  convention; the bare `Txxx:`-first coaching is gone.
+- **`verify-commit.sh`** advisor (non-blocking, always exits 0): reports whether
+  HEAD conforms to the declared convention, skips merge commits, honors a custom
+  type set declared in the convention, and reports `ABSENT`/`TEMPLATE`/`AUTHORED`.
+- Commit format is **not** a derived-state source (spec 008 boundary, locked by a
+  guardrail test).
+- Constitution amended **v1.5.0 → v1.6.0**: the Runtime-guidance clause now
+  delegates commit style to `.spec/convention.md`.
+- Versioned **MINOR 2.4.0 → 2.5.0** (new `convention-template` + new
+  `verify-commit.sh` = additive install-contract expansion; `update` not broken).
+
 ## 2.4.1 — 2026-06-18
 
 ### Fix: constitution status detection now ships (spec-009 source drift)

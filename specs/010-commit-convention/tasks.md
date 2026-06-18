@@ -125,7 +125,7 @@ Single project: `templates/` (package source), `scripts/bash/` (package source f
   - **Verify**: `npx tsx tests/units/commit-convention.test.ts` GREEN.
   - **Depends on**: nothing (test-only, fully independent — `[P]`, can run anytime after T002 creates the test file).
 
-- [ ] **T008** `[infra]` Finalize release: add the **CHANGELOG.md** `2.5.0` entry (configurable commit convention: convention source + installer + never-clobber + status-aware uninstall preserve, conforming skill coaching, `verify-commit.sh` advisor, dogfood convention + constitution amendment v1.6.0, FR-005 guardrail). Run the **full headless suite** (`npx tsx tests/units/*.test.ts`) + smokes (`bash .spec/scripts/bash/verify-commit.sh`; `bash .spec/scripts/bash/verify-constitution-sync.sh`; `npx tsx src/cli.ts --help`). Confirm 0 failures.
+- [x] **T008** `[infra]` Finalize release: add the **CHANGELOG.md** `2.5.0` entry (configurable commit convention: convention source + installer + never-clobber + status-aware uninstall preserve, conforming skill coaching, `verify-commit.sh` advisor, dogfood convention + constitution amendment v1.6.0, FR-005 guardrail). Run the **full headless suite** (`npx tsx tests/units/*.test.ts`) + smokes (`bash .spec/scripts/bash/verify-commit.sh`; `bash .spec/scripts/bash/verify-constitution-sync.sh`; `npx tsx src/cli.ts --help`). Confirm 0 failures.
   - **Files**: `CHANGELOG.md` (edit).
   - **Verify**: full `tests/units/*.test.ts` suite GREEN (paste the `=== Results: N passed, 0 failed ===` lines); CLI/help/advisor smokes clean.
   - **Depends on**: all prior tasks.

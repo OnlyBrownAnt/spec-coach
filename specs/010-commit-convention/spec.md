@@ -4,7 +4,7 @@
 
 **Created**: 2026-06-18
 
-**Status**: Draft
+**Status**: Implemented
 
 **Input**: User observation: the SDD workflow is genuinely commit-coupled (`spec-tasks` / `spec-implement` make "one commit per task" a first-class doctrine), yet commit messages are inconsistent. Evidence gathered before drafting:
 
