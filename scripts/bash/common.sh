@@ -39,6 +39,173 @@ get_repo_root() {
     (cd "$script_dir/../../.." && pwd)
 }
 
+# Derived workflow-state resolver (spec 008).
+#
+# resolve_feature resolves the "current feature" WITHOUT reading any stored
+# state file — .spec/feature.json is ignored and the SDD STATE block is gone.
+# State is derived read-only from specs/NNN-*/ artifacts.
+#
+# Usage: resolve_feature [--strict] [token] [repo_root]
+#   --strict   strict policy (writing path): never guess among multiple features
+#              — resolve only on an explicit token/env OR a single candidate.
+#   token      explicit feature token: a number (007), a slug, or "@" (opt-in
+#              "the feature on the current git branch"). Empty = no token.
+#   repo_root  repository root (defaults to get_repo_root).
+#
+# Precedence (soft = default; --strict replaces the mtime tier with single-candidate):
+#   1. explicit token (incl. "@")
+#   2. SPECIFY_FEATURE / SPECIFY_FEATURE_DIRECTORY env (override only)
+#   3. soft: most-recently-modified specs/NNN-*/  |  strict: single candidate only
+#   4. none (echo empty)
+#
+# Always returns 0; echoes the absolute feature dir or empty. Never errors.
+# Legacy .spec/feature.json is tolerated (read-ignored, never written/migrated).
+resolve_feature() {
+    local strict=0
+    if [ "${1:-}" = "--strict" ]; then
+        strict=1
+        shift
+    fi
+    local token="${1:-}"
+    local repo_root="${2:-$(get_repo_root 2>/dev/null || pwd)}"
+    local specs_dir="$repo_root/specs"
+
+    # 1. Explicit token (incl. "@").
+    if [ -n "$token" ]; then
+        if [ "$token" = "@" ]; then
+            _resolve_at_branch "$repo_root"
+        else
+            _resolve_by_token "$repo_root" "$token"
+        fi
+        return 0
+    fi
+
+    # 2. SPECIFY_FEATURE_DIRECTORY / SPECIFY_FEATURE env (override only).
+    if [ -n "${SPECIFY_FEATURE_DIRECTORY:-}" ]; then
+        local fd="$SPECIFY_FEATURE_DIRECTORY"
+        if [ "$fd" != /* ]; then fd="$repo_root/$fd"; fi
+        if [ -d "$fd" ]; then
+            printf '%s' "$fd"
+            return 0
+        fi
+    fi
+    if [ -n "${SPECIFY_FEATURE:-}" ]; then
+        local via_env
+        via_env="$(_resolve_by_token "$repo_root" "$SPECIFY_FEATURE")"
+        if [ -n "$via_env" ]; then
+            printf '%s' "$via_env"
+            return 0
+        fi
+    fi
+
+    # 3. No explicit input: derive from specs/ candidates.
+    local -a candidates=()
+    local d
+    for d in "$specs_dir"/[0-9][0-9][0-9]-*/; do
+        if [ -d "$d" ]; then
+            candidates+=("${d%/}")
+        fi
+    done
+    local count=${#candidates[@]}
+    if [ "$count" -eq 0 ]; then
+        return 0
+    fi
+    if [ "$count" -eq 1 ]; then
+        printf '%s' "${candidates[0]}"
+        return 0
+    fi
+    # count > 1
+    if [ "$strict" -eq 1 ]; then
+        return 0   # ambiguous + no explicit input: refuse to guess (writing path)
+    fi
+    # soft: most-recently-modified
+    local newest="${candidates[0]}"
+    local c
+    for c in "${candidates[@]}"; do
+        if [ "$c" -nt "$newest" ]; then
+            newest="$c"
+        fi
+    done
+    printf '%s' "$newest"
+    return 0
+}
+
+# Map a leading NNN from the current git branch to specs/<NNN>-*/. Opt-in only
+# (called by resolve_feature when token is "@"). Empty when git is absent, HEAD
+# is detached, or the branch has no leading NNN (e.g. main, fix-typo).
+_resolve_at_branch() {
+    local repo_root="$1"
+    local branch=""
+    if command -v git >/dev/null 2>&1; then
+        branch="$(git -C "$repo_root" branch --show-current 2>/dev/null || true)"
+        if [ -z "$branch" ]; then
+            branch="$(git -C "$repo_root" symbolic-ref --quiet --short HEAD 2>/dev/null || true)"
+        fi
+    fi
+    local num
+    num="$(printf '%s' "$branch" | sed -n 's/^\([0-9][0-9][0-9]\).*/\1/p')"
+    if [ -z "$num" ]; then
+        return 0
+    fi
+    _resolve_by_num "$repo_root" "$num"
+}
+
+# Resolve a numeric feature id (e.g. 007) to the first matching specs/007-*/.
+_resolve_by_num() {
+    local repo_root="$1" num="$2"
+    local d
+    for d in "$repo_root"/specs/"$num"-*/; do
+        if [ -d "$d" ]; then
+            printf '%s' "${d%/}"
+            return 0
+        fi
+    done
+    return 0
+}
+
+# Resolve an explicit token (number, full slug, NNN-prefixed, or slug substring)
+# to a specs/ dir. Empty when nothing matches.
+_resolve_by_token() {
+    local repo_root="$1" token="$2"
+    local specs_dir="$repo_root/specs"
+
+    # Pure 3-digit number → specs/<num>-*/.
+    if printf '%s' "$token" | grep -qE '^[0-9][0-9][0-9]$'; then
+        _resolve_by_num "$repo_root" "$token"
+        return 0
+    fi
+    # Exact dir under specs/ (full slug like "007-alpha").
+    if [ -d "$specs_dir/$token" ]; then
+        printf '%s' "$specs_dir/$token"
+        return 0
+    fi
+    # Leading NNN in a composite token (e.g. "007-alpha" or a branch name).
+    local num
+    num="$(printf '%s' "$token" | sed -n 's/^\([0-9][0-9][0-9]\).*/\1/p')"
+    if [ -n "$num" ]; then
+        local via_num
+        via_num="$(_resolve_by_num "$repo_root" "$num")"
+        if [ -n "$via_num" ]; then
+            printf '%s' "$via_num"
+            return 0
+        fi
+    fi
+    # Slug substring match (basename contains the token).
+    local match=""
+    local d
+    for d in "$specs_dir"/*/; do
+        if [ -d "$d" ]; then
+            case "$(basename "$d")" in
+                *"$token"*) match="${d%/}"; break ;;
+            esac
+        fi
+    done
+    if [ -n "$match" ]; then
+        printf '%s' "$match"
+    fi
+    return 0
+}
+
 # Get current feature name from explicit state only.
 # Returns the feature identifier or empty string if none is set.
 # Feature state is set by SPECIFY_FEATURE (from create-new-feature or
