@@ -1,5 +1,31 @@
 # Changelog
 
+## 2.2.0 — 2026-06-18
+
+### Resource ownership & document safety (spec 007)
+
+Harden spec-coach's project footprint around one iron rule: spec-coach is
+**read-only on user documents** and only appends to `specs/`. Behavior change
+(a new `init`-safety guarantee, a new `uninstall` boundary, and the removal of
+the over-built `intake` subsystem) + a constitution amendment v1.2.0 → v1.3.0.
+
+- `init` is now safe to re-run: it no longer clobbers `.spec/agents.json` to
+  `{}` (writes the empty managed state only when the file is absent).
+- Plain `uninstall` now removes **all** `.spec/` tooling — including the
+  constitution (reclassified as regenerable tooling) — and preserves only
+  `specs/` as user content. `--force` also purges `specs/`.
+- **Removed the `intake` subsystem** (`intake scan`/`process`/`ignore`, the
+  `.spec/intake/` manifest + ignore list, `.spec/absorbed/`, and
+  `src/commands/intake.ts`). Document→spec conversion is now the sole job of
+  the on-demand `/spec-absorb` skill, which reads a document in place and
+  writes `specs/NNN-slug/spec.md` without ever touching the original.
+- `init` detects existing `specs/` and emits a non-blocking guidance block
+  (acknowledges prior specs; states the document-safety rule; shows the
+  `/spec-absorb` path).
+- Constitution amended v1.2.0 → v1.3.0: CLI surface 3 → 2; codifies the iron
+  rule, the ownership model, and the uninstall preservation set.
+- Versioned **MINOR 2.2.0** (observable `init`/`uninstall` change + amendment).
+
 ## 2.1.1 — 2026-06-18
 
 ### Internal cleanup — dead code, type dedup, state cohesion (spec 006)
