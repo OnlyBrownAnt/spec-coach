@@ -15,7 +15,7 @@ function ok(name: string, cond: boolean): void {
 console.log("=== relocation.test (spec 006) ===");
 
 try {
-  // CmdResult — single source of truth in src/result.ts (was duplicated in agents.ts + intake.ts)
+  // CmdResult — single source of truth in src/result.ts (once duplicated across command modules)
   const okResult: CmdResult = { ok: true, message: "done" };
   const errResult: CmdResult = { ok: false, reason: "nope" };
   ok("CmdResult ok-branch carries message", okResult.ok === true && okResult.message === "done");
