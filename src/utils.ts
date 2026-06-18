@@ -268,7 +268,12 @@ export function installDocumentTemplates(projectRoot: string): string[] {
   return installed;
 }
 
-/** Copy constitution-template to .spec/memory/constitution.md — only if absent. */
+/**
+ * Copy constitution-template to .spec/memory/constitution.md — only if absent.
+ * spec 009 invariant (FR-007): NEVER overwrite an existing constitution. An
+ * AUTHORED charter is project IP; init/update MUST leave it untouched. The
+ * `if (fs.existsSync(constDest)) return false` guard below IS this invariant.
+ */
 export function installConstitutionToMemory(projectRoot: string): boolean {
   const constSrc = templateSource("constitution-template");
   if (!fs.existsSync(constSrc)) return false;

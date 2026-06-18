@@ -184,6 +184,24 @@ try {
   console.log("    error:", (e as Error).message);
 }
 
+console.log("=== constitution-charter.test (T007: never-clobber invariant) ===");
+
+try {
+  // FR-007: init must NOT overwrite an existing AUTHORED constitution. This is
+  // already-true behavior via installConstitutionToMemory's `if exists` guard;
+  // the test locks it as a regression guard (no code change in T007).
+  const n1 = mktmp("cc-nc-");
+  writeAuthored(n1);
+  const before = fs.readFileSync(path.join(n1, ".spec", "memory", "constitution.md"), "utf8");
+  await runInit(n1);
+  const after = fs.readFileSync(path.join(n1, ".spec", "memory", "constitution.md"), "utf8");
+  ok("init never clobbers an existing AUTHORED constitution", before === after);
+  ok("...and it stays authored (no template tokens)", !/\[CONSTITUTION_VERSION\]/.test(after));
+} catch (e) {
+  ok("never-clobber block ran without throwing", false);
+  console.log("    error:", (e as Error).message);
+}
+
 assert.ok(pass > 0, "test ran");
 console.log("");
 console.log(`=== Results: ${pass} passed, ${fail} failed ===`);

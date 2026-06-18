@@ -104,7 +104,7 @@
 
 **Purpose**: The never-clobber invariant (FR-007, cross-cutting) + release finalization.
 
-- [ ] **T007** `[P]` `[infra]` Codify the **never-clobber invariant** (FR-007): add a one-line invariant comment to `installConstitutionToMemory` in `src/utils.ts` (already guarded by `if (fs.existsSync(constDest)) return false`; `update.ts` already "Never modifies user artifacts"). Add **RED-first** regression tests to `tests/units/constitution-charter.test.ts`: `init` over an AUTHORED constitution preserves it (not clobbered by the template). No logic change — this locks existing behavior as the invariant.
+- [x] **T007** `[P]` `[infra]` Codify the **never-clobber invariant** (FR-007): add a one-line invariant comment to `installConstitutionToMemory` in `src/utils.ts` (already guarded by `if (fs.existsSync(constDest)) return false`; `update.ts` already "Never modifies user artifacts"). Add **RED-first** regression tests to `tests/units/constitution-charter.test.ts`: `init` over an AUTHORED constitution preserves it (not clobbered by the template). No logic change — this locks existing behavior as the invariant.
   - **Files**: `src/utils.ts` (comment only); `tests/units/constitution-charter.test.ts` (extend).
   - **Verify**: `npx tsx tests/units/constitution-charter.test.ts` GREEN.
   - **Depends on**: nothing (independent — `[P]`, can run anytime after T002).
