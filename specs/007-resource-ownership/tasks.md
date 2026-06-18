@@ -24,7 +24,7 @@ Single project: `src/`, `tests/` at repo root (dogfood — these are spec-coach'
 
 **Purpose**: Release scaffolding.
 
-- [ ] **T001** Bump version `2.1.1 → 2.2.0` + CHANGELOG skeleton (C9 part 1).
+- [x] **T001** Bump version `2.1.1 → 2.2.0` + CHANGELOG skeleton (C9 part 1).
   - Files: `package.json` (`version`), `CHANGELOG.md` (new `## 2.2.0` entry, TBD bullets: init re-entry safety, uninstall ownership, intake removal, init guidance, constitution v1.3.0).
   - Verify: `npx tsx src/cli.ts --version` prints `2.2.0`.
 
@@ -44,13 +44,13 @@ Single project: `src/`, `tests/` at repo root (dogfood — these are spec-coach'
 
 ### Tests for User Story 1
 
-- [ ] **T002** **[US1] RED** — assert re-init preserves installed-agent state.
+- [x] **T002** **[US1] RED** — assert re-init preserves installed-agent state.
   - File: `tests/units/corpus-init.test.ts`. Add a block: `mktmp` → `runAgentsAdd("claude", t)` → snapshot `readState(t)` → `runInit(t)` again → `ok("re-init preserves agents.json", readState(t).claude !== undefined)` + `ok("re-init preserves createdFiles", (readState(t).claude?.createdFiles?.length ?? 0) === 12)`.
   - Verify: `npx tsx tests/units/corpus-init.test.ts` → these two assertions **FAIL** (today `writeState({})` wipes state on the second init). Confirm failure is "state reset", not a typo.
 
 ### Implementation for User Story 1
 
-- [ ] **T003** **[US1] GREEN** — guard the state write in `init.ts`.
+- [x] **T003** **[US1] GREEN** — guard the state write in `init.ts`.
   - File: `src/commands/init.ts:73`. Replace `writeState(projectRoot, {});` with `if (!fs.existsSync(path.join(projectRoot, ".spec", "agents.json"))) writeState(projectRoot, {});` (add `import * as fs from "node:fs"` if not present — it is NOT currently imported in init.ts).
   - Verify: `npx tsx tests/units/corpus-init.test.ts` → all PASS (incl. T002 + the existing "re-init keeps a single constitution"). Run the full suite; 0 regressions.
 
@@ -66,7 +66,7 @@ Single project: `src/`, `tests/` at repo root (dogfood — these are spec-coach'
 
 ### Tests for User Story 2
 
-- [ ] **T004** **[US2] RED** — flip the constitution assertions + drop the obsolete intake block.
+- [x] **T004** **[US2] RED** — flip the constitution assertions + drop the obsolete intake block.
   - Files: `tests/units/corpus-uninstall.test.ts`, `tests/units/corpus-lifecycle.test.ts`.
     - `corpus-uninstall.test.ts` ~line 61: change `ok("constitution PRESERVED", exists(t, ".spec/memory/constitution.md"))` → `ok("constitution REMOVED on plain uninstall", !exists(t, ".spec/memory/constitution.md"))`.
     - `corpus-uninstall.test.ts` lines 87-104: **delete** the entire `T017/FR-016 (spec 005)` block (it asserts `.spec/intake` removed + `.spec/absorbed` preserved — obsolete once intake is gone and `.spec/intake` leaves the removal set).
@@ -75,7 +75,7 @@ Single project: `src/`, `tests/` at repo root (dogfood — these are spec-coach'
 
 ### Implementation for User Story 2
 
-- [ ] **T005** **[US2] GREEN** — set the ownership boundary + correct user-facing text.
+- [x] **T005** **[US2] GREEN** — set the ownership boundary + correct user-facing text.
   - Files: `src/commands/uninstall.ts`, `src/cli.ts`.
     - `uninstall.ts:25-26`: `INFRA_PATHS = [".spec/scripts", ".spec/templates", ".spec/agents.json", ".spec/memory"]`; `USER_PATHS = ["specs"]` (drop `.spec/intake` from INFRA; drop `.spec/absorbed` + `.spec/memory` from USER).
     - `cli.ts` uninstall prompt (~line 128): change "User content (specs/, constitution) is preserved unless --force" → "User content (specs/) is preserved; the constitution is removed as tooling. --force also purges specs/." (~line 129 force clause updated to match).
@@ -96,21 +96,21 @@ Single project: `src/`, `tests/` at repo root (dogfood — these are spec-coach'
 
 ### Implementation for User Story 3
 
-- [ ] **T006** **[US3]** — remove `intake` from the CLI.
+- [x] **T006** **[US3]** — remove `intake` from the CLI.
   - File: `src/cli.ts`. Delete: the import `import { runIntakeScan, runIntakeProcess, runIntakeIgnore } from "./commands/intake.js";` (line 24); the header comment's "Document lifecycle: intake …" line (line 8, change "Two isolated command surfaces (spec 003) + document lifecycle (spec 005)" → "Two isolated command surfaces"); the help "Document lifecycle (bring existing docs in):" block (lines 55-61); the `case "intake":` block (lines 163-196).
   - Verify: `npx tsx src/cli.ts intake scan` → prints "Unknown command: intake" (smoke). `npx tsx src/cli.ts --help` → no "Document lifecycle" section. Full suite green.
 
-- [ ] **T007** **[US3]** — drop the `intakeNudge` wiring and delete the intake module + its test.
+- [x] **T007** **[US3]** — drop the `intakeNudge` wiring and delete the intake module + its test.
   - Files: `src/commands/init.ts`, `src/commands/intake.ts` (DELETE), `tests/units/intake.test.ts` (DELETE).
     - `init.ts`: remove `import { intakeNudge } from "./intake.ts";` (line 18) and the nudge call (lines 75-76, the `const nudge = intakeNudge(...)` + `if (nudge) console.log(nudge)`).
     - `git rm src/commands/intake.ts tests/units/intake.test.ts`.
   - Verify: `npx tsx tests/units/corpus-init.test.ts` → PASS (init no longer imports intake). `npx tsx src/cli.ts init` (in a tmp dir) → runs without error. Full suite green (intake.test.ts removed). `grep -rn "from.*intake" src/` → no matches.
 
-- [ ] **T008** **[P] [US3]** — pin the iron rule (FR-008).
+- [x] **T008** **[P] [US3]** — pin the iron rule (FR-008).
   - File: `tests/units/corpus-init.test.ts`. Add: create `docs/keep.md` with known content before `runInit`, then `ok("iron rule: user doc untouched by init", fs.readFileSync(path.join(t,"docs/keep.md"),"utf-8") === <original>)` and `ok("iron rule: no .spec/intake created", !exists(t,".spec/intake"))` and `ok("iron rule: no .spec/absorbed created", !exists(t,".spec/absorbed"))`.
   - Verify: `npx tsx tests/units/corpus-init.test.ts` → PASS (characterization — locks the invariant; these pass today and must keep passing). Depends on: T003 + T007 (corpus-init + intake state settled).
 
-- [ ] **T009** **[P] [US3]** — rewrite `absorb.md` to direct-path invocation (C7).
+- [x] **T009** **[P] [US3]** — rewrite `absorb.md` to direct-path invocation (C7).
   - File: `skills/absorb.md`. Rewrite "When to use" + "The process" so the skill is pointed at any document path the user names; remove every reference to `intake process --ai`, `.spec/intake/manifest.json`, "staged source", `absorb-ai-pending`, and the "later intake scan marks absorbed-ai" step. The transform algorithm is unchanged: read the source in place → follow `.spec/templates/spec-template.md` → write `specs/NNN-slug/spec.md` → do NOT move/rename/delete the source.
   - Verify: `grep -in "intake\|manifest\|staged\|absorb-ai" skills/absorb.md` → no matches. `npx tsx tests/units/owned-paths.test.ts` + `agents-update.test.ts` → PASS (the `absorb` skill is still in `SKILL_NAMES`, 12-skill set intact).
 
@@ -126,13 +126,13 @@ Single project: `src/`, `tests/` at repo root (dogfood — these are spec-coach'
 
 ### Tests for User Story 4
 
-- [ ] **T010** **[US4] RED** — assert the guidance block (existing-specs + fresh cases).
+- [x] **T010** **[US4] RED** — assert the guidance block (existing-specs + fresh cases).
   - File: `tests/units/corpus-init.test.ts`. Capture `runInit` stdout (e.g., override `console.log` to a buffer). Add: (a) dir with `specs/003-thing/spec.md` → `ok("US4: acknowledges existing spec", <stdout> includes "003" or "existing")` + `ok("US4: existing spec untouched", <spec.md bytes unchanged>)`; (b) fresh dir → `ok("US4: fresh emits safety rule + absorb how-to", <stdout> includes "/spec-absorb")` and `ok("US4: fresh has no existing-specs line", !<stdout includes "existing">)`.
   - Verify: `npx tsx tests/units/corpus-init.test.ts` → the US4 assertions **FAIL** (no guidance emitted today).
 
 ### Implementation for User Story 4
 
-- [ ] **T011** **[US4] GREEN** — add `existingSpecs` + `printDocumentGuidance` to `init.ts`.
+- [x] **T011** **[US4] GREEN** — add `existingSpecs` + `printDocumentGuidance` to `init.ts`.
   - File: `src/commands/init.ts`. Add `existingSpecs(projectRoot): { count: number; highest: number }` — reads direct children of `specs/`, counts those matching `/^\d{3}-.+/`, returns the max leading number (0 when none/missing). Add `printDocumentGuidance(projectRoot)` — when `count > 0`: a line acknowledging existing specs (count + highest, "adopted as-is; review with `ls specs/`; new specs continue from N+1"); always: the safety rule ("your documents are never moved/deleted/overwritten") + the how-to ("turn a doc into a spec: `/spec-absorb <path>`; originals stay put; ignore the rest"). Call it after `printNextSteps`. NEVER modify `specs/`.
   - Verify: `npx tsx tests/units/corpus-init.test.ts` → PASS (incl. T010). Full suite green.
 
@@ -142,15 +142,15 @@ Single project: `src/`, `tests/` at repo root (dogfood — these are spec-coach'
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] **T012** **[P]** Constitution amendment v1.2.0 → v1.3.0 (C8).
+- [x] **T012** **[P]** Constitution amendment v1.2.0 → v1.3.0 (C8).
   - File: `.spec/memory/constitution.md`. In **Development Constraints — CLI surface**: "Three isolated surfaces" → **two** (corpus lifecycle + agent lifecycle); delete the document-lifecycle/intake sentence; state that document→spec is the on-demand `/spec-absorb` skill, not a CLI command. Add an **Ownership & Safety** clause: the iron rule (read-only on user documents; append-only to `specs/`) + the uninstall preservation set (`specs/` only; all else under `.spec/` is regenerable tooling). Footer: Version `1.2.0 → 1.3.0`, Last Amended `2026-06-18`. SDD STATE block → `Current feature: 007-resource-ownership`, `Last phase: tasks`.
   - Verify: read-through confirms the two-surfaces + iron-rule wording. (If `.spec/scripts/bash/verify-constitution-sync.sh` exists, run it; it should be CLEAN — no SYNC IMPACT block since this amendment does not add/rename a Core Principle.)
 
-- [ ] **T013** Finalize release (C9 part 2).
+- [x] **T013** Finalize release (C9 part 2).
   - Files: `CHANGELOG.md` (fill the 2.2.0 bullets from the implemented changes), `.spec/memory/constitution.md` SDD STATE → `Last phase: implement`.
   - Verify: `npx tsx src/cli.ts --version` → `2.2.0`. Full suite green. CLI smoke: `init` (tmp dir), `uninstall --yes`, `--help` all behave as designed.
 
-- [ ] **T014** **[P]** Cosmetic — fix stale `intake.ts` comments.
+- [x] **T014** **[P]** Cosmetic — fix stale `intake.ts` comments.
   - Files: `src/result.ts:6` (comment "was duplicated in agents.ts + intake.ts" → drop the intake.ts mention), `tests/units/relocation.test.ts:18` (same). Behavior-neutral comment-only edits.
   - Verify: `npx tsx tests/units/relocation.test.ts` → PASS. `grep -rn "intake.ts" src/ tests/` → no matches.
 
