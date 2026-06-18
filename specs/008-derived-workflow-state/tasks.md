@@ -55,7 +55,7 @@
   - **Verify**: `npx tsx tests/units/workflow-state.test.ts` → pass.
   - **Deps**: T003 (same file; sequential).
 
-- [ ] T005 Reform `get_feature_paths()` in `scripts/bash/common.sh` to resolve via `resolve_feature --strict` (drop the `SPECIFY_FEATURE_DIRECTORY`/`feature.json` tier; keep emitting `REPO_ROOT`/`FEATURE_DIR`/`FEATURE_SPEC`/`IMPL_PLAN`/`TASKS`/`RESEARCH`/`DATA_MODEL`/`QUICKSTART`/`CONTRACTS_DIR`; keep error-when-unresolvable). Accept an optional token forwarded to `resolve_feature`. **Strict** = resolves on explicit token/env OR single feature; errors (non-zero) on multiple features with no explicit input — never silently mtime-picks (prevents wrong-feature writes; analysis C1).
+- [x] T005 Reform `get_feature_paths()` in `scripts/bash/common.sh` to resolve via `resolve_feature --strict` (drop the `SPECIFY_FEATURE_DIRECTORY`/`feature.json` tier; keep emitting `REPO_ROOT`/`FEATURE_DIR`/`FEATURE_SPEC`/`IMPL_PLAN`/`TASKS`/`RESEARCH`/`DATA_MODEL`/`QUICKSTART`/`CONTRACTS_DIR`; keep error-when-unresolvable). Accept an optional token forwarded to `resolve_feature`. **Strict** = resolves on explicit token/env OR single feature; errors (non-zero) on multiple features with no explicit input — never silently mtime-picks (prevents wrong-feature writes; analysis C1).
   - **Files**: `scripts/bash/common.sh` (edit `get_feature_paths`).
   - **Verify**: smoke the 4 callers in a tmp repo — with ONE feature, `setup-plan.sh`/`setup-tasks.sh`/`check-prerequisites.sh`/`verify-spec.sh` resolve it and `exit 0`; with MULTIPLE features and no `SPECIFY_FEATURE`/token, the writing wrappers (`setup-plan`/`setup-tasks`) ERROR non-zero (no guess); with `SPECIFY_FEATURE` set, they resolve the named feature. Full headless suite green.
   - **Deps**: T002.

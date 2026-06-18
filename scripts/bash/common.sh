@@ -325,34 +325,20 @@ _persist_feature_json() {
 
 get_feature_paths() {
     local repo_root=$(get_repo_root)
-    local current_branch=$(get_current_branch)
+    local token="${1:-}"
 
-    # Resolve feature directory.  Priority:
-    #   1. SPECIFY_FEATURE_DIRECTORY env var (explicit override)
-    #   2. .spec/feature.json "feature_directory" key (persisted by specify command)
-    #   3. Error — no feature context available
+    # Resolve the feature directory via the derived resolver (spec 008). The
+    # writing path uses STRICT policy: resolve only on an explicit token/env
+    # OR a single candidate — never silently guess among multiple features
+    # (which would write artifacts into the wrong feature dir).
     local feature_dir
-    if [[ -n "${SPECIFY_FEATURE_DIRECTORY:-}" ]]; then
-        feature_dir="$SPECIFY_FEATURE_DIRECTORY"
-        # Normalize relative paths to absolute under repo root
-        [[ "$feature_dir" != /* ]] && feature_dir="$repo_root/$feature_dir"
-        # Persist to feature.json so future sessions without the env var still work
-        _persist_feature_json "$repo_root" "$SPECIFY_FEATURE_DIRECTORY"
-    elif [[ -f "$repo_root/.spec/feature.json" ]]; then
-        local _fd
-        _fd=$(read_feature_json_feature_directory "$repo_root")
-        if [[ -n "$_fd" ]]; then
-            feature_dir="$_fd"
-            # Normalize relative paths to absolute under repo root
-            [[ "$feature_dir" != /* ]] && feature_dir="$repo_root/$feature_dir"
-        else
-            echo "ERROR: Feature directory not found. Set SPECIFY_FEATURE_DIRECTORY or ensure .spec/feature.json contains feature_directory." >&2
-            return 1
-        fi
-    else
-        echo "ERROR: Feature directory not found. Set SPECIFY_FEATURE_DIRECTORY or run the specify command to create .spec/feature.json." >&2
+    feature_dir="$(resolve_feature --strict "$token" "$repo_root")"
+    if [ -z "$feature_dir" ]; then
+        echo "ERROR: Could not resolve a feature unambiguously. Pass a feature token (NNN/slug/@), set SPECIFY_FEATURE, or keep exactly one specs/NNN-*/ directory." >&2
         return 1
     fi
+
+    local current_branch=$(get_current_branch)
 
     # Use printf '%q' to safely quote values, preventing shell injection
     # via crafted branch names or paths containing special characters
