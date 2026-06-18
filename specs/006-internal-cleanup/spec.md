@@ -4,7 +4,7 @@
 
 **Created**: 2026-06-18
 
-**Status**: Draft
+**Status**: Implemented
 
 **Input**: Maintainer-driven refactor — remove vestigial dead code from the spec-003 `--agent` decoupling, dedupe a shared command-result type that has drifted into two definitions, and move state-read logic to its conceptual home. **Zero behavior change.** No user-facing CLI/contract change; the install output (skills/templates/scripts) is untouched. Scope A from the refactor analysis.
 
