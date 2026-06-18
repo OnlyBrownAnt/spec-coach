@@ -60,7 +60,7 @@ This constitution defines the non-negotiable principles for spec-coach. It super
 
 <!-- SDD STATE START -->
 **Current feature**: 006-internal-cleanup
-**Last phase**: specify
+**Last phase**: plan
 **Skipped phases**: none
 **Decisions**: 2.1.1 internal cleanup (PATCH, zero behavior change) — remove AgentKey + dead runInit/runUpdate params; dedup CmdResult to src/result.ts; move ensureState/corpusExists to state.ts. Retain AGENTS (test-covered), fix stale comments. No constitution amendment.
 <!-- SDD STATE END -->
