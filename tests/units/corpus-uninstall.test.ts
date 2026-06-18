@@ -58,7 +58,7 @@ try {
   ok("CLAUDE.md removed", !exists(t, "CLAUDE.md"));
   // user content PRESERVED
   ok("specs/ PRESERVED", exists(t, "specs/001-x/spec.md"));
-  ok("constitution REMOVED on plain uninstall (regenerable tooling)", !exists(t, ".spec/memory/constitution.md"));
+  ok("TEMPLATE constitution removed on plain uninstall (fixture is the init template)", !exists(t, ".spec/memory/constitution.md"));
   // spec 007 fix: an emptied .spec/ is pruned (uninstall = inverse of init)
   ok("plain uninstall prunes an emptied .spec/", !exists(t, ".spec"));
 

@@ -8,6 +8,8 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
 import { execSync } from "node:child_process";
+import { runInit } from "../../src/commands/init.ts";
+import { runUninstall } from "../../src/commands/uninstall.ts";
 
 let pass = 0;
 let fail = 0;
@@ -146,6 +148,39 @@ try {
   ok("skill propagation covers spec-template + tasks-template (not only plan)", /spec-template/.test(skill) && /tasks-template/.test(skill));
 } catch (e) {
   ok("semvar/propagation block ran without throwing", false);
+  console.log("    error:", (e as Error).message);
+}
+
+console.log("=== constitution-charter.test (T005: status-aware uninstall) ===");
+
+const AUTHORED_BODY = "# Proj Constitution\n\n## Core Principles\n\n### I. Real Principle\n\nReal text.\n\n**Version**: 1.0.0 | **Ratified**: 2026-01-01 | **Last Amended**: 2026-01-01\n";
+function writeAuthored(root: string): void {
+  fs.mkdirSync(path.join(root, ".spec", "memory"), { recursive: true });
+  fs.writeFileSync(path.join(root, ".spec", "memory", "constitution.md"), AUTHORED_BODY);
+}
+
+try {
+  // AUTHORED constitution (no signature tokens) -> PRESERVED on plain uninstall (IP).
+  const u1 = mktmp("cc-un-auth-");
+  await runInit(u1);
+  writeAuthored(u1);
+  runUninstall(u1, { confirmed: true });
+  ok("AUTHORED constitution PRESERVED on plain uninstall", fs.existsSync(path.join(u1, ".spec", "memory", "constitution.md")));
+
+  // TEMPLATE constitution (init copies the template) -> removed on plain uninstall (tooling).
+  const u2 = mktmp("cc-un-tpl-");
+  await runInit(u2);
+  runUninstall(u2, { confirmed: true });
+  ok("TEMPLATE constitution removed on plain uninstall (tooling)", !fs.existsSync(path.join(u2, ".spec", "memory", "constitution.md")));
+
+  // --force/purge removes even an AUTHORED constitution.
+  const u3 = mktmp("cc-un-purge-");
+  await runInit(u3);
+  writeAuthored(u3);
+  runUninstall(u3, { confirmed: true, purge: true });
+  ok("purge removes AUTHORED constitution", !fs.existsSync(path.join(u3, ".spec", "memory", "constitution.md")));
+} catch (e) {
+  ok("uninstall block ran without throwing", false);
   console.log("    error:", (e as Error).message);
 }
 
