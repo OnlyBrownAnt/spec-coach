@@ -89,7 +89,7 @@ spec-coach should ship with its OWN constitution authored by the improved tool. 
 
 ### Functional Requirements
 
-- **FR-001 (amend-guard)**: `/spec-constitution` MUST distinguish AUTHORED (no template-signature placeholders AND ≥1 `### ` principle heading) from TEMPLATE/ABSENT. On AUTHORED it MUST take an *amend* branch anchored to the existing principle set — it MUST NOT rewrite a settled principle unless that principle is the explicit target of the amendment. On TEMPLATE/ABSENT it MUST take the cold-start *author* branch (US2).
+- **FR-001 (amend-guard)**: `/spec-constitution` MUST distinguish AUTHORED (no template-signature placeholders present — the principle count is informational and MAY be 0, e.g. an authored shell) from TEMPLATE/ABSENT. On AUTHORED it MUST take an *amend* branch anchored to the existing principle set — it MUST NOT rewrite a settled principle unless that principle is the explicit target of the amendment. On TEMPLATE/ABSENT it MUST take the cold-start *author* branch (US2).
 - **FR-002 (status advisor)**: A non-blocking advisory script MUST report constitution status as `TEMPLATE` | `AUTHORED` | `ABSENT` together with the footer version and last-amended date. The skill MUST reference this to choose amend vs cold-start. The script MUST never refuse or exit non-zero on a present constitution (advises only — Coach-Not-Gatekeeper). (Implemented by extending `verify-constitution-sync.sh` or a new `constitution-status.sh`, matching the existing non-blocking advisor pattern.)
 - **FR-003 (seeded cold-start)**: On the cold-start branch, the skill MUST read concrete repo signals — at minimum `package.json` (name + dependency list), the primary source/skills directory structure, `README.md`, and any existing `specs/` — and PROPOSE candidate principles plus the two flexible sections as a starting menu. It MUST surface the proposal for human ratification and MUST NOT write the constitution until the human approves.
 - **FR-004 (constitution semver)**: On any amendment, the skill MUST bump the constitution footer version per semantic rules and state the bump rationale: MAJOR = principle removed, redefined, or renamed; MINOR = principle or section added or materially expanded; PATCH = wording/clarification with no semantic change.
@@ -100,13 +100,13 @@ spec-coach should ship with its OWN constitution authored by the improved tool. 
 
 ### Key Entities *(include if feature involves data)*
 
-- **Constitution status** (drives amend vs cold-start): `TEMPLATE` (template-signature placeholders present) | `AUTHORED` (no signature placeholders + ≥1 principle) | `ABSENT` (file missing). Computed read-only by the status advisor (FR-002); never stored.
+- **Constitution status** (drives amend vs cold-start): `TEMPLATE` (≥1 template-signature placeholder present) | `AUTHORED` (no signature placeholders present; the principle count is reported alongside and MAY be 0 — an authored shell is still AUTHORED) | `ABSENT` (file missing). Computed read-only by the status advisor (FR-002); never stored.
 
 ## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
 
-- **SC-001**: Re-running `/spec-constitution` on an AUTHORED fixture leaves every non-targeted settled principle byte-identical; on a TEMPLATE/ABSENT fixture it authors fresh. Verified via the advisor's status detection (TEMPLATE/AUTHORED/ABSENT) plus a skill-content assertion that the amend-vs-cold-start instruction is present and correct.
+- **SC-001**: The `/spec-constitution` skill takes the *amend* branch on an AUTHORED constitution (anchored to the existing principle set) and the *cold-start* branch on TEMPLATE/ABSENT, verified by the advisor's status detection (TEMPLATE/AUTHORED/ABSENT) plus a skill-content assertion that the amend-vs-cold-start instruction is present. NOTE: the amend-guard is **coaching-enforced (best-effort)** — the content-assertion proves the guidance exists, not that the AI follows it (unlike US3/FR-006, which is mechanically enforced in `uninstall.ts`). This asymmetry is intentional under Constitution II (Coach-Not-Gatekeeper); the criterion asserts the coaching is in place, not hard prevention of drift.
 - **SC-002**: A cold-start proposal cites ≥3 concrete repo-derived signals (e.g. dependency list, source/skills structure, README purpose) and is surfaced for approval, not auto-written. Verified via skill-content assertion.
 - **SC-003**: Plain `uninstall --yes` preserves `.spec/memory/constitution.md`; `uninstall --yes --force` removes it. Verified by a TS unit test in a `mkdtemp` repo.
 - **SC-004**: An amendment produces a constitution-footer version bump matching MAJOR/MINOR/PATCH semantics (FR-004) with a stated rationale. Verified via skill-content assertion + documented semantics.
