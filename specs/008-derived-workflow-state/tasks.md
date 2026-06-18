@@ -50,7 +50,7 @@
   - **Verify**: `npx tsx tests/units/workflow-state.test.ts` → pass.
   - **Deps**: T002 (same file; sequential).
 
-- [ ] T004 Create `first_pending_task()` in `scripts/bash/common.sh`. **RED-first**: add failing cases — (a) first `- [ ]` (not `- [x]`) in `tasks.md` → its line/id; (b) all `[x]` → `no pending task`; (c) no `tasks.md` → `no tasks.md yet`. Signature: `first_pending_task <feature_dir>` echoes the task or a status string.
+- [x] T004 Create `first_pending_task()` in `scripts/bash/common.sh`. **RED-first**: add failing cases — (a) first `- [ ]` (not `- [x]`) in `tasks.md` → its line/id; (b) all `[x]` → `no pending task`; (c) no `tasks.md` → `no tasks.md yet`. Signature: `first_pending_task <feature_dir>` echoes the task or a status string.
   - **Files**: `scripts/bash/common.sh` (add), `tests/units/workflow-state.test.ts` (add cases).
   - **Verify**: `npx tsx tests/units/workflow-state.test.ts` → pass.
   - **Deps**: T003 (same file; sequential).

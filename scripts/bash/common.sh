@@ -224,6 +224,26 @@ infer_phase() {
     fi
 }
 
+# Resume breakpoint: the first unchecked task in a feature's tasks.md (spec 008).
+# Echoes the trimmed task line, or "no pending task" (all checked) / "no tasks.md
+# yet" (file absent). Read-only.
+first_pending_task() {
+    local feature_dir="$1"
+    local tasks="$feature_dir/tasks.md"
+    if [ ! -f "$tasks" ]; then
+        printf '%s' "no tasks.md yet"
+        return 0
+    fi
+    local line
+    line="$(grep -m1 -E '^[[:space:]]*- \[ \]' "$tasks" 2>/dev/null || true)"
+    if [ -n "$line" ]; then
+        printf '%s' "$(printf '%s' "$line" | sed -e 's/^[[:space:]]*//')"
+    else
+        printf '%s' "no pending task"
+    fi
+    return 0
+}
+
 # Get current feature name from explicit state only.
 # Returns the feature identifier or empty string if none is set.
 # Feature state is set by SPECIFY_FEATURE (from create-new-feature or
