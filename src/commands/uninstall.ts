@@ -1,9 +1,9 @@
 /**
  * Spec Coach — `uninstall` command (spec-corpus lifecycle).
  *
- * Removes spec-coach infrastructure (scripts, templates, state) + ALL agent
- * bindings (skill files + managed context sections), while PRESERVING user-
- * authored content (`specs/`, `.spec/memory/constitution.md`, `.spec/absorbed/`)
+ * Removes ALL spec-coach infrastructure under `.spec/` (scripts, templates,
+ * state, the constitution — regenerable tooling) + every agent binding (skill
+ * files + managed context sections), PRESERVING only `specs/` (user content)
  * unless `purge` is set (FR-016). Requires explicit confirmation (FR-014).
  */
 import * as fs from "node:fs";
@@ -18,12 +18,15 @@ import type { CmdResult } from "../result.ts";
 export interface UninstallOptions {
   /** FR-014: must be true to proceed (the CLI prompts; tests pass it directly). */
   confirmed?: boolean;
-  /** FR-016 --force: also remove user-authored content (specs/, constitution, absorbed). */
+  /** FR-016 --force: also remove user content (specs/). */
   purge?: boolean;
 }
 
-const INFRA_PATHS = [".spec/scripts", ".spec/templates", ".spec/agents.json", ".spec/intake"];
-const USER_PATHS = ["specs", ".spec/memory", ".spec/absorbed"];
+// Plain uninstall removes exactly what init installs (its inverse), minus user
+// content. The constitution (.spec/memory) is regenerable tooling; only specs/
+// is preserved. (spec 007 US2 / FR-003/004/005.)
+const INFRA_PATHS = [".spec/scripts", ".spec/templates", ".spec/agents.json", ".spec/memory"];
+const USER_PATHS = ["specs"];
 
 export function runUninstall(projectRoot: string, opts: UninstallOptions = {}): CmdResult {
   if (!opts.confirmed) {
@@ -58,8 +61,8 @@ export function runUninstall(projectRoot: string, opts: UninstallOptions = {}): 
   }
 
   const tail = opts.purge
-    ? " (user content purged: specs/, constitution, absorbed/)"
-    : " User content (specs/, constitution) preserved.";
+    ? " (specs/ purged.)"
+    : " User content (specs/) preserved.";
   return { ok: true, message: `Removed spec-coach infrastructure + agent bindings.${tail}` };
 }
 

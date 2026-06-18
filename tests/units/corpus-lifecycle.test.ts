@@ -77,7 +77,7 @@ try {
   ok("uninstall: infrastructure removed", !exists(t, ".spec/scripts") && !exists(t, ".spec/templates"));
   ok("uninstall: agent bindings removed", !exists(t, ".claude/skills") && !exists(t, "CLAUDE.md"));
   ok("uninstall: specs/ PRESERVED", exists(t, "specs/001-survivor/spec.md"));
-  ok("uninstall: constitution PRESERVED", exists(t, ".spec/memory/constitution.md"));
+  ok("uninstall: constitution REMOVED (regenerable tooling)", !exists(t, ".spec/memory/constitution.md"));
 } catch (e) {
   ok("lifecycle ran without throwing", false);
   console.log("    error:", (e as Error).message);

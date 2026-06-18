@@ -43,8 +43,8 @@ Corpus lifecycle (the durable product):
                                  constitution). Installs no agent.
   update                         Refresh corpus templates + scripts.
   uninstall --yes [--force]      Remove spec-coach infrastructure + agent
-                                 bindings. --force also purges specs/ +
-                                 constitution (otherwise preserved).
+                                 bindings + constitution (regenerable tooling).
+                                 --force also purges specs/ (user content).
 
 Agent lifecycle (ephemeral bindings):
   agents list                    Show available + installed agents.
@@ -124,9 +124,9 @@ async function main(): Promise<void> {
 
     case "uninstall": {
       if (!has("--yes")) {
-        console.log("  Uninstall would remove: spec-coach infrastructure + all agent bindings.");
-        console.log("  User content (specs/, constitution) is preserved unless --force is passed.");
-        console.log("  Re-run with --yes to proceed" + (has("--force") ? " (--force → also purge user content)." : "."));
+        console.log("  Uninstall would remove: spec-coach infrastructure + all agent bindings + constitution.");
+        console.log("  User content (specs/) is preserved; the constitution is removed as regenerable tooling.");
+        console.log("  Re-run with --yes to proceed" + (has("--force") ? " (--force → also purges specs/)." : "."));
         process.exit(1);
       }
       const r = runUninstall(projectRoot, { confirmed: true, purge: has("--force") });
