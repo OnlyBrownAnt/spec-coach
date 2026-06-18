@@ -27,7 +27,7 @@
 
 **Purpose**: Version skeleton + branch.
 
-- [ ] T001 [P] Bump `package.json` version `2.2.1 → 2.3.0` (version skeleton; CHANGELOG finalized in T013). Create the feature branch `008-derived-workflow-state` from `main` if not already on it.
+- [x] T001 [P] Bump `package.json` version `2.2.1 → 2.3.0` (version skeleton; CHANGELOG finalized in T013). Create the feature branch `008-derived-workflow-state` from `main` if not already on it.
   - **Files**: `package.json`.
   - **Verify**: `node -e "console.log(require('./package.json').version)"` → `2.3.0`.
   - **Deps**: none.
