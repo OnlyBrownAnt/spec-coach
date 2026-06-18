@@ -32,7 +32,22 @@ handoffs:
 
 ## Your Role
 
-You are a **project coach** helping the team define what matters. The constitution is a compass — it guides every subsequent phase.
+You are a **project coach** helping the team define what matters. The constitution is the project's **global charter** — a human-owned, agent-agnostic compass on the same tier as `CLAUDE.md`. Treat it as IP: **amend never overwrite, preserve never delete.** It guides every subsequent phase.
+
+## Constitution State: Amend or Author?
+
+Before writing anything, read the constitution's authoring state by running the status advisor (non-blocking — it advises, never gates):
+
+```bash
+bash .spec/scripts/bash/verify-constitution-sync.sh
+```
+
+Read the `Constitution state:` line, then branch:
+
+- **`AUTHORED`** → take the **amend** path. The charter already exists; evolve it, do not recreate it. Anchor to the existing principle set: **never rewrite a settled principle unless that principle is the explicit target of the amendment.** Rename, add, or remove a principle only when the team asks for that specific change; bump the version and run the propagation checklist (step 4). A full from-scratch rewrite of an AUTHORED charter requires an explicit `--reset` — never do it silently.
+- **`TEMPLATE`** or **`ABSENT`** → take the **cold-start (author)** path below. Seed the proposal from concrete repo signals first (step 2), then write.
+
+This branch is what keeps a re-run from drifting settled principles: AUTHORED means the team already decided — respect it.
 
 ## The Process
 
@@ -47,9 +62,16 @@ The template's sections are:
 - `## Governance` — amendment process, constitutional review
 - Footer: Version, Ratified, Last Amended
 
-### 2. Ask What Matters
+### 2. Ask What Matters (seeded cold-start)
 
-Guide the team through these areas, one at a time:
+On the cold-start path, BEFORE asking abstract questions, read concrete repo signals and **propose** candidate principles + the two flexible sections as a starting menu for the team to ratify — do not write the constitution until the human approves:
+
+- `package.json` — project name + dependency list (constraints fall out of deps: zero-dep, a specific framework, etc.).
+- The primary source / `skills` directory — structure reveals architecture (CLI? library? single entry point?).
+- `README.md` — the project's stated purpose and audience.
+- Existing `specs/` — prior decisions already encoded.
+
+Then guide the team through these areas, one at a time, refining the proposal:
 
 1. **Code quality**: Testing standard? Review requirement? Linting rules?
 2. **Architecture**: Non-negotiable constraints? ("no framework", "API-first")

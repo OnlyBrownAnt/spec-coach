@@ -122,6 +122,22 @@ try {
   }
 }
 
+console.log("=== constitution-charter.test (T003: skill content assertions) ===");
+
+try {
+  const skill = fs.readFileSync(path.join(REPO, "skills", "constitution.md"), "utf8");
+
+  ok("skill references 'Constitution state' (status-branch on advisor)", /Constitution state/.test(skill));
+  ok("skill names the AUTHORED status", /AUTHORED/.test(skill));
+  ok("skill states the amend-guard (never rewrite a settled principle)", /never rewrite a settled principle/i.test(skill));
+  ok("skill documents the --reset full-rewrite escape hatch", /--reset/.test(skill));
+  ok("skill seeds cold-start from repo signals (package.json + README + propose)", /package\.json/.test(skill) && /README/.test(skill) && /propose/i.test(skill));
+  ok("skill frames the constitution as a charter (charter + amend never overwrite)", /charter/i.test(skill) && /amend never overwrite/i.test(skill));
+} catch (e) {
+  ok("skill-content block ran without throwing", false);
+  console.log("    error:", (e as Error).message);
+}
+
 assert.ok(pass > 0, "test ran");
 console.log("");
 console.log(`=== Results: ${pass} passed, ${fail} failed ===`);
