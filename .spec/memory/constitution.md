@@ -59,8 +59,8 @@ This constitution defines the non-negotiable principles for spec-coach. It super
 **Version**: 1.2.0 | **Ratified**: 2025-06-15 | **Last Amended**: 2026-06-18
 
 <!-- SDD STATE START -->
-**Current feature**: 005-document-intake
-**Last phase**: implement
+**Current feature**: 006-internal-cleanup
+**Last phase**: specify
 **Skipped phases**: none
-**Decisions**: 2.1.0 document intake — three-subcommand pipeline (scan/process/ignore) + .spec/intake manifest (no body copy) + dual absorb modes (verbatim→.spec/absorbed/, AI→specs/NNN-slug/ via new spec-absorb SKILL); init detect-and-nudge (no block); non-TTY-safe (closes spec 001 blocking class); constitution amendment v1.2.0 (third CLI surface: document lifecycle)
+**Decisions**: 2.1.1 internal cleanup (PATCH, zero behavior change) — remove AgentKey + dead runInit/runUpdate params; dedup CmdResult to src/result.ts; move ensureState/corpusExists to state.ts. Retain AGENTS (test-covered), fix stale comments. No constitution amendment.
 <!-- SDD STATE END -->
