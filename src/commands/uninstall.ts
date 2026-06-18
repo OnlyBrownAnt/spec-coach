@@ -11,7 +11,8 @@ import * as path from "node:path";
 import { loadManifest } from "../manifest.ts";
 import { loadAgentConfig } from "../utils.ts";
 import { readCreatedContextFiles, unrecordAgent } from "../state.ts";
-import { removeAgentSkills, removeAgentContext, ensureState } from "./agents.ts";
+import { removeAgentSkills, removeAgentContext } from "./agents.ts";
+import { ensureState } from "../state.ts";
 import type { CmdResult } from "../result.ts";
 
 export interface UninstallOptions {

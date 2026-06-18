@@ -9,7 +9,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { loadManifest } from "../manifest.ts";
-import { readState, recordAgent, unrecordAgent, reconcileFromFs, recordContextFileCreated, readCreatedContextFiles, removeContextFileCreated, type InstalledState } from "../state.ts";
+import { readState, recordAgent, unrecordAgent, reconcileFromFs, recordContextFileCreated, readCreatedContextFiles, removeContextFileCreated, ensureState, corpusExists, type InstalledState } from "../state.ts";
 import { loadAgentConfig, installAllSkills, upsertManagedSection, removeManagedSection, ownedSkillUnits, type AgentConfig } from "../utils.ts";
 import type { CmdResult } from "../result.ts";
 
@@ -42,26 +42,6 @@ export function runAgentsList(projectRoot: string): AgentStatus[] {
   const installed = status.filter((a) => a.installed).length;
   console.log(`\n  ${installed}/${status.length} installed.`);
   return status;
-}
-
-/** A project has a spec corpus when `.spec/` exists (created by `spec-coach init`). */
-export function corpusExists(projectRoot: string): boolean {
-  return fs.existsSync(path.join(projectRoot, ".spec"));
-}
-
-/**
- * Read installed state, reconciling from the filesystem when the state file is
- * absent but a corpus exists — migrating projects created by a prior version
- * whose agent bindings are on disk but unrecorded (FR-018). One-time write.
- */
-export function ensureState(projectRoot: string): InstalledState {
-  if (fs.existsSync(path.join(projectRoot, ".spec", "agents.json"))) {
-    return readState(projectRoot);
-  }
-  if (corpusExists(projectRoot)) {
-    return reconcileFromFs(projectRoot, loadManifest(), true);
-  }
-  return readState(projectRoot);
 }
 
 /**

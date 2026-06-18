@@ -124,6 +124,26 @@ export function unrecordAgent(projectRoot: string, key: string): InstalledState 
   return state;
 }
 
+/** A project has a spec corpus when `.spec/` exists (created by `spec-coach init`). */
+export function corpusExists(projectRoot: string): boolean {
+  return fs.existsSync(path.join(projectRoot, ".spec"));
+}
+
+/**
+ * Read installed state, reconciling from the filesystem when the state file is
+ * absent but a corpus exists — migrating projects created by a prior version
+ * whose agent bindings are on disk but unrecorded (FR-018). One-time write.
+ */
+export function ensureState(projectRoot: string): InstalledState {
+  if (fs.existsSync(path.join(projectRoot, ".spec", "agents.json"))) {
+    return readState(projectRoot);
+  }
+  if (corpusExists(projectRoot)) {
+    return reconcileFromFs(projectRoot, loadManifest(), true);
+  }
+  return readState(projectRoot);
+}
+
 /**
  * Rebuild installed state from the filesystem by scanning for known agent dirs
  * (FR-018). An agent counts as installed when its manifest `dir` exists and
