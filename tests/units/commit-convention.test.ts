@@ -203,6 +203,46 @@ console.log("=== commit-convention.test (T005: verify-commit.sh advisor) ===");
   }
 }
 
+// ─── T007: FR-005 state-boundary guardrail (A5: per-function body extraction) ─
+console.log("=== commit-convention.test (T007: FR-005 guardrail) ===");
+try {
+  const commonSh = path.join(REPO, "scripts", "bash", "common.sh");
+  const src = fs.readFileSync(commonSh, "utf8");
+
+  // Extract a function's body: from `fn() {` to the next column-1 `}`. Per-body
+  // extraction (analysis A5) — NOT a whole-file grep — so verify-commit.sh's
+  // legitimate `git log` (which checks FORMAT, never feeds a state function) is
+  // not flagged.
+  function functionBody(fn: string): string {
+    const lines = src.split("\n");
+    const start = lines.findIndex((l) => new RegExp(`^${fn}\\s*\\(\\)`).test(l));
+    if (start === -1) return "";
+    const body: string[] = [];
+    for (let i = start; i < lines.length; i++) {
+      body.push(lines[i]);
+      if (i > start && /^\}/.test(lines[i])) break;
+    }
+    return body.join("\n");
+  }
+
+  for (const fn of ["resolve_feature", "infer_phase", "first_pending_task", "get_feature_paths"]) {
+    const body = functionBody(fn);
+    ok(`FR-005: ${fn}() body found`, body.length > 0);
+    // Forbid any git-log form (bare `git log` OR scoped `git -C … log`) in state
+    // functions — commits are NOT a state source (spec 008). Does NOT flag
+    // `git symbolic-ref` / `git rev-parse` (branch-name resolution, allowed).
+    ok(`FR-005: ${fn}() does not read commit messages (no git-log)`, !/git\b.*\blog\b/.test(body));
+  }
+
+  // Confirm the guardrail is scoped, not a blanket ban: verify-commit.sh DOES
+  // access commit history (legitimately — format check, never state).
+  const advisor = fs.readFileSync(path.join(REPO, "scripts", "bash", "verify-commit.sh"), "utf8");
+  ok("guardrail scoped: verify-commit.sh legitimately reads commit history (format, not state)", /git\b.*\blog\b/.test(advisor));
+} catch (e) {
+  ok("T007 block ran without throwing", false);
+  console.log("    error:", (e as Error).message);
+}
+
 // ─── cleanup + results ──────────────────────────────────────────────────────
 for (const d of tmpDirs) {
   try { fs.rmSync(d, { recursive: true, force: true }); } catch { /* best effort */ }

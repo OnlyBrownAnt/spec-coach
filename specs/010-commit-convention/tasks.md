@@ -120,7 +120,7 @@ Single project: `templates/` (package source), `scripts/bash/` (package source f
 
 **Purpose**: The FR-005 state-boundary guardrail (cross-cutting) + release finalization.
 
-- [ ] **T007** `[P]` `[infra]` Add the **FR-005 state-boundary guardrail** test to `tests/units/commit-convention.test.ts`: grep `scripts/bash/common.sh` and assert the four state functions — `resolve_feature`, `infer_phase`, `first_pending_task`, `get_feature_paths` — do NOT parse `git log` commit subjects to derive feature/phase/progress (the spec 008 boundary). Scope the assertion to those four functions so it does NOT false-positive on `verify-commit.sh`'s legitimate `git log` (which checks FORMAT, never feeds a state function). Baseline confirmed: no such inference exists today — this locks it as the invariant. No logic change.
+- [x] **T007** `[P]` `[infra]` Add the **FR-005 state-boundary guardrail** test to `tests/units/commit-convention.test.ts`: grep `scripts/bash/common.sh` and assert the four state functions — `resolve_feature`, `infer_phase`, `first_pending_task`, `get_feature_paths` — do NOT parse `git log` commit subjects to derive feature/phase/progress (the spec 008 boundary). Scope the assertion to those four functions so it does NOT false-positive on `verify-commit.sh`'s legitimate `git log` (which checks FORMAT, never feeds a state function). Baseline confirmed: no such inference exists today — this locks it as the invariant. No logic change.
   - **Files**: `tests/units/commit-convention.test.ts` (extend).
   - **Verify**: `npx tsx tests/units/commit-convention.test.ts` GREEN.
   - **Depends on**: nothing (test-only, fully independent — `[P]`, can run anytime after T002 creates the test file).
