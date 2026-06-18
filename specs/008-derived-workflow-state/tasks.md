@@ -121,7 +121,7 @@
   - **Verify**: `bash scripts/bash/verify-spec.sh --help` shows derived wording; `grep -n 'feature.json' scripts/bash/verify-spec.sh src/utils.ts` → none.
   - **Deps**: T005 (verify-spec behavior already correct).
 
-- [ ] T011 [P] [US3] Remove step 5 "Initialize SDD State" (the `<!-- SDD STATE START -->…END -->` append) from `skills/constitution.md`; renumber subsequent steps.
+- [x] T011 [P] [US3] Remove step 5 "Initialize SDD State" (the `<!-- SDD STATE START -->…END -->` append) from `skills/constitution.md`; renumber subsequent steps.
   - **Files**: `skills/constitution.md` (edit).
   - **Verify**: `grep -n 'SDD STATE' skills/constitution.md` → none; step numbering contiguous.
   - **Deps**: none (independent file).

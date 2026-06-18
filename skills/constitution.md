@@ -89,20 +89,7 @@ Pending re-alignment: templates/plan-template.md
 
 Once every dependent artifact is re-aligned and the script reports `CLEAN`, delete the SYNC IMPACT block.
 
-### 5. Initialize SDD State
-
-Append the managed state section:
-
-```markdown
-<!-- SDD STATE START -->
-**Current feature**: none
-**Last phase**: constitution
-**Skipped phases**: none
-**Decisions**: none
-<!-- SDD STATE END -->
-```
-
-### 6. Autopilot Mode
+### 5. Autopilot Mode
 
 If running without user interaction (from `/spec.autopilot`):
 
@@ -110,7 +97,7 @@ If running without user interaction (from `/spec.autopilot`):
 2. Customize principle names and rationales to the project context.
 3. Write and report: "Constitution created with 5 principles (autopilot defaults). Review at .spec/memory/constitution.md"
 
-### 7. Load Team Hooks (optional)
+### 6. Load Team Hooks (optional)
 
 Teams can extend the constitution workflow without editing source skills, via a project-local `.spec/hooks.md`. If it exists, read it before finalizing the constitution and surface any declared `constitution`-phase steps. If the file is absent or malformed, skip silently — never fail the workflow on it.
 
@@ -124,7 +111,7 @@ Teams can extend the constitution workflow without editing source skills, via a 
 
 Surface each declared step; the team owns their hooks. You surface, they act.
 
-### 8. Hand Off
+### 7. Hand Off
 
 ```
 Constitution created with {{N}} principles.
