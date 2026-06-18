@@ -62,6 +62,19 @@ try {
   const afterRe = readState(t2).claude;
   ok("US1: re-init preserves agents.json (claude still recorded)", afterRe !== undefined);
   ok("US1: re-init preserves createdFiles", (afterRe?.createdFiles?.length ?? 0) === 12);
+
+  // --- US3 / FR-008/009 (spec 007): iron rule — init never touches user docs ---
+  const t3 = mktmp("init-iron-");
+  fs.mkdirSync(path.join(t3, "docs"), { recursive: true });
+  fs.writeFileSync(path.join(t3, "docs/keep.md"), "# my doc\n\nFR-001 something\n");
+  const beforeKeep = fs.readFileSync(path.join(t3, "docs/keep.md"), "utf-8");
+  await runInit(t3);
+  ok(
+    "FR-008 iron rule: user doc untouched by init",
+    fs.readFileSync(path.join(t3, "docs/keep.md"), "utf-8") === beforeKeep,
+  );
+  ok("FR-009: init creates no .spec/intake (no external scan)", !exists(t3, ".spec/intake"));
+  ok("FR-009: init creates no .spec/absorbed", !exists(t3, ".spec/absorbed"));
 } catch (e) {
   ok("init ran without throwing", false);
   console.log("    error:", (e as Error).message);
