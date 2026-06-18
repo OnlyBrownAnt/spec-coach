@@ -22,15 +22,10 @@ export interface AgentConfig {
   argumentHints?: Record<string, string>;
 }
 
-// Agents are data-driven via agents.json (spec 003); AgentKey is now an open
-// string type so manifest additions need no source change. Legacy callers
-// (cli.ts) still import this name.
-export type AgentKey = string;
-
 // ── Agent configurations ───────────────────────────────────────────────────
-// Agents are data-driven via agents.json (spec 003 FR-001/002/003). The former
-// hardcoded enum is removed; AGENTS below is a backward-compat map derived from
-// the manifest, retained until cli.ts is rewritten (T018). Prefer loadAgentConfig.
+// Agents are data-driven via agents.json (spec 003 FR-001/002/003). Runtime
+// resolution uses loadAgentConfig; AGENTS below is the manifest-derived keyed
+// map kept for programmatic access (and exercised by agent-config.test).
 
 /** Convert a validated manifest entry into an AgentConfig. */
 function entryToConfig(e: AgentEntry): AgentConfig {
@@ -54,7 +49,7 @@ export function loadAgentConfig(key: string): AgentConfig | null {
   return entry ? entryToConfig(entry) : null;
 }
 
-/** Backward-compat agent map, manifest-derived. Legacy callers: cli.ts/init.ts/update.ts. */
+/** Manifest-derived keyed map of every agent config. Programmatic access; runtime code prefers loadAgentConfig. */
 export const AGENTS: Record<string, AgentConfig> = Object.fromEntries(
   loadManifest().map((e) => [e.key, entryToConfig(e)] as const),
 );
