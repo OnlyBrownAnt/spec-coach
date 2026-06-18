@@ -4,7 +4,7 @@
 
 **Created**: 2026-06-18
 
-**Status**: Draft
+**Status**: Implemented
 
 **Input**: User scope decision (scope A — behavioral, keep `.spec/memory/constitution.md`, MINOR) plus the preceding design dialogue: the constitution is a global, agent-agnostic, human-owned project charter on the same tier as `CLAUDE.md`, not disposable tooling. spec-coach already treats `CLAUDE.md` correctly (managed `<!-- COACH -->` slice: upsert only that slice, strip only that slice on uninstall, never delete the human file) but holds the constitution to a lower standard. spec 009 raises the constitution to parity. **Final scope (Path 1)**: behavioral improvements (scope A) PLUS re-authoring spec-coach's own live constitution via the improved tool as the closing dogfood; root-level migration (scope B / MAJOR) is deferred to a potential separate spec 010.
 

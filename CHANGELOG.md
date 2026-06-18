@@ -1,5 +1,34 @@
 # Changelog
 
+## 2.4.0 — 2026-06-18
+
+### Constitution as charter — amend, don't overwrite (spec 009)
+
+The constitution is treated as a global, agent-agnostic, human-owned project
+charter (`CLAUDE.md`-tier IP) — not disposable tooling. amend-don't-overwrite,
+seed-don't-generate, preserve-don't-delete.
+
+- `/spec-constitution` now branches on the constitution's authoring state. On an
+  AUTHORED charter it AMENDS (anchored to the existing principles — never
+  rewrites a settled one unless explicitly targeted; a full rewrite needs
+  `--reset`); on TEMPLATE/ABSENT it runs a SEEDED cold-start that reads repo
+  signals (`package.json`, source/`skills`, `README`, existing `specs/`) and
+  proposes candidate principles for ratification before writing.
+- Status advisor: `verify-constitution-sync.sh` reports `TEMPLATE` / `AUTHORED`
+  / `ABSENT` (non-blocking), so the skill can choose amend vs cold-start. (Also
+  fixes a latent zero-principle count bug.)
+- `/spec-constitution` codifies constitution-doc semver (MAJOR/MINOR/PATCH) and
+  an exhaustive propagation checklist (spec/plan/tasks templates + all skills).
+- `uninstall` is status-aware: an AUTHORED constitution is PRESERVED on plain
+  uninstall (project IP, like `specs/`); only a never-authored TEMPLATE is
+  removed; `--force`/purge removes it. `init`/`update` never overwrite an
+  existing constitution (codified as the FR-007 invariant).
+- Constitution re-authored **v1.4.0 → v1.5.0**: the Ownership & safety clause
+  reflects charter-as-IP (amended never overwritten, preserved never deleted),
+  superseding spec 007's "regenerable tooling" classification.
+- Versioned **MINOR 2.3.0 → 2.4.0** (new skill behavior + uninstall behavior;
+  installed file structure unchanged, so `update` is not broken).
+
 ## 2.3.0 — 2026-06-18
 
 ### Derived workflow state — eliminate the stored-state subsystem (spec 008)

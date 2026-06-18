@@ -109,7 +109,7 @@
   - **Verify**: `npx tsx tests/units/constitution-charter.test.ts` GREEN.
   - **Depends on**: nothing (independent — `[P]`, can run anytime after T002).
 
-- [ ] **T008** `[infra]` Finalize release: add the **CHANGELOG.md** `2.4.0` entry (constitution-as-charter: status advisor, amend-guard, seeded cold-start, semver, exhaustive propagation, status-aware uninstall preserve, never-clobber codified, dogfood re-author). Run the **full headless suite** (`npx tsx tests/units/*.test.ts`) + smokes (`bash .spec/scripts/bash/verify-constitution-sync.sh`; `npx tsx src/cli.ts --help`). Confirm 0 failures.
+- [x] **T008** `[infra]` Finalize release: add the **CHANGELOG.md** `2.4.0` entry (constitution-as-charter: status advisor, amend-guard, seeded cold-start, semver, exhaustive propagation, status-aware uninstall preserve, never-clobber codified, dogfood re-author). Run the **full headless suite** (`npx tsx tests/units/*.test.ts`) + smokes (`bash .spec/scripts/bash/verify-constitution-sync.sh`; `npx tsx src/cli.ts --help`). Confirm 0 failures.
   - **Files**: `CHANGELOG.md` (edit).
   - **Verify**: full `tests/units/*.test.ts` suite GREEN (paste the `=== Results: N passed, 0 failed ===` lines); CLI/help smokes clean.
   - **Depends on**: all prior tasks.
