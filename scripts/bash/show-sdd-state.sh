@@ -66,6 +66,11 @@ else
   else
     echo "Decisions: see specs/$SLUG/spec.md + CHANGELOG.md"
   fi
+
+  # Resume breakpoint — first unchecked task in tasks.md (derived, not stored).
+  RESUME="$(first_pending_task "$FEATURE_DIR")"
+  RESUME="${RESUME#- \[ \] }"   # strip leading checkbox for a clean line
+  echo "Resume: $RESUME"
 fi
 
 exit 0

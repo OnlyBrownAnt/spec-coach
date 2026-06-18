@@ -89,7 +89,7 @@
 
 ### Implementation for User Story 2
 
-- [ ] T007 [US2] Wire `first_pending_task()` into `show-sdd-state.sh`'s output as a resume/breakpoint line (e.g. "Resume at: <task>" / "no pending task" / "no tasks.md yet"). Feature resolution reuses `resolve_feature` (FR-008) — no stored pointer. **RED-first**: add failing cases — (a) first unchecked reported; (b) all-checked → no pending; (c) no tasks.md → status; (d) `@`/explicit token selects the feature.
+- [x] T007 [US2] Wire `first_pending_task()` into `show-sdd-state.sh`'s output as a resume/breakpoint line (e.g. "Resume at: <task>" / "no pending task" / "no tasks.md yet"). Feature resolution reuses `resolve_feature` (FR-008) — no stored pointer. **RED-first**: add failing cases — (a) first unchecked reported; (b) all-checked → no pending; (c) no tasks.md → status; (d) `@`/explicit token selects the feature.
   - **Files**: `scripts/bash/show-sdd-state.sh` (edit), `tests/units/workflow-state.test.ts` (add cases).
   - **Verify**: `npx tsx tests/units/workflow-state.test.ts` → pass.
   - **Deps**: T004, T006.
