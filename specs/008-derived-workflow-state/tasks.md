@@ -106,7 +106,7 @@
 
 ### Implementation for User Story 3
 
-- [ ] T008 [P] [US3] Remove the `_persist_feature_json "$REPO_ROOT" "$FEATURE_DIR"` call (~line 262) from `scripts/bash/create-new-feature.sh`. Keep branch creation + the `# To persist: export SPECIFY_FEATURE=…` hint (env remains the override channel).
+- [x] T008 [P] [US3] Remove the `_persist_feature_json "$REPO_ROOT" "$FEATURE_DIR"` call (~line 262) from `scripts/bash/create-new-feature.sh`. Keep branch creation + the `# To persist: export SPECIFY_FEATURE=…` hint (env remains the override channel).
   - **Files**: `scripts/bash/create-new-feature.sh` (edit).
   - **Verify**: run `create-new-feature.sh` (dry-run if available) in a tmp repo → no `.spec/feature.json` written; feature dir + export hint still produced.
   - **Deps**: none (independent file).

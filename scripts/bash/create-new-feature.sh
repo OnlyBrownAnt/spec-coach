@@ -258,12 +258,10 @@ if [ "$DRY_RUN" != true ]; then
         fi
     fi
 
-    # Persist to .spec/feature.json so downstream commands can find the feature
-    _persist_feature_json "$REPO_ROOT" "$FEATURE_DIR"
-
-    # Inform the user how to set feature state in their own shell
-    printf '# To persist: export SPECIFY_FEATURE=%q\n' "$BRANCH_NAME" >&2
-    printf '#              export SPECIFY_FEATURE_DIRECTORY=%q\n' "$FEATURE_DIR" >&2
+    # No state file is written (spec 008): workflow state is derived from specs/
+    # artifacts. To pin the current feature in your shell, export SPECIFY_FEATURE:
+    printf '# export SPECIFY_FEATURE=%q\n' "$BRANCH_NAME" >&2
+    printf '# export SPECIFY_FEATURE_DIRECTORY=%q\n' "$FEATURE_DIR" >&2
 fi
 
 if $JSON_MODE; then
