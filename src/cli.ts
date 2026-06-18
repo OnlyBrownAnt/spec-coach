@@ -115,7 +115,7 @@ async function main(): Promise<void> {
 
   switch (cmd) {
     case "init":
-      await runInit(null, projectRoot);
+      await runInit(projectRoot);
       break;
 
     case "update":

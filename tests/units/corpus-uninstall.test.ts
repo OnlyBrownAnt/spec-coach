@@ -31,7 +31,7 @@ console.log("=== corpus-uninstall.test ===");
 try {
   // --- FR-014: refuses without confirmation ---
   const t0 = mktmp("un-nc-");
-  await runInit(null, t0);
+  await runInit(t0);
   runAgentsAdd("claude", t0);
   const refused = runUninstall(t0);
   ok("uninstall without confirmation -> ok:false", refused.ok === false);
@@ -39,7 +39,7 @@ try {
 
   // --- FR-016: confirmed uninstall removes infra + bindings, preserves user content ---
   const t = mktmp("un-keep-");
-  await runInit(null, t);
+  await runInit(t);
   runAgentsAdd("claude", t);
   runAgentsAdd("cursor", t);
   // user content
@@ -62,7 +62,7 @@ try {
 
   // --- FR-016 --force/purge: also removes user content ---
   const t2 = mktmp("un-purge-");
-  await runInit(null, t2);
+  await runInit(t2);
   fs.mkdirSync(path.join(t2, "specs", "001-y"), { recursive: true });
   fs.writeFileSync(path.join(t2, "specs", "001-y", "spec.md"), "# bye\n");
   runUninstall(t2, { confirmed: true, purge: true });
@@ -71,7 +71,7 @@ try {
 
   // --- T010/FR-012 (spec 004): uninstall touches only INSTALLED agents (advisory A4) ---
   const t3 = mktmp("un-installed-");
-  await runInit(null, t3);
+  await runInit(t3);
   runAgentsAdd("claude", t3);
   // codex is NOT installed, but a spec-coach-looking dir exists (user mimicked / partial install)
   fs.mkdirSync(path.join(t3, ".codex", "skills", "spec-specify"), { recursive: true });
@@ -86,7 +86,7 @@ try {
 
   // --- T017/FR-016 (spec 005): .spec/intake is infra (removed); .spec/absorbed is user content (kept unless --force) ---
   const t4 = mktmp("un-intake-");
-  await runInit(null, t4);
+  await runInit(t4);
   fs.mkdirSync(path.join(t4, ".spec", "intake"), { recursive: true });
   fs.writeFileSync(path.join(t4, ".spec/intake/manifest.json"), '{"candidates":[]}');
   fs.writeFileSync(path.join(t4, ".spec/intake/ignore.json"), '{"patterns":[]}');
@@ -97,7 +97,7 @@ try {
   ok("T017: .spec/absorbed PRESERVED on plain uninstall (user content)", exists(t4, ".spec/absorbed/old.md"));
 
   const t5 = mktmp("un-intake-force-");
-  await runInit(null, t5);
+  await runInit(t5);
   fs.mkdirSync(path.join(t5, ".spec", "absorbed"), { recursive: true });
   fs.writeFileSync(path.join(t5, ".spec/absorbed/old.md"), "# absorbed\n");
   runUninstall(t5, { confirmed: true, purge: true });

@@ -31,7 +31,7 @@ console.log("=== corpus-update.test ===");
 
 try {
   const t = mktmp("upd-");
-  await runInit(claude, t);
+  await runInit(t);
 
   // user artifact that update MUST NOT touch
   fs.mkdirSync(path.join(t, "specs", "001-thing"), { recursive: true });

@@ -7,9 +7,6 @@ import * as path from "node:path";
 import * as os from "node:os";
 import { runInit } from "../../src/commands/init.ts";
 import { readState } from "../../src/state.ts";
-import { loadAgentConfig } from "../../src/utils.ts";
-
-const claude = loadAgentConfig("claude");
 
 let pass = 0;
 let fail = 0;
@@ -32,7 +29,7 @@ console.log("=== corpus-init.test ===");
 
 try {
   const t = mktmp("init-");
-  await runInit(claude, t);
+  await runInit(t);
 
   // --- corpus infrastructure present ---
   ok(".spec/templates present", exists(t, ".spec/templates"));
@@ -49,7 +46,7 @@ try {
   ok("no .cursor/commands (no agent)", !exists(t, ".cursor/commands"));
 
   // --- idempotent re-init does not duplicate constitution ---
-  await runInit(claude, t);
+  await runInit(t);
   ok("re-init keeps a single constitution", exists(t, ".spec/memory/constitution.md"));
 } catch (e) {
   ok("init ran without throwing", false);

@@ -39,7 +39,7 @@ try {
   const t = mktmp("lc-cycle-");
 
   // init — corpus present, NO agent bindings
-  await runInit(null, t);
+  await runInit(t);
   ok("init: corpus templates present", exists(t, ".spec/templates"));
   ok("init: constitution present", exists(t, ".spec/memory/constitution.md"));
   ok("init: NO agent files", !exists(t, ".claude/skills") && !exists(t, "CLAUDE.md"));

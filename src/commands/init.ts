@@ -47,16 +47,11 @@ function printNextSteps(projectRoot: string, templates: number, scripts: number)
 // ── Main ───────────────────────────────────────────────────────────────────
 
 /**
- * Initialize the spec corpus. The `agent` and `skipAbsorb` parameters are
- * accepted for backward compatibility with the current CLI (T018 removes them)
- * but are NOT used: init is corpus-only. Agent bindings come from `agents add`;
- * document absorption is deferred to a separate intake pipeline.
+ * Initialize the spec corpus. Installs NO agent bindings (those come from
+ * `agents add`) and performs NO document absorption (that is the `intake`
+ * pipeline, spec 005). Corpus-only.
  */
-export async function runInit(
-  _agent: unknown,
-  projectRoot: string,
-  _skipAbsorb: boolean = false,
-): Promise<void> {
+export async function runInit(projectRoot: string): Promise<void> {
   // 1. Project structure
   createProjectStructure(projectRoot);
   console.log("  ✓  Project structure created");
