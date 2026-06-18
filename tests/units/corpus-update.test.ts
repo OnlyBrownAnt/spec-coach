@@ -7,7 +7,6 @@ import * as path from "node:path";
 import * as os from "node:os";
 import { runInit } from "../../src/commands/init.ts";
 import { runUpdate } from "../../src/commands/update.ts";
-import { loadAgentConfig } from "../../src/utils.ts";
 
 let pass = 0;
 let fail = 0;
@@ -16,7 +15,6 @@ function ok(name: string, cond: boolean): void {
   else { fail++; console.log("  [FAIL]", name); }
 }
 
-const claude = loadAgentConfig("claude");
 const tmpDirs: string[] = [];
 function mktmp(prefix: string): string {
   const d = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
@@ -39,7 +37,7 @@ try {
 
   const specBefore = fs.readFileSync(path.join(t, "specs/001-thing/spec.md"), "utf-8");
 
-  await runUpdate(claude, t);
+  await runUpdate(t);
 
   // --- corpus infrastructure refreshed & present ---
   ok("templates present after update", exists(t, ".spec/templates"));

@@ -6,15 +6,14 @@
  * `agents update`. Never modifies user artifacts (`specs/`, constitution, etc.)
  * (spec 003 FR-013/017).
  */
-import type { AgentConfig } from "../utils.js";
 import { installDocumentTemplates, installScripts } from "../utils.js";
 
 /**
- * Refresh the spec corpus infrastructure. `agent` is accepted for backward
- * compatibility with the current CLI (T018 removes it) but is ignored: update is
- * corpus-scoped. To refresh an installed agent's bindings, use `agents update`.
+ * Refresh the spec corpus infrastructure (document templates + helper scripts).
+ * Corpus-scoped: installs NO agent bindings. To refresh an installed agent's
+ * bindings, use `agents update`.
  */
-export async function runUpdate(_agent: AgentConfig | null, projectRoot: string): Promise<void> {
+export async function runUpdate(projectRoot: string): Promise<void> {
   const docTemplates = installDocumentTemplates(projectRoot);
   console.log(`  ✓  ${docTemplates.length} document templates refreshed`);
 

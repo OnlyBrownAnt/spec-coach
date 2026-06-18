@@ -119,7 +119,7 @@ async function main(): Promise<void> {
       break;
 
     case "update":
-      await runUpdate(null, projectRoot);
+      await runUpdate(projectRoot);
       break;
 
     case "uninstall": {

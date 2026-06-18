@@ -60,7 +60,7 @@ try {
   ok("remove: constitution UNCHANGED", hash(t, ".spec/memory/constitution.md") === constBefore);
 
   // update — corpus refreshed, still no agent bindings
-  await runUpdate(null, t);
+  await runUpdate(t);
   ok("update: templates still present", exists(t, ".spec/templates"));
   ok("update: NO agent files appeared", !exists(t, ".claude/skills") && !exists(t, "CLAUDE.md"));
 
