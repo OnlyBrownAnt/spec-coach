@@ -7,6 +7,7 @@
  * absorption — agent bindings come from `agents add`; document intake is a
  * separate pipeline (spec 003 FR-013/017).
  */
+import * as fs from "node:fs";
 import * as path from "node:path";
 import {
   installDocumentTemplates,
@@ -70,7 +71,11 @@ export async function runInit(projectRoot: string): Promise<void> {
   console.log(`  ✓  ${scripts.length} helper scripts installed`);
 
   // 5. Empty installed-agent state — marks the corpus as spec-coach-managed.
-  writeState(projectRoot, {});
+  //    Written only when absent: re-running init must not wipe already-installed
+  //    agents (spec 007 US1 / FR-001/002).
+  if (!fs.existsSync(path.join(projectRoot, ".spec", "agents.json"))) {
+    writeState(projectRoot, {});
+  }
 
   // 6. Intake nudge (FR-014): non-blocking. Detect candidates and hint; never prompt.
   const nudge = intakeNudge(projectRoot);

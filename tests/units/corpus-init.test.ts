@@ -6,6 +6,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
 import { runInit } from "../../src/commands/init.ts";
+import { runAgentsAdd } from "../../src/commands/agents.ts";
 import { readState } from "../../src/state.ts";
 
 let pass = 0;
@@ -48,6 +49,19 @@ try {
   // --- idempotent re-init does not duplicate constitution ---
   await runInit(t);
   ok("re-init keeps a single constitution", exists(t, ".spec/memory/constitution.md"));
+
+  // --- US1 (spec 007): re-running init must NOT clobber installed-agent state ---
+  const t2 = mktmp("init-reentry-");
+  await runInit(t2); // scaffold corpus (realistic: init -> add agent -> later re-init)
+  runAgentsAdd("claude", t2);
+  ok(
+    "US1 setup: agent recorded before re-init",
+    readState(t2).claude !== undefined && (readState(t2).claude?.createdFiles?.length ?? 0) === 12,
+  );
+  await runInit(t2);
+  const afterRe = readState(t2).claude;
+  ok("US1: re-init preserves agents.json (claude still recorded)", afterRe !== undefined);
+  ok("US1: re-init preserves createdFiles", (afterRe?.createdFiles?.length ?? 0) === 12);
 } catch (e) {
   ok("init ran without throwing", false);
   console.log("    error:", (e as Error).message);
