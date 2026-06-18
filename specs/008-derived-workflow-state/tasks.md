@@ -45,7 +45,7 @@
   - **Verify**: `npx tsx tests/units/workflow-state.test.ts` → cases pass; confirm they FAILED before the function existed.
   - **Deps**: none.
 
-- [ ] T003 Create `infer_phase()` in `scripts/bash/common.sh`. **RED-first**: add failing cases — `analysis.md`→`analyze`, `tasks.md`→`tasks`, `plan.md`→`plan`, `spec.md`→`specify`, none→`constitution`. Signature: `infer_phase <feature_dir>` echoes the phase. (Extracted from `show-sdd-state.sh`'s existing if/elif.)
+- [x] T003 Create `infer_phase()` in `scripts/bash/common.sh`. **RED-first**: add failing cases — `analysis.md`→`analyze`, `tasks.md`→`tasks`, `plan.md`→`plan`, `spec.md`→`specify`, none→`constitution`. Signature: `infer_phase <feature_dir>` echoes the phase. (Extracted from `show-sdd-state.sh`'s existing if/elif.)
   - **Files**: `scripts/bash/common.sh` (add), `tests/units/workflow-state.test.ts` (add cases).
   - **Verify**: `npx tsx tests/units/workflow-state.test.ts` → pass.
   - **Deps**: T002 (same file; sequential).

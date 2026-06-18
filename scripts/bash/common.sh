@@ -206,6 +206,24 @@ _resolve_by_token() {
     return 0
 }
 
+# Infer the current SDD phase of a feature from its artifacts (spec 008).
+# Priority: analysis.md→analyze, tasks.md→tasks, plan.md→plan, spec.md→specify,
+# else constitution. Read-only; echoes the phase string.
+infer_phase() {
+    local feature_dir="$1"
+    if [ -f "$feature_dir/analysis.md" ]; then
+        printf '%s' "analyze"
+    elif [ -f "$feature_dir/tasks.md" ]; then
+        printf '%s' "tasks"
+    elif [ -f "$feature_dir/plan.md" ]; then
+        printf '%s' "plan"
+    elif [ -f "$feature_dir/spec.md" ]; then
+        printf '%s' "specify"
+    else
+        printf '%s' "constitution"
+    fi
+}
+
 # Get current feature name from explicit state only.
 # Returns the feature identifier or empty string if none is set.
 # Feature state is set by SPECIFY_FEATURE (from create-new-feature or
