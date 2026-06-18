@@ -59,6 +59,8 @@ try {
   // user content PRESERVED
   ok("specs/ PRESERVED", exists(t, "specs/001-x/spec.md"));
   ok("constitution REMOVED on plain uninstall (regenerable tooling)", !exists(t, ".spec/memory/constitution.md"));
+  // spec 007 fix: an emptied .spec/ is pruned (uninstall = inverse of init)
+  ok("plain uninstall prunes an emptied .spec/", !exists(t, ".spec"));
 
   // --- FR-016 --force/purge: also removes user content ---
   const t2 = mktmp("un-purge-");
@@ -68,6 +70,14 @@ try {
   runUninstall(t2, { confirmed: true, purge: true });
   ok("purge removes specs/", !exists(t2, "specs/001-y/spec.md"));
   ok("purge removes constitution", !exists(t2, ".spec/memory/constitution.md"));
+
+  // spec 007 fix: a .spec/ holding non-infra content is PRESERVED (prune is empty-only)
+  const tKeep = mktmp("un-speckeep-");
+  await runInit(tKeep);
+  fs.writeFileSync(path.join(tKeep, ".spec", "feature.json"), '{"feature":"x"}');
+  runUninstall(tKeep, { confirmed: true });
+  ok(".spec/ preserved when it holds non-infra content", exists(tKeep, ".spec"));
+  ok("non-infra content under .spec/ survives plain uninstall", exists(tKeep, ".spec/feature.json"));
 
   // --- T010/FR-012 (spec 004): uninstall touches only INSTALLED agents (advisory A4) ---
   const t3 = mktmp("un-installed-");

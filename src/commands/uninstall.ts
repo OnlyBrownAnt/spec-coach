@@ -57,8 +57,14 @@ export function runUninstall(projectRoot: string, opts: UninstallOptions = {}): 
   // 3. User content is preserved unless purge (--force) is set.
   if (opts.purge) {
     for (const rel of USER_PATHS) rmAny(path.join(projectRoot, rel));
-    pruneIfEmpty(path.join(projectRoot, ".spec"));
   }
+
+  // 4. Prune an emptied .spec/ (spec 007 fix). pruneIfEmpty removes only an empty
+  //    dir, so non-infra content under .spec/ (.spec/feature.json, a user file,
+  //    legacy .spec/absorbed/) keeps it. Plain uninstall now empties .spec/
+  //    (the constitution is tooling since 007), so the inverse-of-init prune
+  //    applies to both plain and purge.
+  pruneIfEmpty(path.join(projectRoot, ".spec"));
 
   const tail = opts.purge
     ? " (specs/ purged.)"

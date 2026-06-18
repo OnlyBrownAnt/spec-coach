@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.2.1 — 2026-06-18
+
+### Fix: plain uninstall prunes an emptied `.spec/` (spec 007 fix)
+
+- Plain `uninstall --yes` left an empty `.spec/` shell behind. Spec 007 moved the
+  constitution to regenerable tooling (so plain uninstall now empties `.spec/`),
+  but the empty-directory prune only ran on `--force`. The prune now runs for both
+  plain and purge — completing spec 007's "uninstall = inverse of init". Safe: it
+  removes `.spec/` only when empty; any non-infra content under it (e.g.
+  `.spec/feature.json`, a user file, legacy `.spec/absorbed/`) keeps the directory.
+- Versioned **PATCH 2.2.1** (bug fix, no install-contract change).
+
 ## 2.2.0 — 2026-06-18
 
 ### Resource ownership & document safety (spec 007)
