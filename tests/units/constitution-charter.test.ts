@@ -202,6 +202,23 @@ try {
   console.log("    error:", (e as Error).message);
 }
 
+console.log("=== constitution-charter.test (T006: dogfood — live charter re-authored) ===");
+
+try {
+  const live = path.join(REPO, ".spec", "memory", "constitution.md");
+  const liveOut = advisor(live);
+  ok("live constitution -> state AUTHORED", /Constitution state:\s*AUTHORED/.test(liveOut));
+  ok("advisor reports 5 principles", /Principles \(5\)/.test(liveOut));
+  const body = fs.readFileSync(live, "utf8");
+  ok("live charter has charter-as-IP clause (amended never overwritten)", /amended never overwritten/i.test(body));
+  ok("live charter has corrected uninstall clause (PRESERVES an AUTHORED)", /PRESERVES an AUTHORED constitution/.test(body));
+  ok("live charter has no template-signature tokens", !/\[(CONSTITUTION_VERSION|PRINCIPLE_1_NAME|PROJECT_NAME)\]/.test(body));
+  ok("live charter footer is v1.5.0", /\*\*Version\*\*:\s*1\.5\.0/.test(body));
+} catch (e) {
+  ok("dogfood block ran without throwing", false);
+  console.log("    error:", (e as Error).message);
+}
+
 assert.ok(pass > 0, "test ran");
 console.log("");
 console.log(`=== Results: ${pass} passed, ${fail} failed ===`);
