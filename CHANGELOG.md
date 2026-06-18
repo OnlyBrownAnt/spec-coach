@@ -1,5 +1,24 @@
 # Changelog
 
+## 2.1.1 — 2026-06-18
+
+### Internal cleanup — dead code, type dedup, state cohesion (spec 006)
+
+Zero-behavior-change refactor. No install-contract change, no constitution
+amendment.
+
+- Removed the unused `AgentKey` type alias. Simplified `runInit`/`runUpdate` to
+  single-arg `(projectRoot)` (dropped the vestigial `_agent`/`_skipAbsorb` params
+  from spec 003's `--agent` decoupling) and updated every caller.
+- Deduplicated `CmdResult` (was defined identically in `agents.ts` and
+  `intake.ts`) into a single shared `src/result.ts`.
+- Moved `ensureState` + `corpusExists` from `agents.ts` to their conceptual home
+  `state.ts` (no import cycle).
+- Corrected stale comments (the `AGENTS` "retained until cli.ts is rewritten"
+  note and the `runInit`/`runUpdate` "T018 removes them" JSDoc). `AGENTS` itself
+  is retained (`agent-config.test.ts` depends on it).
+- Versioned **PATCH 2.1.1** (internal cleanup, no install-contract change).
+
 ## 2.1.0 — 2026-06-18
 
 ### Document intake pipeline — bring existing docs into the corpus (spec 005)
