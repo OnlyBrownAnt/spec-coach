@@ -219,6 +219,39 @@ try {
   console.log("    error:", (e as Error).message);
 }
 
+console.log("=== constitution-charter.test (fix: SOURCE ships the status detection) ===");
+
+try {
+  // Regression (spec-009 fix): spec 009 added the TEMPLATE/AUTHORED/ABSENT
+  // detection to the INSTALLED .spec/scripts/bash/verify-constitution-sync.sh
+  // but NOT the SOURCE scripts/bash/verify-constitution-sync.sh — so init/update
+  // (which copy source -> installed) shipped a copy WITHOUT the detection. The
+  // feature never reached new users. Guard the SOURCE, not just the installed copy.
+  const srcAdvisor = path.join(REPO, "scripts", "bash", "verify-constitution-sync.sh");
+  const srcBody = fs.readFileSync(srcAdvisor, "utf8");
+  ok("SOURCE verify-constitution-sync.sh ships TEMPLATE/AUTHORED detection",
+    /Constitution state: TEMPLATE/.test(srcBody) && /Constitution state: AUTHORED/.test(srcBody));
+  ok("SOURCE verify-constitution-sync.sh ships the ABSENT branch",
+    /Constitution state: ABSENT/.test(srcBody));
+  ok("SOURCE verify-constitution-sync.sh has the zero-principle count fix (no '|| echo 0')",
+    !/\|\| echo 0/.test(srcBody));
+
+  // Class guard: every scripts/bash/*.sh source MUST equal its installed copy
+  // (installScripts copies source -> installed; drift = a change landed in only
+  // one file, so the feature fails to ship). Catches the whole bug class.
+  const bashDir = path.join(REPO, "scripts", "bash");
+  const instDir = path.join(REPO, ".spec", "scripts", "bash");
+  for (const name of fs.readdirSync(bashDir).filter((n) => n.endsWith(".sh"))) {
+    const s = fs.readFileSync(path.join(bashDir, name), "utf8");
+    const instPath = path.join(instDir, name);
+    const i = fs.existsSync(instPath) ? fs.readFileSync(instPath, "utf8") : null;
+    ok(`source==installed: ${name}`, i !== null && s === i);
+  }
+} catch (e) {
+  ok("source-ships-fix block ran without throwing", false);
+  console.log("    error:", (e as Error).message);
+}
+
 assert.ok(pass > 0, "test ran");
 console.log("");
 console.log(`=== Results: ${pass} passed, ${fail} failed ===`);

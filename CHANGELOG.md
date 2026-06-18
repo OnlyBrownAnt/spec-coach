@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.4.1 — 2026-06-18
+
+### Fix: constitution status detection now ships (spec-009 source drift)
+
+- spec 009 added the `TEMPLATE`/`AUTHORED`/`ABSENT` status detection (and the
+  zero-principle count fix) to the INSTALLED `.spec/scripts/bash/verify-constitution-sync.sh`
+  but NOT the SOURCE `scripts/bash/verify-constitution-sync.sh`. Since `init`/`update`
+  copy source → installed, new projects got an advisor WITHOUT status detection —
+  the feature never shipped beyond the dev repo. Ported the detection to the source
+  (source now == installed); added a regression test asserting the SOURCE carries
+  the detection, plus a class guard that every `scripts/bash/*.sh` source equals its
+  installed copy.
+- Versioned **PATCH 2.4.0 → 2.4.1** (fix; install file structure unchanged).
+
 ## 2.4.0 — 2026-06-18
 
 ### Constitution as charter — amend, don't overwrite (spec 009)
