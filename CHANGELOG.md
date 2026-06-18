@@ -1,5 +1,29 @@
 # Changelog
 
+## 2.3.0 — 2026-06-18
+
+### Derived workflow state — eliminate the stored-state subsystem (spec 008)
+
+spec-coach no longer maintains a parallel, drift-prone workflow-state store.
+State is **derived read-only** from `specs/NNN/` artifacts — it cannot fall out
+of sync, because there is no stored copy to forget to update.
+
+- New `resolve_feature()` resolver (`scripts/bash/common.sh`): current feature =
+  explicit token (`NNN`/slug) > `@` (opt-in current git branch) > `SPECIFY_FEATURE`
+  env override > most-recently-modified `specs/NNN-*/` dir. The **writing** path
+  (`get_feature_paths`) uses strict policy — it never silently guesses among
+  multiple features (which would write artifacts into the wrong feature dir).
+- `show-sdd-state.sh` is now a pure read-only reporter: feature + phase (inferred
+  from artifacts) + a decisions pointer + the resume breakpoint (first unchecked
+  task in `tasks.md`). It reads no state file, never mutates, and always exits 0.
+- Removed `.spec/feature.json` and its read/persist helpers, the
+  `SPECIFY_FEATURE`-as-source role, the constitution's `<!-- SDD STATE -->` block,
+  and the `spec-constitution` step that appended it. Legacy `feature.json`/block
+  instances are tolerated (read-ignored, never migrated).
+- Constitution amendment **v1.3.0 → v1.4.0**: codifies the derived-state model.
+- Versioned **MINOR 2.2.1 → 2.3.0** (observable behavior change + amendment; the
+  installed file structure is unchanged, so `update` is not broken).
+
 ## 2.2.1 — 2026-06-18
 
 ### Fix: plain uninstall prunes an emptied `.spec/` (spec 007 fix)
