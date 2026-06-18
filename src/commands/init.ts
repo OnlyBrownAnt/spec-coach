@@ -3,9 +3,9 @@
  *
  * Scaffolds the spec corpus: project structure, document templates, the
  * constitution (if absent), helper scripts, and an empty installed-agent state
- * file. Installs NO agent bindings (skills/context) and performs NO document
- * absorption — agent bindings come from `agents add`; document intake is a
- * separate pipeline (spec 003 FR-013/017).
+ * file. Installs NO agent bindings (skills/context) — those come from
+ * `agents add`. Document→spec conversion is the on-demand `/spec-absorb` skill
+ * (spec 007); init never scans or touches the user's documents.
  */
 import * as fs from "node:fs";
 import * as path from "node:path";
@@ -16,7 +16,6 @@ import {
   ensureDir,
 } from "../utils.js";
 import { writeState } from "../state.ts";
-import { intakeNudge } from "./intake.ts";
 
 // ── Project structure ──────────────────────────────────────────────────────
 
@@ -49,8 +48,8 @@ function printNextSteps(projectRoot: string, templates: number, scripts: number)
 
 /**
  * Initialize the spec corpus. Installs NO agent bindings (those come from
- * `agents add`) and performs NO document absorption (that is the `intake`
- * pipeline, spec 005). Corpus-only.
+ * `agents add`) and never touches user documents (the `/spec-absorb` skill
+ * converts a document into a spec on demand — spec 007). Corpus-only.
  */
 export async function runInit(projectRoot: string): Promise<void> {
   // 1. Project structure
@@ -76,10 +75,6 @@ export async function runInit(projectRoot: string): Promise<void> {
   if (!fs.existsSync(path.join(projectRoot, ".spec", "agents.json"))) {
     writeState(projectRoot, {});
   }
-
-  // 6. Intake nudge (FR-014): non-blocking. Detect candidates and hint; never prompt.
-  const nudge = intakeNudge(projectRoot);
-  if (nudge) console.log(nudge);
 
   printNextSteps(projectRoot, templates.length, scripts.length);
 }
