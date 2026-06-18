@@ -11,6 +11,7 @@ import assert from "node:assert/strict";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
+import { execSync } from "node:child_process";
 import { runInit } from "../../src/commands/init.ts";
 import { runUpdate } from "../../src/commands/update.ts";
 import { runUninstall } from "../../src/commands/uninstall.ts";
@@ -127,6 +128,79 @@ try {
 } catch (e) {
   ok("T003 block ran without throwing", false);
   console.log("    error:", (e as Error).message);
+}
+
+// ─── T005: verify-commit.sh advisor (FR-004; A1 custom-type; A3 git -C) ─────
+console.log("=== commit-convention.test (T005: verify-commit.sh advisor) ===");
+{
+  const ADVISOR = path.join(REPO, ".spec", "scripts", "bash", "verify-commit.sh");
+  function gitRepo(prefix: string): string {
+    const d = mktmp(prefix);
+    execSync("git init -q", { cwd: d });
+    execSync("git config user.email t@t.tt", { cwd: d });
+    execSync("git config user.name t", { cwd: d });
+    fs.mkdirSync(path.join(d, ".spec"), { recursive: true }); // get_repo_root marker
+    return d;
+  }
+  function commit(repo: string, subject: string): void {
+    execSync(`git commit -q --allow-empty -m "${subject}"`, { cwd: repo });
+  }
+  function merge(repo: string): void {
+    const br = execSync("git symbolic-ref --short HEAD", { cwd: repo, encoding: "utf8" }).trim();
+    execSync("git checkout -q -b side", { cwd: repo });
+    commit(repo, "side: a change");
+    execSync(`git checkout -q ${br}`, { cwd: repo });
+    execSync(`git merge --no-ff -q side -m "Merge branch 'side'"`, { cwd: repo });
+  }
+  function authoredWith(repo: string, allowedTypes: string): void {
+    fs.writeFileSync(path.join(repo, ".spec", "convention.md"),
+      `# Proj Commit Convention\n\n<!-- CONVENTION RULES START\nallowed_types: ${allowedTypes}\nscope_format: any\ntask_id_footer: optional\nCONVENTION RULES END -->\n`);
+  }
+  function advise(repo: string, rev?: string): string {
+    try {
+      return execSync(`bash "${ADVISOR}"${rev ? ` "${rev}"` : ""}`, { cwd: repo, encoding: "utf8" });
+    } catch { return " ERR"; }
+  }
+
+  try {
+    // (a) AUTHORED + default types + feat(x): y -> CONFORMING.
+    const a = gitRepo("cc-adv-conf-"); authoredWith(a, "feat fix docs refactor test chore");
+    commit(a, "feat(x): y");
+    ok("(a) feat(x): y -> CONFORMING", /CONFORMING/.test(advise(a)));
+
+    // (b) AUTHORED + default + T001: foo -> NON-CONFORMING.
+    const b = gitRepo("cc-adv-bad-"); authoredWith(b, "feat fix docs refactor test chore");
+    commit(b, "T001: foo");
+    ok("(b) T001: foo -> NON-CONFORMING", /NON-CONFORMING/.test(advise(b)));
+
+    // (c) merge commit -> SKIP.
+    const c = gitRepo("cc-adv-merge-"); authoredWith(c, "feat fix docs refactor test chore");
+    commit(c, "chore: init"); merge(c);
+    ok("(c) merge commit -> SKIP", /SKIP/.test(advise(c)));
+
+    // (d) ABSENT convention -> reports ABSENT + coaches default; exit 0.
+    const d = gitRepo("cc-adv-absent-"); commit(d, "feat: ok");
+    const od = advise(d);
+    ok("(d) ABSENT convention reported", /Convention state: ABSENT/.test(od));
+    let dExit = 0;
+    try { execSync(`bash "${ADVISOR}"`, { cwd: d, stdio: "ignore" }); } catch (e: unknown) { dExit = (e as { status?: number }).status ?? 1; }
+    ok("(d) advisor exits 0 on ABSENT", dExit === 0);
+
+    // (e) TEMPLATE convention -> reports TEMPLATE, uses default.
+    const e = gitRepo("cc-adv-tpl-");
+    fs.copyFileSync(path.join(REPO, "templates", "convention-template.md"), path.join(e, ".spec", "convention.md"));
+    commit(e, "feat: ok");
+    ok("(e) TEMPLATE convention reported", /Convention state: TEMPLATE/.test(advise(e)));
+
+    // (f) A1: custom allowed_types honored — build: foo CONFORMING; feat: foo NON-CONFORMING.
+    const f = gitRepo("cc-adv-cust1-"); authoredWith(f, "build deploy"); commit(f, "build: foo");
+    ok("(f) custom: build: foo -> CONFORMING (A1)", /CONFORMING/.test(advise(f)));
+    const g = gitRepo("cc-adv-cust2-"); authoredWith(g, "build deploy"); commit(g, "feat: foo");
+    ok("(f) custom: feat: foo -> NON-CONFORMING (A1)", /NON-CONFORMING/.test(advise(g)));
+  } catch (e) {
+    ok("T005 block ran without throwing", false);
+    console.log("    error:", (e as Error).message);
+  }
 }
 
 // ─── cleanup + results ──────────────────────────────────────────────────────
