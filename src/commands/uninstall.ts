@@ -66,6 +66,16 @@ export function runUninstall(projectRoot: string, opts: UninstallOptions = {}): 
     rmAny(memoryDir);
   }
 
+  // 2c. spec 010 (FR-001 charter-as-IP): the commit convention is project IP
+  //     once authored, like the constitution. Preserve an AUTHORED
+  //     .spec/convention.md on plain uninstall; remove it on purge or when it is
+  //     still a TEMPLATE (never authored — tooling). A never-authored TEMPLATE
+  //     is removed so an emptied .spec/ still prunes (uninstall = inverse of init).
+  const convFile = path.join(projectRoot, ".spec", "convention.md");
+  if (opts.purge || !isAuthoredConvention(convFile)) {
+    rmAny(convFile);
+  }
+
   // 3. User content is preserved unless purge (--force) is set.
   if (opts.purge) {
     for (const rel of USER_PATHS) rmAny(path.join(projectRoot, rel));
@@ -98,6 +108,22 @@ function isAuthoredConstitution(p: string): boolean {
     if (!fs.existsSync(p)) return false;
     const content = fs.readFileSync(p, "utf8");
     return !/\[(CONSTITUTION_VERSION|RATIFICATION_DATE|LAST_AMENDED_DATE|PROJECT_NAME|PRINCIPLE_1_NAME)\]/.test(content);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * spec 010: an AUTHORED convention has no template-signature placeholders (a
+ * TEMPLATE still does — [PROJECT_NAME]/[ALLOWED_TYPES]/[SCOPE_FORMAT]). Same
+ * idea as isAuthoredConstitution; a separate helper because the convention's
+ * signature tokens differ. Returns false when the file is missing or unreadable.
+ */
+function isAuthoredConvention(p: string): boolean {
+  try {
+    if (!fs.existsSync(p)) return false;
+    const content = fs.readFileSync(p, "utf8");
+    return !/\[(PROJECT_NAME|ALLOWED_TYPES|SCOPE_FORMAT)\]/.test(content);
   } catch {
     return false;
   }

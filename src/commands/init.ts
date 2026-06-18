@@ -12,6 +12,7 @@ import * as path from "node:path";
 import {
   installDocumentTemplates,
   installConstitutionToMemory,
+  installConventionToMemory,
   installScripts,
   ensureDir,
 } from "../utils.js";
@@ -34,6 +35,7 @@ function printNextSteps(projectRoot: string, templates: number, scripts: number)
   ✓  ${templates} document templates → ${path.join(projectRoot, ".spec/templates")}
   ✓  ${scripts} helper scripts → ${path.join(projectRoot, ".spec/scripts/bash")}
   ✓  Constitution → ${path.join(projectRoot, ".spec/memory/constitution.md")} (if absent)
+  ✓  Commit convention → ${path.join(projectRoot, ".spec/convention.md")} (if absent; edit it to your project)
 
   Next — bind an AI tool (installs its skills + context):
     spec-coach agents add <key>      (claude, cursor, copilot, codex, windsurf, kiro)
@@ -104,6 +106,11 @@ export async function runInit(projectRoot: string): Promise<void> {
   // 3. Constitution (only if absent — never overwrite)
   if (installConstitutionToMemory(projectRoot)) {
     console.log("  ✓  Constitution created at .spec/memory/constitution.md");
+  }
+
+  // 3b. Commit convention (only if absent — never overwrite; spec 010 FR-001).
+  if (installConventionToMemory(projectRoot)) {
+    console.log("  ✓  Commit convention created at .spec/convention.md");
   }
 
   // 4. Helper scripts (corpus infrastructure)

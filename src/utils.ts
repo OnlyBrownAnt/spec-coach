@@ -249,6 +249,7 @@ const TEMPLATE_NAMES = [
   "tasks-template",
   "checklist-template",
   "constitution-template",
+  "convention-template",
   "fix-template",
 ];
 
@@ -285,6 +286,27 @@ export function installConstitutionToMemory(projectRoot: string): boolean {
   if (fs.existsSync(constDest)) return false; // never overwrite
 
   fs.copyFileSync(constSrc, constDest);
+  return true;
+}
+
+/**
+ * Copy convention-template to .spec/convention.md — only if absent. spec 010
+ * (FR-001): the commit convention is charter-as-IP on the same tier as the
+ * constitution, so the same never-clobber invariant applies — init/update MUST
+ * leave an AUTHORED convention untouched. The `if (fs.existsSync(dest)) return
+ * false` guard below IS this invariant (mirrors installConstitutionToMemory).
+ */
+export function installConventionToMemory(projectRoot: string): boolean {
+  const convSrc = templateSource("convention-template");
+  if (!fs.existsSync(convSrc)) return false;
+
+  const specDir = path.join(projectRoot, ".spec");
+  ensureDir(specDir);
+  const convDest = path.join(specDir, "convention.md");
+
+  if (fs.existsSync(convDest)) return false; // never overwrite
+
+  fs.copyFileSync(convSrc, convDest);
   return true;
 }
 
