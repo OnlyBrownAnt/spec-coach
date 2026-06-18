@@ -4,7 +4,7 @@
 
 **Created**: 2026-06-18
 
-**Status**: Draft
+**Status**: Implemented
 
 **Input**: spec-coach maintains a parallel, drift-prone "workflow state" subsystem that re-expresses what the artifacts (`specs/NNN/`) and git already say — and is internally broken: "current feature" has **three competing sources** (`SPECIFY_FEATURE` env, `.spec/feature.json`, the constitution's `<!-- SDD STATE -->` block); the block's `Last phase` field is dead (the reader already ignores it and infers phase from artifacts); `Decisions` is written by no skill; `feature.json` does not even exist in this repo. Root cause: every explicit state store carries a "someone must remember to write it" obligation that demonstrably goes unmet.
 
