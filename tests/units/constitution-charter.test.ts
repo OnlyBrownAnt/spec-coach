@@ -213,7 +213,7 @@ try {
   ok("live charter has charter-as-IP clause (amended never overwritten)", /amended never overwritten/i.test(body));
   ok("live charter has corrected uninstall clause (PRESERVES an AUTHORED)", /PRESERVES an AUTHORED constitution/.test(body));
   ok("live charter has no template-signature tokens", !/\[(CONSTITUTION_VERSION|PRINCIPLE_1_NAME|PROJECT_NAME)\]/.test(body));
-  ok("live charter footer is v1.5.0", /\*\*Version\*\*:\s*1\.5\.0/.test(body));
+  ok("live charter footer is v1.6.0 (spec 010 amended the Runtime-guidance clause)", /\*\*Version\*\*:\s*1\.6\.0/.test(body));
 } catch (e) {
   ok("dogfood block ran without throwing", false);
   console.log("    error:", (e as Error).message);

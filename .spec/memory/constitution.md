@@ -57,6 +57,6 @@ This constitution defines the non-negotiable principles for spec-coach. It super
 - **Amendments**: Require a documented rationale, a migration plan if the change affects installed output, and review by the project maintainer. An amendment MUST be propagated to every dependent artifact (the spec/plan/tasks templates and any skill embedding principle wording) via the `/spec-constitution` propagation checklist — the constitution's authority rots the moment an amendment stops at the file.
 - **Compliance**: Every PR must state which principles it touches (or "none"). PRs that violate a principle require either a revision or a constitution amendment — no silent violations.
 - **Complexity must be justified**: If a change adds a file, a dependency, or a new concept, the PR description must explain why simpler alternatives were rejected.
-- **Runtime guidance**: Day-to-day development practices (linting rules, commit style, local setup) live in `CLAUDE.md`, not here. The constitution is principles; `CLAUDE.md` is playbook.
+- **Runtime guidance**: Day-to-day development practices (linting rules, local setup) live in `CLAUDE.md`, not here. **Commit convention** lives in `.spec/convention.md` — a human-owned, project-configurable standard the SDD skills coach and `verify-commit.sh` advises (spec 010). The constitution is principles; `CLAUDE.md` and `.spec/convention.md` are playbooks.
 
-**Version**: 1.5.0 | **Ratified**: 2025-06-15 | **Last Amended**: 2026-06-18
+**Version**: 1.6.0 | **Ratified**: 2025-06-15 | **Last Amended**: 2026-06-18

@@ -243,6 +243,31 @@ try {
   console.log("    error:", (e as Error).message);
 }
 
+// ─── T006: dogfood convention + constitution amendment (FR-006) ─────────────
+console.log("=== commit-convention.test (T006: dogfood + constitution) ===");
+try {
+  const convBody = fs.readFileSync(path.join(REPO, ".spec", "convention.md"), "utf8");
+  ok("spec-coach's .spec/convention.md is AUTHORED (no signature tokens)",
+    !/\[(PROJECT_NAME|ALLOWED_TYPES|SCOPE_FORMAT)\]/.test(convBody));
+  ok("spec-coach's convention declares Conventional + Task footer",
+    /Conventional Commits/.test(convBody) && /Task: T/.test(convBody));
+
+  const con = fs.readFileSync(path.join(REPO, ".spec", "memory", "constitution.md"), "utf8");
+  ok("constitution delegates commit style to .spec/convention.md",
+    /\.spec\/convention\.md/.test(con) && /Commit convention/.test(con));
+  ok("constitution footer is v1.6.0", /\*\*Version\*\*:\s*1\.6\.0/.test(con));
+
+  // verify-constitution-sync.sh reports CLEAN (no pending amendment block).
+  const cadv = execSync(
+    `bash "${path.join(REPO, ".spec", "scripts", "bash", "verify-constitution-sync.sh")}"`,
+    { cwd: REPO, encoding: "utf8" },
+  );
+  ok("verify-constitution-sync.sh reports CLEAN on the amended constitution", /CLEAN/.test(cadv));
+} catch (e) {
+  ok("T006 block ran without throwing", false);
+  console.log("    error:", (e as Error).message);
+}
+
 // ─── cleanup + results ──────────────────────────────────────────────────────
 for (const d of tmpDirs) {
   try { fs.rmSync(d, { recursive: true, force: true }); } catch { /* best effort */ }
