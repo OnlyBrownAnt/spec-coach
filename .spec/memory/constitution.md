@@ -39,6 +39,7 @@ Tests verify that installed skills and templates produce correct AI behavior end
 - **File structure**: Skills live in `.claude/skills/<name>/SKILL.md`. Templates in `.spec/templates/<name>-template.md`. Scripts in `.spec/scripts/bash/`. This structure is the contract — changing it breaks `spec-coach update`.
 - **CLI surface**: Two isolated surfaces — the **corpus lifecycle** (`init`, `update`, `uninstall`) and the **agent lifecycle** (`agents add`/`update`/`remove`/`list`). The two never mutate each other's owned content: an agent can retire (`agents remove`) while the spec corpus is fully preserved. Document→spec conversion is the on-demand `/spec-absorb` **skill**, not a CLI command (spec 007): it reads a document in place and writes `specs/NNN-slug/spec.md`, never touching the original. Adding a new top-level command requires a compelling reason documented in the spec.
 - **Ownership & safety** (spec 007 — iron rule): spec-coach is **read-only on user documents** — no command moves, renames, deletes, or overwrites a file outside the paths spec-coach owns (`.spec/` tooling, agent skill dirs, the managed context section); it only reads sources and appends new `NNN-slug/` dirs under `specs/`. `uninstall` is the inverse of `init`: it removes every `.spec/` artifact `init` creates (scripts, templates, `agents.json`, the constitution — all regenerable tooling) and preserves only `specs/` as user content; `--force` also purges `specs/`.
+- **Workflow state** (spec 008): workflow state is **derived read-only** from `specs/NNN/` artifacts, never stored. No command writes a workflow-state file (`.spec/feature.json` is gone); `show-sdd-state.sh` is a non-driving reporter (always exits 0, never mutates). The current feature is resolved by `resolve_feature`: explicit token (`NNN`/slug) > `@` (opt-in current git branch) > `SPECIFY_FEATURE` env override > most-recently-modified `specs/NNN-*/` dir. The writing path (`get_feature_paths`) uses **strict** policy — single candidate or explicit input only; it never guesses among multiple features.
 - **Agent support**: Agents are data-driven via the root `agents.json` manifest. Adding a new agent means adding one manifest entry (`key`, `name`, `dir`, `format`, `separator`, `frontmatter`, `contextFile`, `version`) — no TypeScript change. No agent-specific logic branches in individual skills.
 
 ## Release Workflow
@@ -57,11 +58,4 @@ This constitution defines the non-negotiable principles for spec-coach. It super
 - **Complexity must be justified**: If a change adds a file, a dependency, or a new concept, the PR description must explain why simpler alternatives were rejected.
 - **Runtime guidance**: Day-to-day development practices (linting rules, commit style, local setup) live in `CLAUDE.md`, not here. The constitution is principles; `CLAUDE.md` is playbook.
 
-**Version**: 1.3.0 | **Ratified**: 2025-06-15 | **Last Amended**: 2026-06-18
-
-<!-- SDD STATE START -->
-**Current feature**: 007-resource-ownership
-**Last phase**: implement
-**Skipped phases**: none
-**Decisions**: 2.2.0 resource ownership & document safety (MINOR) — iron rule (read-only on user docs; append-only to specs/); remove the intake subsystem (CLI command + .spec/intake + .spec/absorbed + src/commands/intake.ts), /spec-absorb is the sole doc→spec path; init re-entry safe (no agents.json clobber) + emits document-safety guidance; uninstall removes all .spec tooling incl constitution, preserves specs/ only. Constitution amendment v1.2.0 → v1.3.0.
-<!-- SDD STATE END -->
+**Version**: 1.4.0 | **Ratified**: 2025-06-15 | **Last Amended**: 2026-06-18

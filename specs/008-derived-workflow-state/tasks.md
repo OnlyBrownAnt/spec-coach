@@ -126,7 +126,7 @@
   - **Verify**: `grep -n 'SDD STATE' skills/constitution.md` → none; step numbering contiguous.
   - **Deps**: none (independent file).
 
-- [ ] T012 [P] [US3] Amend `.spec/memory/constitution.md`: remove the `<!-- SDD STATE START -->…END -->` block; under Development Constraints add a clause — "Workflow state is derived read-only from `specs/NNN/` artifacts; no command writes a workflow-state file; `show-sdd-state.sh` is a non-driving reporter; the current feature resolves by explicit token / `SPECIFY_FEATURE` override / opt-in `@` / mtime default." Bump footer `v1.3.0 → v1.4.0`, Last Amended `2026-06-18`. (`constitution-template.md` unchanged — it has no block.)
+- [x] T012 [P] [US3] Amend `.spec/memory/constitution.md`: remove the `<!-- SDD STATE START -->…END -->` block; under Development Constraints add a clause — "Workflow state is derived read-only from `specs/NNN/` artifacts; no command writes a workflow-state file; `show-sdd-state.sh` is a non-driving reporter; the current feature resolves by explicit token / `SPECIFY_FEATURE` override / opt-in `@` / mtime default." Bump footer `v1.3.0 → v1.4.0`, Last Amended `2026-06-18`. (`constitution-template.md` unchanged — it has no block.)
   - **Files**: `.spec/memory/constitution.md` (edit).
   - **Verify**: `grep -n 'SDD STATE' .spec/memory/constitution.md` → none; footer reads `Version: 1.4.0`.
   - **Deps**: none (independent file).
