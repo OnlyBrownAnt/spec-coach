@@ -11,6 +11,7 @@ import * as path from "node:path";
 import { loadManifest } from "../manifest.ts";
 import { readState, recordAgent, unrecordAgent, reconcileFromFs, recordContextFileCreated, readCreatedContextFiles, removeContextFileCreated, type InstalledState } from "../state.ts";
 import { loadAgentConfig, installAllSkills, upsertManagedSection, removeManagedSection, ownedSkillUnits, type AgentConfig } from "../utils.ts";
+import type { CmdResult } from "../result.ts";
 
 export interface AgentStatus {
   key: string;
@@ -42,10 +43,6 @@ export function runAgentsList(projectRoot: string): AgentStatus[] {
   console.log(`\n  ${installed}/${status.length} installed.`);
   return status;
 }
-
-// ── Command results ────────────────────────────────────────────────────────
-
-export type CmdResult = { ok: true; message: string } | { ok: false; reason: string };
 
 /** A project has a spec corpus when `.spec/` exists (created by `spec-coach init`). */
 export function corpusExists(projectRoot: string): boolean {

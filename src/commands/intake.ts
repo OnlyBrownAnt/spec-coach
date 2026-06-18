@@ -12,6 +12,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as crypto from "node:crypto";
+import type { CmdResult } from "../result.ts";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -33,9 +34,6 @@ export interface Candidate {
   /** Corpus destination once absorbed. */
   destination?: string;
 }
-
-/** Command result — mirrors the `agents.ts` discriminated-union shape. */
-export type CmdResult = { ok: true; message: string } | { ok: false; reason: string };
 
 // ── Manifest store (.spec/intake/manifest.json) ────────────────────────────
 

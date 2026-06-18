@@ -11,7 +11,8 @@ import * as path from "node:path";
 import { loadManifest } from "../manifest.ts";
 import { loadAgentConfig } from "../utils.ts";
 import { readCreatedContextFiles, unrecordAgent } from "../state.ts";
-import { removeAgentSkills, removeAgentContext, ensureState, type CmdResult } from "./agents.ts";
+import { removeAgentSkills, removeAgentContext, ensureState } from "./agents.ts";
+import type { CmdResult } from "../result.ts";
 
 export interface UninstallOptions {
   /** FR-014: must be true to proceed (the CLI prompts; tests pass it directly). */
