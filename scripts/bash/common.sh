@@ -266,74 +266,14 @@ get_current_branch() {
         return
     fi
 
-    # No explicit feature set — caller must handle this via feature.json
-    # in get_feature_paths(). Return empty to signal "unknown".
+    # Display-role only (spec 008): mirrors SPECIFY_FEATURE for the CURRENT_BRANCH
+    # output var consumed by setup-plan.sh/check-prerequisites.sh. Not a source of
+    # the current feature — resolve_feature is. Empty when no override is set.
     echo ""
 }
 
-# Safely read .spec/feature.json's "feature_directory" value.
-# Prints the raw value (possibly relative) to stdout, or empty string if the file
-# is missing, unparseable, or does not contain the key. Always returns 0 so callers
-# under `set -e` cannot be aborted by parser failure.
-# Parser order mirrors the historical get_feature_paths behavior: jq -> python3 -> grep/sed.
-read_feature_json_feature_directory() {
-    local repo_root="$1"
-    local fj="$repo_root/.spec/feature.json"
-    [[ -f "$fj" ]] || { printf '%s' ''; return 0; }
-
-    local _fd=''
-    if command -v jq >/dev/null 2>&1; then
-        if ! _fd=$(jq -r '.feature_directory // empty' "$fj" 2>/dev/null); then
-            _fd=''
-        fi
-    elif command -v python3 >/dev/null 2>&1; then
-        # Use Python so pretty-printed/multi-line JSON still parses correctly.
-        if ! _fd=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); v=d.get('feature_directory'); print(v if v else '')" "$fj" 2>/dev/null); then
-            _fd=''
-        fi
-    else
-        # Last-resort single-line grep/sed fallback. The `|| true` guards against
-        # grep returning 1 (no match) aborting under `set -e` / `pipefail`.
-        _fd=$( { grep -E '"feature_directory"[[:space:]]*:' "$fj" 2>/dev/null || true; } \
-            | head -n 1 \
-            | sed -E 's/^[^:]*:[[:space:]]*"([^"]*)".*$/\1/' )
-    fi
-
-    printf '%s' "$_fd"
-    return 0
-}
-
-# Persist a feature_directory value to .spec/feature.json.
-# Writes only when the file is missing or the value differs from what's stored.
-# Accepts the raw (possibly relative) path — callers should pass the original
-# user-supplied value, not the normalized absolute path.
-_persist_feature_json() {
-    local repo_root="$1"
-    local feature_dir_value="$2"
-    local fj="$repo_root/.spec/feature.json"
-
-    # Strip repo_root prefix if the value is absolute and under repo_root
-    if [[ "$feature_dir_value" == "$repo_root/"* ]]; then
-        feature_dir_value="${feature_dir_value#"$repo_root/"}"
-    fi
-
-    # Read current value (if any) and skip write when unchanged
-    local current_val
-    current_val=$(read_feature_json_feature_directory "$repo_root")
-    if [[ "$current_val" == "$feature_dir_value" ]]; then
-        return 0
-    fi
-
-    # Ensure .spec/ directory exists
-    mkdir -p "$repo_root/.spec"
-
-    # Write feature.json — prefer jq for safe JSON, fall back to printf
-    if command -v jq >/dev/null 2>&1; then
-        jq -cn --arg fd "$feature_dir_value" '{feature_directory:$fd}' > "$fj"
-    else
-        printf '{"feature_directory":"%s"}\n' "$(json_escape "$feature_dir_value")" > "$fj"
-    fi
-}
+# .spec/feature.json read/persist helpers removed (spec 008): workflow state is
+# derived read-only from specs/ artifacts — nothing reads or writes feature.json.
 
 get_feature_paths() {
     local repo_root=$(get_repo_root)

@@ -111,7 +111,7 @@
   - **Verify**: run `create-new-feature.sh` (dry-run if available) in a tmp repo → no `.spec/feature.json` written; feature dir + export hint still produced.
   - **Deps**: none (independent file).
 
-- [ ] T009 [US3] Delete dead functions from `scripts/bash/common.sh`: `read_feature_json_feature_directory` and `_persist_feature_json` (zero callers after T005 + T006 + T008). Reduce `get_current_branch()` to honoring `SPECIFY_FEATURE` only, or remove it if `resolve_feature` subsumes it (verify no remaining caller).
+- [x] T009 [US3] Delete dead functions from `scripts/bash/common.sh`: `read_feature_json_feature_directory` and `_persist_feature_json` (zero callers after T005 + T006 + T008). Reduce `get_current_branch()` to honoring `SPECIFY_FEATURE` only, or remove it if `resolve_feature` subsumes it (verify no remaining caller).
   - **Files**: `scripts/bash/common.sh` (edit).
   - **Verify**: `grep -rn 'read_feature_json_feature_directory\|_persist_feature_json' scripts/ src/ skills/` → no references; full headless suite green; `bash scripts/bash/show-sdd-state.sh` still works.
   - **Deps**: T005, T006, T008 (all callers gone first).
