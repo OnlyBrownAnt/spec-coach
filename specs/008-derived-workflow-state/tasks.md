@@ -139,12 +139,12 @@
 
 **Purpose**: Finalize version, full-suite verification, straggler cleanup.
 
-- [ ] T013 [P] Write the `## 2.3.0` entry in `CHANGELOG.md` (derived workflow state; removed `feature.json`/SDD STATE subsystem; added opt-in `@`; `show-sdd-state.sh` is now a read-only reporter; constitution v1.4.0). Confirm `package.json` is `2.3.0` (from T001).
+- [x] T013 [P] Write the `## 2.3.0` entry in `CHANGELOG.md` (derived workflow state; removed `feature.json`/SDD STATE subsystem; added opt-in `@`; `show-sdd-state.sh` is now a read-only reporter; constitution v1.4.0). Confirm `package.json` is `2.3.0` (from T001).
   - **Files**: `CHANGELOG.md` (edit).
   - **Verify**: `CHANGELOG.md` has a `## 2.3.0 — 2026-06-18` section.
   - **Deps**: T001.
 
-- [ ] T014 Run the full headless suite (`for f in tests/units/*.test.ts; do npx tsx "$f"; done`) — all green. Add bash/CLI smokes: `show-sdd-state.sh` on this repo (reports `008` + phase `tasks`, no mutation, exit 0); `show-sdd-state.sh @` (resolves via branch); `create-new-feature.sh` (no feature.json). Remove/fix any straggler test that still writes/asserts `.spec/feature.json` or the SDD STATE block.
+- [x] T014 Run the full headless suite (`for f in tests/units/*.test.ts; do npx tsx "$f"; done`) — all green. Add bash/CLI smokes: `show-sdd-state.sh` on this repo (reports `008` + phase `tasks`, no mutation, exit 0); `show-sdd-state.sh @` (resolves via branch); `create-new-feature.sh` (no feature.json). Remove/fix any straggler test that still writes/asserts `.spec/feature.json` or the SDD STATE block.
   - **Files**: any straggler `tests/units/*.test.ts`; smokes are run, not committed (or noted in the commit body).
   - **Verify**: full suite green; smokes pass; `grep -rn 'feature.json\|SDD STATE' tests/ src/ scripts/ skills/` shows only intentional references.
   - **Deps**: all prior tasks.

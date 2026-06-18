@@ -256,10 +256,8 @@ _spec_candidates() {
     done
 }
 
-# Get current feature name from explicit state only.
-# Returns the feature identifier or empty string if none is set.
-# Feature state is set by SPECIFY_FEATURE (from create-new-feature or
-# the git extension) or implicitly via .spec/feature.json.
+# Get current feature name from the SPECIFY_FEATURE override (display-role only).
+# Not a source of the current feature — resolve_feature is (spec 008).
 get_current_branch() {
     if [[ -n "${SPECIFY_FEATURE:-}" ]]; then
         echo "$SPECIFY_FEATURE"
