@@ -116,7 +116,7 @@
   - **Verify**: `grep -rn 'read_feature_json_feature_directory\|_persist_feature_json' scripts/ src/ skills/` → no references; full headless suite green; `bash scripts/bash/show-sdd-state.sh` still works.
   - **Deps**: T005, T006, T008 (all callers gone first).
 
-- [ ] T010 [P] [US3] Retarget doc/help text that references the old state model: `scripts/bash/verify-spec.sh` (no-arg resolution already fixed by T005 — update the `# no args → … via .spec/feature.json` comment + `--help` text) and `src/utils.ts:333` (Workflow State line → "state is derived from artifacts; run `show-sdd-state.sh [feature|@]`; no state file").
+- [x] T010 [P] [US3] Retarget doc/help text that references the old state model: `scripts/bash/verify-spec.sh` (no-arg resolution already fixed by T005 — update the `# no args → … via .spec/feature.json` comment + `--help` text) and `src/utils.ts:333` (Workflow State line → "state is derived from artifacts; run `show-sdd-state.sh [feature|@]`; no state file").
   - **Files**: `scripts/bash/verify-spec.sh` (edit text), `src/utils.ts` (edit line ~333).
   - **Verify**: `bash scripts/bash/verify-spec.sh --help` shows derived wording; `grep -n 'feature.json' scripts/bash/verify-spec.sh src/utils.ts` → none.
   - **Deps**: T005 (verify-spec behavior already correct).

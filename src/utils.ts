@@ -330,7 +330,7 @@ export function buildManagedSection(): string {
     "",
     "## Workflow State",
     "",
-    "Current feature & workflow phase: run `scripts/bash/show-sdd-state.sh` (state lives in `.spec/feature.json` + the SDD STATE block in `.spec/memory/constitution.md`).",
+    "Current feature & workflow phase: run `scripts/bash/show-sdd-state.sh [token|@]` — state is derived read-only from `specs/` artifacts (no state file).",
     "",
     "## Bug Fixes",
     "",

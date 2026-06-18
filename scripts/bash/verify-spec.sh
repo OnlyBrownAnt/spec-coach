@@ -6,7 +6,8 @@
 # labelled so the author can confirm they are intentionally retained (not silently dropped).
 #
 # Usage: verify-spec.sh [spec.md]
-#   no args → resolves specs/<current-feature>/spec.md via .spec/feature.json
+#   no args → resolves specs/<current-feature>/spec.md via the derived resolver
+#             (explicit token / @ / SPECIFY_FEATURE / a single specs/ feature)
 #   --help  → usage
 #
 # FR-014 non-blocking: ALWAYS exits 0. Findings go to stdout.
