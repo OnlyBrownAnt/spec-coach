@@ -244,6 +244,18 @@ first_pending_task() {
     return 0
 }
 
+# List specs/NNN-*/ candidate feature dirs (one absolute path per line). Used by
+# the read-only reporter to detect/list ambiguity. (spec 008)
+_spec_candidates() {
+    local repo_root="$1"
+    local d
+    for d in "$repo_root"/specs/[0-9][0-9][0-9]-*/; do
+        if [ -d "$d" ]; then
+            printf '%s\n' "${d%/}"
+        fi
+    done
+}
+
 # Get current feature name from explicit state only.
 # Returns the feature identifier or empty string if none is set.
 # Feature state is set by SPECIFY_FEATURE (from create-new-feature or

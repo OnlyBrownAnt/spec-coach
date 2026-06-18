@@ -1,16 +1,15 @@
 #!/usr/bin/env bash
-# show-sdd-state.sh — surface the current SDD workflow state (non-blocking).
+# show-sdd-state.sh — read-only SDD workflow-state reporter (spec 008).
 #
-# Prints: current feature (basename of the feature directory), the last phase
-# (INFERRED from which artifacts exist — not the never-maintained SDD STATE
-# `Last phase` field), and decisions/skipped (read from the SDD STATE block in
-# the constitution when present). See specs/002-constitution-enforcement-reach/.
+# Derives the current feature/phase/decisions from artifacts. It reads NO stored
+# state file (.spec/feature.json and the SDD STATE block are gone) and mutates
+# nothing. Always exits 0; never drives behavior — a wrong best-effort pick costs
+# a glance, not corruption.
 #
-# Usage: show-sdd-state.sh [feature-dir] [constitution.md]
-#   no args  → feature dir from .spec/feature.json; constitution from repo.
-#   --help   → usage.
-#
-# FR-014 non-blocking: ALWAYS exits 0.
+# Usage: show-sdd-state.sh [token]
+#   token   explicit feature token: NNN, slug, or "@" (opt-in: the feature on the
+#           current git branch). Omit to default to the most-recently-modified
+#           specs/NNN-*/ dir (a soft guess; ambiguity is listed, not hidden).
 
 SCRIPT_DIR="$(CDPATH="" cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=common.sh
@@ -20,53 +19,53 @@ REPO_ROOT="$(get_repo_root 2>/dev/null || pwd)"
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
   cat <<'EOF'
-Usage: show-sdd-state.sh [feature-dir] [constitution.md]
+Usage: show-sdd-state.sh [token]
 
-Surfaces the current SDD workflow state: current feature, last phase (inferred
-from artifacts), and decisions/skipped (from the constitution's SDD STATE block).
+Read-only report of the current SDD workflow state, derived from specs/NNN-*/
+artifacts (no state file is read or written). token may be a feature number
+(007), a slug, or "@" (the feature on the current git branch). Omitted → the
+most-recently-modified feature (ambiguity is listed).
 
 Non-blocking: always exits 0.
 EOF
   exit 0
 fi
 
-FEATURE_DIR="${1:-}"
-CONSTITUTION="${2:-$REPO_ROOT/.spec/memory/constitution.md}"
+TOKEN="${1:-}"
+FEATURE_DIR="$(resolve_feature "$TOKEN" "$REPO_ROOT")"
 
-# Resolve feature dir from .spec/feature.json when not passed explicitly.
+# Was the feature chosen by an explicit input (token or SPECIFY_FEATURE env)?
+EXPLICIT=0
+if [ -n "$TOKEN" ]; then EXPLICIT=1; fi
+if [ -n "${SPECIFY_FEATURE:-}${SPECIFY_FEATURE_DIRECTORY:-}" ]; then EXPLICIT=1; fi
+
 if [ -z "$FEATURE_DIR" ]; then
-  fd="$(read_feature_json_feature_directory "$REPO_ROOT")"
-  if [ -n "$fd" ]; then
-    FEATURE_DIR="$fd"
-    [[ "$FEATURE_DIR" != /* ]] && FEATURE_DIR="$REPO_ROOT/$FEATURE_DIR"
+  echo "Feature: (none — no specs/NNN-*/ directories found)"
+  echo "Phase: constitution (no feature started)"
+else
+  SLUG="$(basename "$FEATURE_DIR")"
+  PHASE="$(infer_phase "$FEATURE_DIR")"
+  echo "Feature: $SLUG"
+  echo "Phase: $PHASE (inferred from artifacts)"
+
+  # Ambiguity note: a soft guess among multiple candidates with no explicit input.
+  if [ "$EXPLICIT" -eq 0 ]; then
+    NCAND="$(_spec_candidates "$REPO_ROOT" | grep -c . || true)"
+    if [ "$NCAND" -gt 1 ]; then
+      echo "Note: $NCAND features found (ambiguous); showing the most-recently-modified. Pass a token (NNN/slug/@) to be specific:"
+      _spec_candidates "$REPO_ROOT" | while IFS= read -r c; do
+        [ -d "$c" ] || continue
+        echo "  - $(basename "$c")  (phase: $(infer_phase "$c"))"
+      done
+    fi
+  fi
+
+  # Decisions pointer (never a stored digest).
+  if [ -f "$FEATURE_DIR/decisions.md" ]; then
+    echo "Decisions: see specs/$SLUG/decisions.md (+ spec.md, CHANGELOG.md)"
+  else
+    echo "Decisions: see specs/$SLUG/spec.md + CHANGELOG.md"
   fi
 fi
-
-# --- Current feature + last phase (artifact-inferred) ---
-if [ -n "$FEATURE_DIR" ] && [ -d "$FEATURE_DIR" ]; then
-  echo "Feature: $(basename "$FEATURE_DIR")"
-  if [ -f "$FEATURE_DIR/analysis.md" ]; then phase="analyze"
-  elif [ -f "$FEATURE_DIR/tasks.md" ]; then phase="tasks"
-  elif [ -f "$FEATURE_DIR/plan.md" ]; then phase="plan"
-  elif [ -f "$FEATURE_DIR/spec.md" ]; then phase="specify"
-  else phase="constitution"; fi
-  echo "Last phase: $phase (inferred from artifacts)"
-else
-  echo "Feature: (none — no feature directory resolved)"
-  echo "Last phase: constitution (no feature started)"
-fi
-
-# --- Decisions / skipped from the SDD STATE block (best-effort, never crashes) ---
-decisions="none"
-skipped="none"
-if [ -f "$CONSTITUTION" ] && grep -q 'SDD STATE START' "$CONSTITUTION" 2>/dev/null; then
-  block="$(sed -n '/SDD STATE START/,/SDD STATE END/p' "$CONSTITUTION" 2>/dev/null)"
-  d="$(printf '%s\n' "$block" | grep -iE '^\*\*Decisions\*\*' | sed -E 's/^\*\*Decisions\*\*:?[[:space:]]*//' | head -1)"
-  s="$(printf '%s\n' "$block" | grep -iE '^\*\*Skipped' | sed -E 's/^\*\*Skipped[^:]*:?[[:space:]]*//' | head -1)"
-  [ -n "$d" ] && [ "$d" != "none" ] && decisions="$d"
-  [ -n "$s" ] && [ "$s" != "none" ] && skipped="$s"
-fi
-echo "Decisions: $decisions"
-echo "Skipped phases: $skipped"
 
 exit 0
