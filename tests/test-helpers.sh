@@ -5,39 +5,88 @@
 # Resolve spec-coach root (one level above tests/)
 COACH_KIT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-# ---- Cross-platform timeout (macOS lacks `timeout`) ----
+# ---- Cross-platform timeout that kills the WHOLE process tree ----
+# macOS has no `timeout`/`gtimeout` and no `setsid`, and native `timeout` (even
+# on Linux) only signals its direct child — so a wrapped `claude -p` that spawns
+# sub-agents survives as an orphan and holds the test's output pipe open (the
+# original 19-minute-hang bug). Fix: a dependency-free perl that forks, puts the
+# child in its OWN process group (setpgrp), and on timeout SIGTERMs then SIGKILLs
+# the entire group (negative PID). perl is a platform prerequisite, not an added
+# package — Constitution Principle III (zero dependencies).
+# Returns 124 on timeout (GNU timeout convention) so callers can distinguish it.
 _timeout() {
     local secs="$1"; shift
-    if command -v timeout &>/dev/null; then timeout "$secs" "$@"
-    elif command -v gtimeout &>/dev/null; then gtimeout "$secs" "$@"
-    else perl -e 'alarm shift; exec @ARGV; die "exec failed: $!"' "$secs" "$@"
-    fi
+    local grace="${SPEC_GRACE:-10}"
+    perl -e '
+        my $secs  = shift @ARGV;
+        my $grace = shift @ARGV;
+        my $pid = fork();
+        die "fork: $!" unless defined $pid;
+        if ($pid == 0) {            # child: own process group, then exec the command
+            setpgrp(0, 0);
+            exec @ARGV;
+            die "exec: $!";
+        }
+        my $timed_out = 0;
+        local $SIG{ALRM} = sub {
+            $timed_out = 1;
+            kill("TERM", -$pid);    # SIGTERM the whole group; give it a chance to flush
+            sleep($grace);
+            kill("KILL", -$pid);    # SIGKILL whatever remains
+        };
+        alarm($secs);
+        waitpid($pid, 0);
+        exit($timed_out ? 124 : ($? >> 8));
+    ' -- "$secs" "$grace" "$@"
 }
 
-# ---- Run Claude Code headless and capture output ----
-# Usage: output=$(run_claude "prompt" [timeout_seconds] [allowed_tools])
+# ---- Per-call budget resolution ----
+# Precedence: explicit arg > SPEC_TIMEOUT_OVERRIDE (run.sh --timeout) > category
+# env var (SPEC_TIMEOUT_L1/L2, exported by run.sh) > built-in fallback (300/600).
+_claude_budget() {
+    local explicit="$1" default_var="$2" fallback="$3"
+    [ -n "$explicit" ] && { echo "$explicit"; return; }
+    [ -n "${SPEC_TIMEOUT_OVERRIDE:-}" ] && { echo "$SPEC_TIMEOUT_OVERRIDE"; return; }
+    local v="${!default_var:-}"
+    [ -n "$v" ] && { echo "$v"; return; }
+    echo "$fallback"
+}
+
+# ---- Run Claude Code headless, streaming output + bounded retry ----
+# One or more attempts of `claude -p`, streaming to a temp file so a kill never
+# loses output (FR-007). On a timeout (rc 124): retry ONLY when the captured
+# output is empty (suspected cold-start), up to SPEC_RETRIES+1 attempts (FR-008);
+# otherwise emit the partial output to stdout and a [TIMEOUT] marker to stderr.
+# Non-timeout results are emitted and returned as-is. perm_mode: "plain"|"bypass".
+_invoke_claude() {
+    local perm_mode="$1" prompt="$2" budget="$3" allowed_tools="${4:-}"
+    local max_attempts=$(( ${SPEC_RETRIES:-1} + 1 ))
+    local cap; cap=$(mktemp)
+    local rc=0 attempt cmd
+    for ((attempt=1; attempt<=max_attempts; attempt++)); do
+        cmd="claude -p \"$prompt\" --output-format text --plugin-dir \"$COACH_KIT_ROOT\""
+        [ "$perm_mode" = "bypass" ] && cmd="$cmd --permission-mode bypassPermissions"
+        [ -n "$allowed_tools" ] && cmd="$cmd --allowed-tools=$allowed_tools"
+        rc=0; _timeout "$budget" bash -c "$cmd" > "$cap" 2>&1 || rc=$?
+        if [ "$rc" -ne 124 ]; then
+            cat "$cap"; rm -f "$cap"; return "$rc"
+        fi
+        # timeout: retry only on empty output with attempts remaining
+        if [ -n "$(cat "$cap")" ] || [ "$attempt" -eq "$max_attempts" ]; then
+            cat "$cap"                                            # partial/empty output -> stdout (never 0 bytes)
+            echo "[TIMEOUT after ${budget}s] (attempt $attempt/$max_attempts)" >&2
+            rm -f "$cap"; return 124
+        fi
+    done
+    cat "$cap"; rm -f "$cap"; return 124
+}
+
+# Usage: output=$(run_claude "prompt" [budget_override] [allowed_tools])
+# Budget resolves via _claude_budget (L1 default 300s).
 run_claude() {
-    local prompt="$1"
-    local timeout_val="${2:-60}"
-    local allowed_tools="${3:-}"
-    local output_file
-    output_file=$(mktemp)
-
-    local cmd="claude -p \"$prompt\" --output-format text --plugin-dir \"$COACH_KIT_ROOT\""
-    if [ -n "$allowed_tools" ]; then
-        cmd="$cmd --allowed-tools=$allowed_tools"
-    fi
-
-    if _timeout "$timeout_val" bash -c "$cmd" > "$output_file" 2>&1; then
-        cat "$output_file"
-        rm -f "$output_file"
-        return 0
-    else
-        local exit_code=$?
-        cat "$output_file" >&2
-        rm -f "$output_file"
-        return $exit_code
-    fi
+    local prompt="$1" budget_override="${2:-}" allowed_tools="${3:-}"
+    local budget; budget=$(_claude_budget "$budget_override" SPEC_TIMEOUT_L1 300)
+    _invoke_claude "plain" "$prompt" "$budget" "$allowed_tools"
 }
 
 # ---- Assertions ----
@@ -146,23 +195,9 @@ cleanup_test_project() {
 }
 
 # Like run_claude but with --permission-mode bypassPermissions for L2 tests
-# that need to write files (implement, specify, plan, etc.).
+# that need to write files (implement, specify, plan, etc.). L2 default 600s.
 run_claude_l2() {
-    local prompt="$1"
-    local timeout_val="${2:-60}"
-    local output_file
-    output_file=$(mktemp)
-
-    local cmd="claude -p \"$prompt\" --output-format text --plugin-dir \"$COACH_KIT_ROOT\" --permission-mode bypassPermissions"
-
-    if _timeout "$timeout_val" bash -c "$cmd" > "$output_file" 2>&1; then
-        cat "$output_file"
-        rm -f "$output_file"
-        return 0
-    else
-        local exit_code=$?
-        cat "$output_file" >&2
-        rm -f "$output_file"
-        return $exit_code
-    fi
+    local prompt="$1" budget_override="${2:-}"
+    local budget; budget=$(_claude_budget "$budget_override" SPEC_TIMEOUT_L2 600)
+    _invoke_claude "bypass" "$prompt" "$budget" ""
 }

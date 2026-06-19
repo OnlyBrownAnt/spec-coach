@@ -25,7 +25,7 @@ git add . && git commit -m "init" --quiet
 
 FAILED=0
 
-output=$(run_claude_l2 "Use spec-implement. The tasks are at specs/quick-feature/tasks.md. Follow the skill exactly." 180)
+output=$(run_claude_l2 "Use spec-implement. The tasks are at specs/quick-feature/tasks.md. Follow the skill exactly.")
 
 assert_contains "$output" "test|TDD|RED" "Skill mentions testing" || FAILED=$((FAILED + 1))
 assert_not_contains "$output" "too simple.*test|skip.*test.*ok" "No test-skipping rationalization" || FAILED=$((FAILED + 1))

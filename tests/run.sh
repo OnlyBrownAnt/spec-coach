@@ -7,6 +7,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/test-helpers.sh"
 
 TIMEOUT=300
+# Per-test budgets exported for child test scripts (read by test-helpers.sh).
+# --timeout overrides BOTH categories via SPEC_TIMEOUT_OVERRIDE; see _claude_budget.
+export SPEC_TIMEOUT_L1=300
+export SPEC_TIMEOUT_L2=600
 VERBOSE=false
 SPECIFIC_TEST=""
 RUN_INTEGRATION=false
@@ -18,7 +22,11 @@ while [[ $# -gt 0 ]]; do
         --verbose|-v)
             VERBOSE=true; shift ;;
         --timeout)
-            TIMEOUT="$2"; shift 2 ;;
+            TIMEOUT="$2"; export SPEC_TIMEOUT_OVERRIDE="$2"; shift 2 ;;
+        --retry)
+            export SPEC_RETRIES="$2"; shift 2 ;;
+        --grace)
+            export SPEC_GRACE="$2"; shift 2 ;;
         all)
             RUN_INTEGRATION=true; shift ;;
         l2)
@@ -59,7 +67,9 @@ while [[ $# -gt 0 ]]; do
             echo ""
             echo "Options:"
             echo "  --verbose, -v   Show full Claude output"
-            echo "  --timeout N     Per-test timeout in seconds (default: 300)"
+            echo "  --timeout N     Per-test budget in seconds (default: 300; overrides L1/L2)"
+            echo "  --retry N       Retries on empty-output timeout (default: 1)"
+            echo "  --grace N       SIGTERM->SIGKILL grace seconds (default: 10)"
             exit 0 ;;
         -*)
             echo "Unknown option: $1. Use --help for usage." >&2; exit 1 ;;

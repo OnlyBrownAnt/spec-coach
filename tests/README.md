@@ -93,11 +93,13 @@ echo "=== All <skill-name> tests passed ==="
 - Node.js (for L2 integration test projects)
 - macOS or Linux (macOS `timeout` handled via perl fallback)
 
-## Timeout
+## Timeout, retry, and grace
 
-- Default: 300s per test
-- L2 tests may need `--timeout 600` for longer workflows
-- Set with: `bash tests/run.sh --timeout 900`
+- Default budget: **300s** (L1 behavioral) / **600s** (L2 integration) per test
+- `--timeout N` overrides the budget for every test (e.g. `bash tests/run.sh all --timeout 600`)
+- `--retry N` — retry an empty-output timeout up to N more times (default 1; absorbs AI cold-start variance; pass `0` to disable)
+- `--grace N` — seconds between SIGTERM and SIGKILL on timeout (default 10; lets `claude` flush its output)
+- No `gtimeout`/`coreutils` required: the timeout helper uses a dependency-free perl process-group kill, so a hung `claude` — and any sub-agents it spawned — is terminated at the budget. Tests no longer hang for many minutes past their timeout.
 
 ## CI Integration
 
