@@ -247,15 +247,15 @@ try {
 console.log("=== commit-convention.test (T006: dogfood + constitution) ===");
 try {
   const convBody = fs.readFileSync(path.join(REPO, ".spec", "convention.md"), "utf8");
-  ok("spec-coach's .spec/convention.md is AUTHORED (no signature tokens)",
-    !/\[(PROJECT_NAME|ALLOWED_TYPES|SCOPE_FORMAT)\]/.test(convBody));
+  ok("spec-coach's .spec/convention.md is TEMPLATE (reset in v2.0.0; re-author pending)",
+    /\[(PROJECT_NAME|ALLOWED_TYPES|SCOPE_FORMAT)\]/.test(convBody));
   ok("spec-coach's convention declares Conventional + Task footer",
     /Conventional Commits/.test(convBody) && /Task: T/.test(convBody));
 
   const con = fs.readFileSync(path.join(REPO, ".spec", "memory", "constitution.md"), "utf8");
   ok("constitution delegates commit style to .spec/convention.md",
     /\.spec\/convention\.md/.test(con) && /Commit convention/.test(con));
-  ok("constitution footer is v1.6.0", /\*\*Version\*\*:\s*1\.6\.0/.test(con));
+  ok("constitution footer is v2.0.0", /\*\*Version\*\*:\s*2\.0\.0/.test(con));
 
   // verify-constitution-sync.sh reports CLEAN (no pending amendment block).
   const cadv = execSync(

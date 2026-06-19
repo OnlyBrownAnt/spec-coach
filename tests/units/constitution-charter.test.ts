@@ -208,12 +208,16 @@ try {
   const live = path.join(REPO, ".spec", "memory", "constitution.md");
   const liveOut = advisor(live);
   ok("live constitution -> state AUTHORED", /Constitution state:\s*AUTHORED/.test(liveOut));
-  ok("advisor reports 5 principles", /Principles \(5\)/.test(liveOut));
+  ok("advisor reports 6 principles", /Principles \(6\)/.test(liveOut));
   const body = fs.readFileSync(live, "utf8");
-  ok("live charter has charter-as-IP clause (amended never overwritten)", /amended never overwritten/i.test(body));
-  ok("live charter has corrected uninstall clause (PRESERVES an AUTHORED)", /PRESERVES an AUTHORED constitution/.test(body));
+  // v2.0.0 promoted the IP / uninstall-preservation invariant into top-level
+  // Principle VI "Read-Only on User Documents" (subsumes the old v1.6.0
+  // "amended never overwritten" + "PRESERVES an AUTHORED" wording; the
+  // behavior-level T005/T007 checks still lock it functionally).
+  ok("constitution codifies read-only-on-user-docs (Principle VI)",
+    /Read-Only on User Documents/i.test(body) && /guest in the user's repository/i.test(body));
   ok("live charter has no template-signature tokens", !/\[(CONSTITUTION_VERSION|PRINCIPLE_1_NAME|PROJECT_NAME)\]/.test(body));
-  ok("live charter footer is v1.6.0 (spec 010 amended the Runtime-guidance clause)", /\*\*Version\*\*:\s*1\.6\.0/.test(body));
+  ok("live charter footer is v2.0.0", /\*\*Version\*\*:\s*2\.0\.0/.test(body));
 } catch (e) {
   ok("dogfood block ran without throwing", false);
   console.log("    error:", (e as Error).message);
